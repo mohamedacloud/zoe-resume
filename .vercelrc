@@ -1,0 +1,5 @@
+# Vercel Runtime Configuration
+# This file helps ensure proper build behavior
+
+# Disable build cache for this deployment to ensure reflect-metadata fix is applied
+VERCEL_FORCE_BUILD_CACHE=0
