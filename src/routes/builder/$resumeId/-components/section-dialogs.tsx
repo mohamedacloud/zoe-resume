@@ -2,11 +2,13 @@
 
 import { t } from "@lingui/core/macro";
 import { CircleNotchIcon, DownloadIcon, FileDocIcon, FilePdfIcon } from "@phosphor-icons/react";
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useResumeStore } from "@/components/resume/store/resume";
+import { orpc } from "@/integrations/orpc/client";
 import { CSSSectionBuilder } from "@/routes/builder/$resumeId/-sidebar/right/sections/css.tsx";
-import { generateFilename } from "@/utils/file";
+import { downloadFromUrl, generateFilename } from "@/utils/file";
 
 // Wrapper that applies light theme styling to section content
 export function SectionDialogWrapper({ children }: { children: React.ReactNode }) {
@@ -377,8 +379,6 @@ export function TypographyDialog() {
 
 export function LayoutDialog() {
 	const layout = useResumeStore((state) => state.resume.data.metadata.layout);
-	const sections = useResumeStore((state) => state.resume.data.sections);
-	const summary = useResumeStore((state) => state.resume.data.summary);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
 
 	// Get the first page (most resumes have only one page)
@@ -396,36 +396,6 @@ export function LayoutDialog() {
 				draft.metadata.layout.pages[0].fullWidth = enabled;
 			}
 		});
-	};
-
-	const toggleSectionVisibility = (sectionId: string) => {
-		updateResumeData((draft) => {
-			// Handle "summary" which is at the top level, not in sections
-			if (sectionId === "summary") {
-				draft.summary.hidden = !draft.summary.hidden;
-				return;
-			}
-
-			// Handle regular sections
-			const section = draft.sections[sectionId as keyof typeof draft.sections];
-			if (section && typeof section === "object" && "hidden" in section) {
-				section.hidden = !section.hidden;
-			}
-		});
-	};
-
-	const isSectionHidden = (sectionId: string): boolean => {
-		// Handle "summary" which is at the top level, not in sections
-		if (sectionId === "summary") {
-			return summary.hidden;
-		}
-
-		// Handle regular sections
-		const section = sections[sectionId as keyof typeof sections];
-		if (section && typeof section === "object" && "hidden" in section) {
-			return section.hidden;
-		}
-		return false;
 	};
 
 	const moveSection = (sectionId: string, from: "main" | "sidebar", to: "main" | "sidebar", index?: number) => {
@@ -508,14 +478,11 @@ export function LayoutDialog() {
 		const name = getSectionName(sectionId);
 		const isFirst = index === 0;
 		const isLast = index === totalCount - 1;
-		const isHidden = isSectionHidden(sectionId);
 
 		return (
 			<div
 				key={sectionId}
-				className={`flex items-center gap-3 rounded-lg border-2 p-3 transition-all ${
-					isHidden ? "border-gray-200 bg-gray-50 opacity-60" : "border-gray-200 bg-white"
-				}`}
+				className="flex items-center gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 transition-all"
 			>
 				{/* Drag Handle */}
 				<div className="cursor-move text-gray-400">
@@ -526,9 +493,7 @@ export function LayoutDialog() {
 
 				{/* Section Info */}
 				<div className="flex-1">
-					<h4 className={`font-semibold text-sm ${isHidden ? "text-gray-500" : "text-gray-900"}`}>
-						{name} {isHidden && <span className="text-gray-400 text-xs">(Hidden)</span>}
-					</h4>
+					<h4 className="font-semibold text-gray-900 text-sm">{name}</h4>
 					<p className="text-gray-500 text-xs">{location === "main" ? "Main Column" : "Sidebar Column"}</p>
 				</div>
 
@@ -557,34 +522,6 @@ export function LayoutDialog() {
 					>
 						<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-						</svg>
-					</button>
-
-					{/* Toggle Visibility */}
-					<button
-						type="button"
-						onClick={() => toggleSectionVisibility(sectionId)}
-						className={`rounded p-1 ${
-							isHidden ? "text-gray-400 hover:bg-gray-100" : "text-emerald-600 hover:bg-emerald-50"
-						}`}
-						title={isHidden ? "Show section" : "Hide section"}
-					>
-						<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							{!isHidden ? (
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-								/>
-							) : (
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-								/>
-							)}
 						</svg>
 					</button>
 
@@ -744,17 +681,6 @@ export function LayoutDialog() {
 					</div>
 				)}
 
-				{/* Info about hidden sections */}
-				{(currentPage.main.some((id) => isSectionHidden(id)) ||
-					currentPage.sidebar.some((id) => isSectionHidden(id))) && (
-					<div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-						<p className="text-orange-800 text-xs">
-							ℹ️ Hidden sections won't appear on your resume but remain in your data. Click the eye icon to show them
-							again.
-						</p>
-					</div>
-				)}
-
 				{/* Layout Tips */}
 				<div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
 					<h4 className="mb-2 font-semibold text-gray-900 text-sm">💡 Layout Tips</h4>
@@ -773,7 +699,7 @@ export function LayoutDialog() {
 						</li>
 						<li className="flex gap-2">
 							<span className="text-blue-600">•</span>
-							<span>Click the eye icon to hide/show sections from your resume</span>
+							<span>Move sections between columns using the arrow buttons</span>
 						</li>
 						<li className="flex gap-2">
 							<span className="text-blue-600">•</span>
@@ -1374,7 +1300,6 @@ export function SharingDialog() {
 	const [message, setMessage] = useState("");
 	const [shareOption, setShareOption] = useState<"link" | "social" | "email">("link");
 	const [allowDownload, setAllowDownload] = useState(true);
-	const [passwordProtect, setPasswordProtect] = useState(false);
 	const [trackViews, setTrackViews] = useState(false);
 
 	// Update URL when username or slug changes
@@ -1397,8 +1322,100 @@ export function SharingDialog() {
 	};
 
 	const handleEmailShare = () => {
-		console.log("Sharing via email to:", email);
-		toast.success("Email sent successfully!");
+		// Validate email
+		if (!email) {
+			toast.error("Please enter a recipient email address");
+			return;
+		}
+
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			toast.error("Please enter a valid email address");
+			return;
+		}
+
+		try {
+			// Prepare email content
+			const subject = encodeURIComponent("Check out my resume!");
+			const bodyText = message 
+				? `${message}\n\nYou can view my resume here: ${publicUrl}` 
+				: `Hi,\n\nI wanted to share my professional resume with you.\n\nYou can view it here: ${publicUrl}\n\nBest regards`;
+			const body = encodeURIComponent(bodyText);
+
+			// Create mailto link
+			const mailtoLink = `mailto:${email}?subject=${subject}&body=${body}`;
+
+			// Open email client
+			window.location.href = mailtoLink;
+			
+			toast.success("Opening your email client...");
+			
+			// Reset form after a delay
+			setTimeout(() => {
+				setEmail("");
+				setMessage("");
+			}, 1000);
+		} catch (error) {
+			console.error("Error opening email client:", error);
+			toast.error("Failed to open email client. Please try again.");
+		}
+	};
+
+	const handleUpdateSettings = () => {
+		// Save the public URL settings
+		console.log("Updating settings:", {
+			username,
+			slug,
+			publicUrl,
+			allowDownload,
+			trackViews,
+		});
+		toast.success("Public URL settings updated successfully!");
+	};
+
+	const handleSocialShare = (platformId: string, platformName: string) => {
+		const shareUrl = encodeURIComponent(publicUrl);
+		const shareText = encodeURIComponent(`Check out my resume!`);
+
+		let url = "";
+		switch (platformId) {
+			case "linkedin":
+				url = `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`;
+				break;
+			case "twitter":
+				url = `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`;
+				break;
+			case "facebook":
+				url = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+				break;
+			case "whatsapp":
+				url = `https://api.whatsapp.com/send?text=${shareText}%20${shareUrl}`;
+				break;
+			case "telegram":
+				url = `https://t.me/share/url?url=${shareUrl}&text=${shareText}`;
+				break;
+			case "email":
+				url = `mailto:?subject=My Resume&body=${shareText}%20${shareUrl}`;
+				break;
+		}
+
+		if (url) {
+			try {
+				// Try to open in new window
+				const popup = window.open(url, "_blank", "width=600,height=400,menubar=no,toolbar=no,location=no");
+				
+				if (popup) {
+					toast.success(`Opening ${platformName} share dialog...`);
+				} else {
+					// Popup was blocked, try direct navigation
+					window.location.href = url;
+					toast.info(`If the share dialog didn't open, please allow popups for this site.`);
+				}
+			} catch (error) {
+				console.error("Error opening share dialog:", error);
+				toast.error(`Failed to open ${platformName} share dialog. Please try again.`);
+			}
+		}
 	};
 
 	const socialPlatforms = [
@@ -1655,6 +1672,7 @@ export function SharingDialog() {
 
 					{/* Publish Button */}
 					<button
+						onClick={handleUpdateSettings}
 						type="button"
 						className="w-full rounded-lg bg-emerald-600 px-6 py-3 font-medium text-white shadow-sm transition-all hover:bg-emerald-700"
 					>
@@ -1671,6 +1689,7 @@ export function SharingDialog() {
 						{socialPlatforms.map((platform) => (
 							<button
 								key={platform.id}
+								onClick={() => handleSocialShare(platform.id, platform.name)}
 								type="button"
 								className={`flex items-center gap-3 rounded-lg px-4 py-3 text-white shadow-sm transition-all ${platform.color}`}
 							>
@@ -1736,7 +1755,10 @@ export function ExportDialog() {
 	const resume = useResumeStore((state) => state.resume);
 	const [selectedFormat, setSelectedFormat] = useState<"pdf" | "docx">("pdf");
 	const [fileName, setFileName] = useState(resume.data.basics.name || "resume");
-	const [isGenerating, setIsGenerating] = useState(false);
+
+	const { mutateAsync: printResumeAsPDF, isPending: isPrintingPDF } = useMutation(
+		orpc.printer.printResumeAsPDF.mutationOptions(),
+	);
 
 	const formats = [
 		{
@@ -1754,149 +1776,25 @@ export function ExportDialog() {
 	];
 
 	const handleDownload = useCallback(async () => {
-		setIsGenerating(true);
-		const filename = generateFilename(fileName, selectedFormat);
-		const toastId = toast.loading(t`Generating your ${selectedFormat.toUpperCase()}...`);
+		if (selectedFormat === "pdf") {
+			const filename = generateFilename(fileName, "pdf");
+			const toastId = toast.loading(t`Please wait while your PDF is being generated...`, {
+				description: t`This may take a while depending on the server capacity. Please do not close the window or refresh the page.`,
+			});
 
-		try {
-			if (selectedFormat === "pdf") {
-				// Client-side PDF generation
-				const html2pdf = (await import("html2pdf.js")).default;
-				
-				// Get the resume preview element
-				const resumeElement = document.querySelector('.page-content');
-				
-				if (!resumeElement) {
-					throw new Error("Resume preview not found");
-				}
-
-				const opt = {
-					margin: 0,
-					filename: filename,
-					image: { type: 'jpeg', quality: 0.98 },
-					html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-					jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-				};
-
-				await html2pdf().set(opt).from(resumeElement).save();
-				toast.success(t`Your PDF has been downloaded successfully!`, { id: toastId });
-			} else {
-				// Client-side DOCX generation
-				const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = await import("docx");
-				const { saveAs } = await import("file-saver");
-
-				const children = [
-					new Paragraph({
-						text: resume.data.basics.name,
-						heading: HeadingLevel.HEADING_1,
-						alignment: AlignmentType.CENTER,
-					}),
-					new Paragraph({
-						text: resume.data.basics.headline,
-						heading: HeadingLevel.HEADING_2,
-						alignment: AlignmentType.CENTER,
-					}),
-					new Paragraph({ text: "" }),
-				];
-
-				// Contact Info
-				if (resume.data.basics.email) {
-					children.push(new Paragraph({ text: `Email: ${resume.data.basics.email}` }));
-				}
-				if (resume.data.basics.phone) {
-					children.push(new Paragraph({ text: `Phone: ${resume.data.basics.phone}` }));
-				}
-				if (resume.data.basics.location) {
-					children.push(new Paragraph({ text: `Location: ${resume.data.basics.location}` }));
-				}
-				children.push(new Paragraph({ text: "" }));
-
-				// Summary
-				if (resume.data.summary.content) {
-					children.push(
-						new Paragraph({
-							text: "PROFESSIONAL SUMMARY",
-							heading: HeadingLevel.HEADING_2,
-						}),
-						new Paragraph({
-							text: resume.data.summary.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' '),
-						}),
-						new Paragraph({ text: "" }),
-					);
-				}
-
-				// Experience
-				if (resume.data.sections.experience.items.length > 0) {
-					children.push(
-						new Paragraph({
-							text: "WORK EXPERIENCE",
-							heading: HeadingLevel.HEADING_2,
-						})
-					);
-					resume.data.sections.experience.items.forEach((exp) => {
-						children.push(
-							new Paragraph({
-								text: exp.position,
-								heading: HeadingLevel.HEADING_3,
-							}),
-							new Paragraph({ text: `${exp.company} | ${exp.location} | ${exp.period}` }),
-							new Paragraph({ text: exp.description.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ') }),
-							new Paragraph({ text: "" }),
-						);
-					});
-				}
-
-				// Education
-				if (resume.data.sections.education.items.length > 0) {
-					children.push(
-						new Paragraph({
-							text: "EDUCATION",
-							heading: HeadingLevel.HEADING_2,
-						})
-					);
-					resume.data.sections.education.items.forEach((edu) => {
-						children.push(
-							new Paragraph({
-								text: edu.degree,
-								heading: HeadingLevel.HEADING_3,
-							}),
-							new Paragraph({ text: `${edu.institution} | ${edu.location} | ${edu.period}` }),
-							new Paragraph({ text: "" }),
-						);
-					});
-				}
-
-				// Skills
-				if (resume.data.sections.skills.items.length > 0) {
-					children.push(
-						new Paragraph({
-							text: "SKILLS",
-							heading: HeadingLevel.HEADING_2,
-						}),
-						new Paragraph({
-							text: resume.data.sections.skills.items.map(s => s.name).join(", "),
-						}),
-						new Paragraph({ text: "" }),
-					);
-				}
-
-				const doc = new Document({
-					sections: [{
-						children: children,
-					}],
-				});
-
-				const blob = await Packer.toBlob(doc);
-				saveAs(blob, filename);
-				toast.success(t`Your DOCX has been downloaded successfully!`, { id: toastId });
+			try {
+				const { url } = await printResumeAsPDF({ id: resume.id });
+				downloadFromUrl(url, filename);
+				toast.success(t`Your PDF has been downloaded successfully!`);
+			} catch {
+				toast.error(t`There was a problem while generating the PDF, please try again in some time.`);
+			} finally {
+				toast.dismiss(toastId);
 			}
-		} catch (error) {
-			console.error("Export error:", error);
-			toast.error(t`There was a problem generating the ${selectedFormat.toUpperCase()}, please try again.`, { id: toastId });
-		} finally {
-			setIsGenerating(false);
+		} else {
+			toast.info(t`DOCX format is coming soon!`);
 		}
-	}, [selectedFormat, fileName, resume]);
+	}, [selectedFormat, fileName, resume, printResumeAsPDF]);
 
 	return (
 		<div className="space-y-6 text-gray-900 **:text-gray-900">
@@ -1987,26 +1885,26 @@ export function ExportDialog() {
 				</div>
 			</div>
 
-		{/* Download Button */}
-		<div className="flex items-center justify-end gap-3 pt-2">
-			<button
-				onClick={handleDownload}
-				disabled={isGenerating || !fileName.trim()}
-				className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 font-medium text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-			>
-				{isGenerating ? (
-					<>
-						<CircleNotchIcon className="h-5 w-5 animate-spin" />
-						Generating...
-					</>
-				) : (
-					<>
-						<DownloadIcon className="h-5 w-5" />
-						Download {selectedFormat.toUpperCase()}
-					</>
-				)}
-			</button>
+			{/* Download Button */}
+			<div className="flex items-center justify-end gap-3 pt-2">
+				<button
+					onClick={handleDownload}
+					disabled={isPrintingPDF || !fileName.trim()}
+					className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 font-medium text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+				>
+					{isPrintingPDF ? (
+						<>
+							<CircleNotchIcon className="h-5 w-5 animate-spin" />
+							Generating...
+						</>
+					) : (
+						<>
+							<DownloadIcon className="h-5 w-5" />
+							Download {selectedFormat.toUpperCase()}
+						</>
+					)}
+				</button>
+			</div>
 		</div>
-	</div>
-);
+	);
 }

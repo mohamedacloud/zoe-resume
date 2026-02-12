@@ -1,13 +1,5 @@
 import { t } from "@lingui/core/macro";
-import {
-	ArrowUUpLeftIcon,
-	ArrowUUpRightIcon,
-	CircleNotchIcon,
-	FileJsIcon,
-	FilePdfIcon,
-	type Icon,
-	LinkSimpleIcon,
-} from "@phosphor-icons/react";
+import { ArrowUUpLeftIcon, ArrowUUpRightIcon, type Icon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { motion } from "motion/react";
@@ -111,7 +103,7 @@ export function BuilderDock() {
 						message: "Redo (Ctrl+Y)",
 					})}
 				/>
-				<div className="mx-1 h-8 w-px bg-border" />
+				{/* <div className="mx-1 h-8 w-px bg-border" />
 				<DockIcon icon={LinkSimpleIcon} title={t`Copy URL`} onClick={() => onCopyUrl()} />
 				<DockIcon icon={FileJsIcon} title={t`Download JSON`} onClick={() => onDownloadJSON()} />
 				<DockIcon
@@ -120,7 +112,7 @@ export function BuilderDock() {
 					onClick={() => onDownloadPDF()}
 					icon={isPrinting ? CircleNotchIcon : FilePdfIcon}
 					iconClassName={cn(isPrinting && "animate-spin")}
-				/>
+				/> */}
 			</motion.div>
 		</div>
 	);

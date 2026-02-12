@@ -41,6 +41,7 @@
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
 		"@fontsource-variable/ibm-plex-sans": "^5.2.8",
+		"@google/generative-ai": "^0.24.1",
 		"@hookform/resolvers": "^5.2.2",
 		"@lingui/core": "^5.9.0",
 		"@lingui/react": "^5.9.0",

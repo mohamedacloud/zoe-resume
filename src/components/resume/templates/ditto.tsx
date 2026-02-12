@@ -50,6 +50,52 @@ export function DittoTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 function Header() {
 	const basics = useResumeStore((state) => state.resume.data.basics);
+	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const handleNameChange = (e: React.FocusEvent<HTMLHeadingElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== basics.name) {
+			updateResumeData((draft) => {
+				draft.basics.name = newValue;
+			});
+		}
+	};
+
+	const handleHeadlineChange = (e: React.FocusEvent<HTMLParagraphElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== basics.headline) {
+			updateResumeData((draft) => {
+				draft.basics.headline = newValue;
+			});
+		}
+	};
+
+	const handleEmailChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== basics.email) {
+			updateResumeData((draft) => {
+				draft.basics.email = newValue;
+			});
+		}
+	};
+
+	const handlePhoneChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== basics.phone) {
+			updateResumeData((draft) => {
+				draft.basics.phone = newValue;
+			});
+		}
+	};
+
+	const handleLocationChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== basics.location) {
+			updateResumeData((draft) => {
+				draft.basics.location = newValue;
+			});
+		}
+	};
 
 	return (
 		<div className="page-header relative">
@@ -60,8 +106,22 @@ function Header() {
 					</div>
 
 					<div className="px-(--page-margin-x) py-(--page-margin-y)">
-						<h2 className="basics-name">{basics.name}</h2>
-						<p className="basics-headline">{basics.headline}</p>
+						<h2 
+							className="basics-name cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+							contentEditable
+							suppressContentEditableWarning
+							onBlur={handleNameChange}
+						>
+							{basics.name}
+						</h2>
+						<p 
+							className="basics-headline cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+							contentEditable
+							suppressContentEditableWarning
+							onBlur={handleHeadlineChange}
+						>
+							{basics.headline}
+						</p>
 					</div>
 				</div>
 			</div>
@@ -73,21 +133,42 @@ function Header() {
 					{basics.email && (
 						<div className="basics-item-email">
 							<EnvelopeIcon />
-							<PageLink url={`mailto:${basics.email}`} label={basics.email} />
+							<span
+								contentEditable
+								suppressContentEditableWarning
+								onBlur={handleEmailChange}
+								className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+							>
+								{basics.email}
+							</span>
 						</div>
 					)}
 
 					{basics.phone && (
 						<div className="basics-item-phone">
 							<PhoneIcon />
-							<PageLink url={`tel:${basics.phone}`} label={basics.phone} />
+							<span
+								contentEditable
+								suppressContentEditableWarning
+								onBlur={handlePhoneChange}
+								className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+							>
+								{basics.phone}
+							</span>
 						</div>
 					)}
 
 					{basics.location && (
 						<div className="basics-item-location">
 							<MapPinIcon />
-							<span>{basics.location}</span>
+							<span
+								contentEditable
+								suppressContentEditableWarning
+								onBlur={handleLocationChange}
+								className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+							>
+								{basics.location}
+							</span>
 						</div>
 					)}
 
