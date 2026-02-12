@@ -3,20 +3,16 @@ import {
 	ArrowUUpLeftIcon,
 	ArrowUUpRightIcon,
 	CircleNotchIcon,
-	CubeFocusIcon,
 	FileJsIcon,
 	FilePdfIcon,
 	type Icon,
 	LinkSimpleIcon,
-	MagnifyingGlassMinusIcon,
-	MagnifyingGlassPlusIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useCallback, useMemo } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useControls } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 import { useTemporalStore } from "@/components/resume/store/resume";
@@ -32,7 +28,6 @@ export function BuilderDock() {
 	const params = useParams({ from: "/builder/$resumeId" });
 
 	const [_, copyToClipboard] = useCopyToClipboard();
-	const { zoomIn, zoomOut, centerView } = useControls();
 
 	const { data: resume } = useQuery(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } }));
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
@@ -116,10 +111,6 @@ export function BuilderDock() {
 						message: "Redo (Ctrl+Y)",
 					})}
 				/>
-				<div className="mx-1 h-8 w-px bg-border" />
-				<DockIcon icon={MagnifyingGlassPlusIcon} title={t`Zoom in`} onClick={() => zoomIn(0.1)} />
-				<DockIcon icon={MagnifyingGlassMinusIcon} title={t`Zoom out`} onClick={() => zoomOut(0.1)} />
-				<DockIcon icon={CubeFocusIcon} title={t`Center view`} onClick={() => centerView()} />
 				<div className="mx-1 h-8 w-px bg-border" />
 				<DockIcon icon={LinkSimpleIcon} title={t`Copy URL`} onClick={() => onCopyUrl()} />
 				<DockIcon icon={FileJsIcon} title={t`Download JSON`} onClick={() => onDownloadJSON()} />

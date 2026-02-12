@@ -2,13 +2,11 @@
 
 import { t } from "@lingui/core/macro";
 import { CircleNotchIcon, DownloadIcon, FileDocIcon, FilePdfIcon } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useResumeStore } from "@/components/resume/store/resume";
-import { orpc } from "@/integrations/orpc/client";
 import { CSSSectionBuilder } from "@/routes/builder/$resumeId/-sidebar/right/sections/css.tsx";
-import { downloadFromUrl, generateFilename } from "@/utils/file";
+import { generateFilename } from "@/utils/file";
 
 // Wrapper that applies light theme styling to section content
 export function SectionDialogWrapper({ children }: { children: React.ReactNode }) {
@@ -1370,7 +1368,7 @@ export function NotesDialog() {
 export function SharingDialog() {
 	const [username, setUsername] = useState("johndoe");
 	const [slug, setSlug] = useState("software-engineer-resume");
-	const [publicUrl, setPublicUrl] = useState(`https://rxresu.me/${username}/${slug}`);
+	const [publicUrl, setPublicUrl] = useState(`https://zoeresu.me/${username}/${slug}`);
 	const [copied, setCopied] = useState(false);
 	const [email, setEmail] = useState("");
 	const [message, setMessage] = useState("");
@@ -1383,13 +1381,13 @@ export function SharingDialog() {
 	const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newUsername = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
 		setUsername(newUsername);
-		setPublicUrl(`https://rxresu.me/${newUsername}/${slug}`);
+		setPublicUrl(`https://zoeresu.me/${newUsername}/${slug}`);
 	};
 
 	const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newSlug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
 		setSlug(newSlug);
-		setPublicUrl(`https://rxresu.me/${username}/${newSlug}`);
+		setPublicUrl(`https://zoeresu.me/${username}/${newSlug}`);
 	};
 
 	const handleCopyLink = () => {
@@ -1628,7 +1626,7 @@ export function SharingDialog() {
 									<p className="text-gray-600 text-xs">Viewers can download your resume as PDF</p>
 								</div>
 							</label>
-							<label className="flex cursor-pointer items-center gap-3">
+							{/* <label className="flex cursor-pointer items-center gap-3">
 								<input
 									type="checkbox"
 									checked={passwordProtect}
@@ -1639,7 +1637,7 @@ export function SharingDialog() {
 									<p className="font-medium text-gray-900 text-sm">Password protect</p>
 									<p className="text-gray-600 text-xs">Require password to view resume</p>
 								</div>
-							</label>
+							</label> */}
 							<label className="flex cursor-pointer items-center gap-3">
 								<input
 									type="checkbox"
@@ -1738,10 +1736,7 @@ export function ExportDialog() {
 	const resume = useResumeStore((state) => state.resume);
 	const [selectedFormat, setSelectedFormat] = useState<"pdf" | "docx">("pdf");
 	const [fileName, setFileName] = useState(resume.data.basics.name || "resume");
-
-	const { mutateAsync: printResumeAsPDF, isPending: isPrintingPDF } = useMutation(
-		orpc.printer.printResumeAsPDF.mutationOptions(),
-	);
+	const [isGenerating, setIsGenerating] = useState(false);
 
 	const formats = [
 		{
@@ -1759,25 +1754,149 @@ export function ExportDialog() {
 	];
 
 	const handleDownload = useCallback(async () => {
-		if (selectedFormat === "pdf") {
-			const filename = generateFilename(fileName, "pdf");
-			const toastId = toast.loading(t`Please wait while your PDF is being generated...`, {
-				description: t`This may take a while depending on the server capacity. Please do not close the window or refresh the page.`,
-			});
+		setIsGenerating(true);
+		const filename = generateFilename(fileName, selectedFormat);
+		const toastId = toast.loading(t`Generating your ${selectedFormat.toUpperCase()}...`);
 
-			try {
-				const { url } = await printResumeAsPDF({ id: resume.id });
-				downloadFromUrl(url, filename);
-				toast.success(t`Your PDF has been downloaded successfully!`);
-			} catch {
-				toast.error(t`There was a problem while generating the PDF, please try again in some time.`);
-			} finally {
-				toast.dismiss(toastId);
+		try {
+			if (selectedFormat === "pdf") {
+				// Client-side PDF generation
+				const html2pdf = (await import("html2pdf.js")).default;
+				
+				// Get the resume preview element
+				const resumeElement = document.querySelector('.page-content');
+				
+				if (!resumeElement) {
+					throw new Error("Resume preview not found");
+				}
+
+				const opt = {
+					margin: 0,
+					filename: filename,
+					image: { type: 'jpeg', quality: 0.98 },
+					html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+					jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+				};
+
+				await html2pdf().set(opt).from(resumeElement).save();
+				toast.success(t`Your PDF has been downloaded successfully!`, { id: toastId });
+			} else {
+				// Client-side DOCX generation
+				const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = await import("docx");
+				const { saveAs } = await import("file-saver");
+
+				const children = [
+					new Paragraph({
+						text: resume.data.basics.name,
+						heading: HeadingLevel.HEADING_1,
+						alignment: AlignmentType.CENTER,
+					}),
+					new Paragraph({
+						text: resume.data.basics.headline,
+						heading: HeadingLevel.HEADING_2,
+						alignment: AlignmentType.CENTER,
+					}),
+					new Paragraph({ text: "" }),
+				];
+
+				// Contact Info
+				if (resume.data.basics.email) {
+					children.push(new Paragraph({ text: `Email: ${resume.data.basics.email}` }));
+				}
+				if (resume.data.basics.phone) {
+					children.push(new Paragraph({ text: `Phone: ${resume.data.basics.phone}` }));
+				}
+				if (resume.data.basics.location) {
+					children.push(new Paragraph({ text: `Location: ${resume.data.basics.location}` }));
+				}
+				children.push(new Paragraph({ text: "" }));
+
+				// Summary
+				if (resume.data.summary.content) {
+					children.push(
+						new Paragraph({
+							text: "PROFESSIONAL SUMMARY",
+							heading: HeadingLevel.HEADING_2,
+						}),
+						new Paragraph({
+							text: resume.data.summary.content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' '),
+						}),
+						new Paragraph({ text: "" }),
+					);
+				}
+
+				// Experience
+				if (resume.data.sections.experience.items.length > 0) {
+					children.push(
+						new Paragraph({
+							text: "WORK EXPERIENCE",
+							heading: HeadingLevel.HEADING_2,
+						})
+					);
+					resume.data.sections.experience.items.forEach((exp) => {
+						children.push(
+							new Paragraph({
+								text: exp.position,
+								heading: HeadingLevel.HEADING_3,
+							}),
+							new Paragraph({ text: `${exp.company} | ${exp.location} | ${exp.period}` }),
+							new Paragraph({ text: exp.description.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ') }),
+							new Paragraph({ text: "" }),
+						);
+					});
+				}
+
+				// Education
+				if (resume.data.sections.education.items.length > 0) {
+					children.push(
+						new Paragraph({
+							text: "EDUCATION",
+							heading: HeadingLevel.HEADING_2,
+						})
+					);
+					resume.data.sections.education.items.forEach((edu) => {
+						children.push(
+							new Paragraph({
+								text: edu.degree,
+								heading: HeadingLevel.HEADING_3,
+							}),
+							new Paragraph({ text: `${edu.institution} | ${edu.location} | ${edu.period}` }),
+							new Paragraph({ text: "" }),
+						);
+					});
+				}
+
+				// Skills
+				if (resume.data.sections.skills.items.length > 0) {
+					children.push(
+						new Paragraph({
+							text: "SKILLS",
+							heading: HeadingLevel.HEADING_2,
+						}),
+						new Paragraph({
+							text: resume.data.sections.skills.items.map(s => s.name).join(", "),
+						}),
+						new Paragraph({ text: "" }),
+					);
+				}
+
+				const doc = new Document({
+					sections: [{
+						children: children,
+					}],
+				});
+
+				const blob = await Packer.toBlob(doc);
+				saveAs(blob, filename);
+				toast.success(t`Your DOCX has been downloaded successfully!`, { id: toastId });
 			}
-		} else {
-			toast.info(t`DOCX format is coming soon!`);
+		} catch (error) {
+			console.error("Export error:", error);
+			toast.error(t`There was a problem generating the ${selectedFormat.toUpperCase()}, please try again.`, { id: toastId });
+		} finally {
+			setIsGenerating(false);
 		}
-	}, [selectedFormat, fileName, resume, printResumeAsPDF]);
+	}, [selectedFormat, fileName, resume]);
 
 	return (
 		<div className="space-y-6 text-gray-900 **:text-gray-900">
@@ -1868,26 +1987,26 @@ export function ExportDialog() {
 				</div>
 			</div>
 
-			{/* Download Button */}
-			<div className="flex items-center justify-end gap-3 pt-2">
-				<button
-					onClick={handleDownload}
-					disabled={isPrintingPDF || !fileName.trim()}
-					className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 font-medium text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-				>
-					{isPrintingPDF ? (
-						<>
-							<CircleNotchIcon className="h-5 w-5 animate-spin" />
-							Generating...
-						</>
-					) : (
-						<>
-							<DownloadIcon className="h-5 w-5" />
-							Download {selectedFormat.toUpperCase()}
-						</>
-					)}
-				</button>
-			</div>
+		{/* Download Button */}
+		<div className="flex items-center justify-end gap-3 pt-2">
+			<button
+				onClick={handleDownload}
+				disabled={isGenerating || !fileName.trim()}
+				className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 font-medium text-white transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+			>
+				{isGenerating ? (
+					<>
+						<CircleNotchIcon className="h-5 w-5 animate-spin" />
+						Generating...
+					</>
+				) : (
+					<>
+						<DownloadIcon className="h-5 w-5" />
+						Download {selectedFormat.toUpperCase()}
+					</>
+				)}
+			</button>
 		</div>
-	);
+	</div>
+);
 }

@@ -2,9 +2,9 @@ import { t } from "@lingui/core/macro";
 import { FloppyDiskIcon } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useHotkeys } from "react-hotkeys-hook";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 import { ResumePreview } from "@/components/resume/preview";
+import { BuilderDock } from "./-components/dock";
 
 export const Route = createFileRoute("/builder/$resumeId/")({
 	component: RouteComponent,
@@ -23,16 +23,17 @@ function RouteComponent() {
 	);
 
 	return (
-		<div className="fixed inset-0" style={{backgroundColor: "#f0f0f0"}}>
-			<TransformWrapper centerOnInit limitToBounds={false} minScale={0.3} initialScale={0.6} maxScale={6}>
-				<TransformComponent wrapperClass="h-full! w-full!">
-					<ResumePreview
-						showPageNumbers
-						className="flex items-start space-x-10 space-y-10"
-						pageClassName="shadow-xl rounded-md overflow-hidden"
-					/>
-				</TransformComponent>
-			</TransformWrapper>
+		<div className="relative h-full w-full overflow-y-auto bg-gray-100" style={{backgroundColor: "#f0f0f0"}}>
+			{/* Fixed Resume Preview with Scroll */}
+			<div className="flex min-h-full items-start justify-center p-8">
+				<ResumePreview
+					showPageNumbers
+					className="flex flex-col items-center gap-6"
+					pageClassName="shadow-xl rounded-md overflow-hidden"
+				/>
+			</div>
+
+			<BuilderDock />
 		</div>
 	);
 }

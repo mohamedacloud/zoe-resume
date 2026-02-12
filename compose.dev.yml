@@ -44,6 +44,8 @@ services:
       - HEALTH=true
       - CONCURRENT=5
       - TOKEN=1234567890
+      - TIMEOUT=120000
+      - CONNECTION_TIMEOUT=120000
     healthcheck:
       test:
         ["CMD", "curl", "-f", "http://localhost:3000/pressure?token=1234567890"]

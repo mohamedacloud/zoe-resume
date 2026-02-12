@@ -1,4 +1,3 @@
-import { t } from "@lingui/core/macro";
 import {
 	DownloadIcon,
 	LayoutIcon,
@@ -8,15 +7,12 @@ import {
 	ShareFatIcon,
 	TextTIcon,
 } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { Button } from "@/components/ui/button";
-import { orpc } from "@/integrations/orpc/client";
-import { downloadFromUrl, generateFilename } from "@/utils/file";
 import {
 	DesignDialog,
+	ExportDialog,
 	LayoutDialog,
 	NotesDialog,
 	PageDialog,
@@ -58,35 +54,13 @@ import { useBuilderSidebar } from "../-store/sidebar";
 
 export function BuilderHeader() {
 	const name = useResumeStore((state) => state.resume.name);
-	const resume = useResumeStore((state) => state.resume);
 	const [openSection, setOpenSection] = useState<string | null>(null);
+	const [exportOpen, setExportOpen] = useState(false);
 	const [sharingOpen, setSharingOpen] = useState(false);
 	const [pageOpen, setPageOpen] = useState(false);
 	const [designOpen, setDesignOpen] = useState(false);
 	const [typographyOpen, setTypographyOpen] = useState(false);
 	const [layoutOpen, setLayoutOpen] = useState(false);
-
-	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
-		orpc.printer.printResumeAsPDF.mutationOptions(),
-	);
-
-	const handleDownloadPDF = async () => {
-		const filename = generateFilename(resume.data.basics.name || "resume", "pdf");
-		const toastId = toast.loading(t`Please wait while your PDF is being generated...`, {
-			description: t`This may take a few seconds. Please don't close the window.`,
-		});
-
-		try {
-			const { url } = await printResumeAsPDF({ id: resume.id });
-			downloadFromUrl(url, filename);
-			toast.success(t`Your PDF has been downloaded successfully!`);
-		} catch (error) {
-			console.error("PDF generation error:", error);
-			toast.error(t`There was a problem generating the PDF. Please try again.`);
-		} finally {
-			toast.dismiss(toastId);
-		}
-	};
 
 	// Separate export and sharing from other sections
 	const regularSections = [
@@ -116,7 +90,7 @@ export function BuilderHeader() {
 					<div className="flex items-center gap-3">
 						<img src="/src/dialogs/resume/zoe-talking.png" alt="Zoe AI" className="h-10 w-8 rounded-full" />
 						<div>
-							<h1 className="font-bold text-gray-900 text-lg">Resume Builder</h1>
+							<h1 className="font-bold text-gray-900 text-lg">Zoe Resume Builder</h1>
 							<p className="text-gray-500 text-xs">{name || "Untitled Resume"}</p>
 						</div>
 					</div>
@@ -185,15 +159,14 @@ export function BuilderHeader() {
 					<span className="font-medium text-sm">Share</span>
 				</Button>
 
-				{/* Export Button - Simple PDF Download */}
+				{/* Export Button - Opens as Side Panel */}
 				<Button
 					variant="ghost"
-					onClick={handleDownloadPDF}
-					disabled={isPrinting}
+					onClick={() => setExportOpen(!exportOpen)}
 					className="h-9 gap-2 px-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
 				>
 					<DownloadIcon className="h-5 w-5" />
-					<span className="font-medium text-sm">{isPrinting ? "Generating..." : "Export"}</span>
+					<span className="font-medium text-sm">Export</span>
 				</Button>
 			</div>
 		</header>			{/* Cover Letter Dialog - Side Panel on Right */}
@@ -312,6 +285,26 @@ export function BuilderHeader() {
 							</Button>
 						</div>
 						<SharingDialog />
+					</div>
+				</div>
+			)}
+
+			{/* Export Settings - Side Panel */}
+			{exportOpen && (
+				<div className="fixed top-18.25 right-0 z-50 h-[calc(100vh-73px)] w-100 overflow-y-auto border-gray-200 border-l bg-white shadow-lg">
+					<div className="p-6">
+						<div className="mb-4 flex items-center justify-between">
+							<h2 className="font-semibold text-gray-900 text-xl">Download Resume</h2>
+							<Button
+								size="icon"
+								variant="ghost"
+								onClick={() => setExportOpen(false)}
+								className="h-8 w-8 text-gray-500 hover:text-gray-900"
+							>
+								<span className="text-xl">×</span>
+							</Button>
+						</div>
+						<ExportDialog />
 					</div>
 				</div>
 			)}

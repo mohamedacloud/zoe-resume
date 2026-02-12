@@ -23,18 +23,16 @@ export const Route = createFileRoute("/$username/$slug")({
 				orpc.resume.getBySlug.queryOptions({ input: { username, slug } }),
 			);
 
-			return { resume };
-		} catch {
-			throw notFound();
-		}
-	},
-	head: ({ loaderData }) => ({
-		meta: [{ title: loaderData ? `${loaderData.resume.name} - Reactive Resume` : "Reactive Resume" }],
-	}),
-	// Authentication and password-protected resumes are not supported in this build.
-});
-
-function RouteComponent() {
+		return { resume };
+	} catch {
+		throw notFound();
+	}
+},
+head: ({ loaderData }) => ({
+	meta: [{ title: loaderData ? `${loaderData.resume.name} - Zoe Resume Builder` : "Zoe Resume Builder" }],
+}),
+// Authentication and password-protected resumes are not supported in this build.
+});function RouteComponent() {
 	const { username, slug } = Route.useParams();
 	const isReady = useResumeStore((state) => state.isReady);
 	const initialize = useResumeStore((state) => state.initialize);

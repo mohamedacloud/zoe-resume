@@ -31,11 +31,11 @@ type RouterContext = {
 	flags: FeatureFlags;
 };
 
-const appName = "Reactive Resume";
-const tagline = "A free and open-source resume builder";
+const appName = "Zoe Resume Builder";
+const tagline = "Build your professional resume with AI assistance";
 const title = `${appName} — ${tagline}`;
 const description =
-	"Reactive Resume is a free and open-source resume builder that simplifies the process of creating, updating, and sharing your resume.";
+	"Zoe Resume Builder is a free and open-source resume builder with AI assistance that simplifies the process of creating, updating, and sharing your resume.";
 
 await loadLocale(await getLocale());
 
@@ -47,10 +47,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 		return {
 			links: [
 				{ rel: "stylesheet", href: appCss },
-				// Icons
-				{ rel: "icon", href: "/favicon.ico", type: "image/x-icon", sizes: "128x128" },
-				{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml", sizes: "256x256 any" },
-				{ rel: "apple-touch-icon", href: "/apple-touch-icon-180x180.png", type: "image/png", sizes: "180x180 any" },
+				// Icons - Zoe Resume Builder
+				{ rel: "icon", href: "/zoe-icon.png", type: "image/png", sizes: "128x128" },
+				{ rel: "icon", href: "/zoe-icon.png", type: "image/png", sizes: "256x256 any" },
+				{ rel: "apple-touch-icon", href: "/zoe-icon.png", type: "image/png", sizes: "180x180 any" },
 				// Manifest
 				{ rel: "manifest", href: "/manifest.webmanifest", crossOrigin: "use-credentials" },
 			],
