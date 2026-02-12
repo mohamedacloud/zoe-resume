@@ -1,0 +1,14 @@
+# Vercel Ignore File
+# Only ignore development files, keep migrations!
+
+node_modules
+.git
+.env.local
+.env.development.local
+.DS_Store
+*.log
+.vscode
+.idea
+
+# DO NOT ignore migrations - they're needed in production!
+# migrations/
