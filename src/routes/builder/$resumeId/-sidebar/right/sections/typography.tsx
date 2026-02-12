@@ -13,9 +13,13 @@ import { SectionBase } from "../shared/section-base";
 export function TypographySectionBuilder() {
 	return (
 		<SectionBase type="typography">
-			<TypographySectionForm />
+			<TypographyPanelContent />
 		</SectionBase>
 	);
+}
+
+export function TypographyPanelContent() {
+	return <TypographySectionForm />;
 }
 
 const formSchema = typographySchema;

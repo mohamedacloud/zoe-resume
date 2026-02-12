@@ -1,13 +1,16 @@
-import { Fragment, useRef } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Reorder } from "motion/react";
 import { match } from "ts-pattern";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-// import { UserDropdownMenu } from "@/components/user/dropdown-menu";
-import { type LeftSidebarSection, leftSidebarSections } from "@/utils/resume/section";
-// import { getInitials } from "@/utils/string";
-// import { BuilderSidebarEdge } from "../../-components/edge";
+import { UserDropdownMenu } from "@/components/user/dropdown-menu";
+import { getSectionIcon, getSectionTitle, type LeftSidebarSection, leftSidebarSections } from "@/utils/resume/section";
+import { getInitials } from "@/utils/string";
+import { BuilderSidebarEdge } from "../../-components/edge";
+import { useBuilderSidebar } from "../../-store/sidebar";
+import { useResumeStore } from "@/components/resume/store/resume";
 import { AwardsSectionBuilder } from "./sections/awards";
 import { BasicsSectionBuilder } from "./sections/basics";
 import { CertificationsSectionBuilder } from "./sections/certifications";
@@ -48,40 +51,139 @@ function getSectionComponent(type: LeftSidebarSection) {
 
 export function BuilderSidebarLeft() {
 	const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+	const layout = useResumeStore((state) => state.resume.data.metadata.layout);
+	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const orderedSections = useMemo(() => {
+		const layoutSections = layout.pages.flatMap((page) => [...page.main, ...page.sidebar]);
+		const ordered: LeftSidebarSection[] = [];
+		const seen = new Set<string>();
+
+		for (const section of layoutSections) {
+			if (!leftSidebarSections.includes(section as LeftSidebarSection)) continue;
+			if (seen.has(section)) continue;
+			ordered.push(section as LeftSidebarSection);
+			seen.add(section);
+		}
+
+		for (const section of leftSidebarSections) {
+			if (seen.has(section)) continue;
+			ordered.push(section);
+			seen.add(section);
+		}
+
+		return ordered;
+	}, [layout.pages]);
+
+	// Separate sections that can be reordered (content sections)
+	// from those that cannot (picture and basics are metadata, always in header)
+	const reorderableSections = useMemo(
+		() => orderedSections.filter((section) => section !== "picture" && section !== "basics"),
+		[orderedSections],
+	);
+	const fixedSections = useMemo(
+		() => orderedSections.filter((section) => section === "picture" || section === "basics"),
+		[orderedSections],
+	);
+
+	const [sectionOrder, setSectionOrder] = useState<LeftSidebarSection[]>(reorderableSections);
+
+	useEffect(() => {
+		setSectionOrder(reorderableSections);
+	}, [reorderableSections]);
+
+	const handleSectionReorder = (nextOrder: LeftSidebarSection[]) => {
+		setSectionOrder(nextOrder);
+		updateResumeData((draft) => {
+			draft.metadata.layout.pages.forEach((page) => {
+				const mainKnown = nextOrder.filter((section) => page.main.includes(section));
+				const mainUnknown = page.main.filter((section) => !nextOrder.includes(section));
+				page.main = [...mainKnown, ...mainUnknown];
+
+				const sidebarKnown = nextOrder.filter((section) => page.sidebar.includes(section));
+				const sidebarUnknown = page.sidebar.filter((section) => !nextOrder.includes(section));
+				page.sidebar = [...sidebarKnown, ...sidebarUnknown];
+			});
+		});
+	};
 
 	return (
-		<div className="h-full w-full bg-white">
-			<ScrollArea ref={scrollAreaRef} className="@container h-full w-full">
-				<div className="space-y-4 p-4 text-black **:text-black [&_h2]:text-black [&_h3]:text-black [&_input]:text-black [&_label]:text-black [&_p]:text-black [&_span]:text-black [&_textarea]:text-black">
-					{leftSidebarSections.map((section) => (
+		<>
+			<SidebarEdge scrollAreaRef={scrollAreaRef} />
+
+			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 dark:bg-gray-900 sm:ms-12">
+				<div className="space-y-4 p-4">
+					{/* Fixed sections (picture and basics) - not draggable, always at top */}
+					{fixedSections.map((section) => (
 						<Fragment key={section}>
 							{getSectionComponent(section)}
 							<Separator />
 						</Fragment>
 					))}
+
+					{/* Reorderable content sections */}
+					<Reorder.Group axis="y" values={sectionOrder} onReorder={handleSectionReorder}>
+						{sectionOrder.map((section) => (
+							<Reorder.Item key={section} value={section} className="space-y-4">
+								<Fragment>
+									{getSectionComponent(section)}
+									<Separator />
+								</Fragment>
+							</Reorder.Item>
+						))}
+					</Reorder.Group>
 				</div>
 			</ScrollArea>
-		</div>
+		</>
 	);
 }
 
-// function SidebarEdge() {
-// 	return (
-// 		<BuilderSidebarEdge side="left">
-// 			<div />
+type SidebarEdgeProps = {
+	scrollAreaRef: React.RefObject<HTMLDivElement | null>;
+};
 
-// 			<div />
+function SidebarEdge({ scrollAreaRef }: SidebarEdgeProps) {
+	const toggleSidebar = useBuilderSidebar((state) => state.toggleSidebar);
 
-// 			<UserDropdownMenu>
-// 				{({ session }) => (
-// 					<Button size="icon" variant="ghost">
-// 						<Avatar className="size-6">
-// 							<AvatarImage src={session.user.image ?? undefined} />
-// 							<AvatarFallback className="text-[0.5rem]">{getInitials(session.user.name)}</AvatarFallback>
-// 						</Avatar>
-// 					</Button>
-// 				)}
-// 			</UserDropdownMenu>
-// 		</BuilderSidebarEdge>
-// 	);
-// }
+	const scrollToSection = useCallback(
+		(section: LeftSidebarSection) => {
+			if (!scrollAreaRef.current) return;
+			toggleSidebar("left", true);
+
+			const sectionElement = scrollAreaRef.current.querySelector(`#sidebar-${section}`);
+			sectionElement?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+		},
+		[toggleSidebar, scrollAreaRef],
+	);
+
+	return (
+		<BuilderSidebarEdge side="left">
+			<div />
+
+			<div className="flex flex-col justify-center gap-y-2">
+				{leftSidebarSections.map((section) => (
+					<Button
+						key={section}
+						size="icon"
+						variant="ghost"
+						title={getSectionTitle(section)}
+						onClick={() => scrollToSection(section)}
+					>
+						{getSectionIcon(section)}
+					</Button>
+				))}
+			</div>
+
+			<UserDropdownMenu>
+				{({ session }) => (
+					<Button size="icon" variant="ghost">
+						<Avatar className="size-6">
+							<AvatarImage src={session.user.image ?? undefined} />
+							<AvatarFallback className="text-[0.5rem]">{getInitials(session.user.name)}</AvatarFallback>
+						</Avatar>
+					</Button>
+				)}
+			</UserDropdownMenu>
+		</BuilderSidebarEdge>
+	);
+}

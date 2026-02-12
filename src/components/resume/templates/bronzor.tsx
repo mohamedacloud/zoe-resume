@@ -1,6 +1,7 @@
 import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react";
 import { cn } from "@/utils/style";
 import { getSectionComponent } from "../shared/get-section-component";
+import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
 import { PagePicture } from "../shared/page-picture";
@@ -49,6 +50,37 @@ export function BronzorTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 function Header() {
 	const basics = useResumeStore((state) => state.resume.data.basics);
+	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const handleEmailChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.email = value;
+		});
+	};
+
+	const handlePhoneChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.phone = value;
+		});
+	};
+
+	const handleLocationChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.location = value;
+		});
+	};
+
+	const handleNameChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.name = value;
+		});
+	};
+
+	const handleHeadlineChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.headline = value;
+		});
+	};
 
 	return (
 		<div className="page-header flex flex-col items-center gap-y-2">
@@ -56,31 +88,45 @@ function Header() {
 
 			<div className="page-basics space-y-2 text-center">
 				<div className="basics-header">
-					<h2 className="basics-name">{basics.name}</h2>
-					<p className="basics-headline">{basics.headline}</p>
+					<h2 className="basics-name">
+						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
+					</h2>
+					<p className="basics-headline">
+						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+					</p>
 				</div>
 
 				<div className="basics-items flex flex-wrap justify-center gap-x-3 gap-y-1 text-center *:flex *:items-center *:gap-x-1.5">
-					{basics.email && (
-						<div className="basics-item-email">
-							<EnvelopeIcon />
-							<PageLink url={`mailto:${basics.email}`} label={basics.email} />
-						</div>
-					)}
+					<div className="basics-item-email">
+						<EnvelopeIcon />
+						<InlineEditableText
+							as="a"
+							href={basics.email ? `mailto:${basics.email}` : undefined}
+							value={basics.email}
+							placeholder="email@domain.com"
+							onChange={handleEmailChange}
+						/>
+					</div>
 
-					{basics.phone && (
-						<div className="basics-item-phone">
-							<PhoneIcon />
-							<PageLink url={`tel:${basics.phone}`} label={basics.phone} />
-						</div>
-					)}
+					<div className="basics-item-phone">
+						<PhoneIcon />
+						<InlineEditableText
+							as="a"
+							href={basics.phone ? `tel:${basics.phone}` : undefined}
+							value={basics.phone}
+							placeholder="+91 98765 43210"
+							onChange={handlePhoneChange}
+						/>
+					</div>
 
-					{basics.location && (
-						<div className="basics-item-location">
-							<MapPinIcon />
-							<span>{basics.location}</span>
-						</div>
-					)}
+					<div className="basics-item-location">
+						<MapPinIcon />
+						<InlineEditableText
+							value={basics.location}
+							placeholder="City, Country"
+							onChange={handleLocationChange}
+						/>
+					</div>
 
 					{basics.website.url && (
 						<div className="basics-item-website">

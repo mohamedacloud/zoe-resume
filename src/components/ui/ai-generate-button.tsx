@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import zoeImage from "@/dialogs/resume/zoe-talking.png";
 import type { AIProvider } from "@/integrations/ai/types";
 import { orpc } from "@/integrations/orpc/client";
 import { Button } from "./button";
@@ -59,8 +58,8 @@ export function AIGenerateButton({ type, data, onGenerated, disabled, className 
 	const buttonTitle = !isConfigured
 		? "Configure AI in .env file (add VITE_AI_API_KEY and VITE_AI_MODEL)"
 		: isPending
-			? "Generating..."
-			: "Generate content with AI";
+			? "Asking Zoe..."
+			: "Ask Zoe to generate content";
 
 	return (
 		<Button
@@ -68,14 +67,11 @@ export function AIGenerateButton({ type, data, onGenerated, disabled, className 
 			size="sm"
 			variant="outline"
 			onClick={handleGenerate}
-			// disabled={isDisabled}
-			className={`${className} hover:text-current`}
+			disabled={isDisabled}
+			className={className}
 			title={buttonTitle}
-			style={{ backgroundColor: "#E8F0FE" }}
 		>
-			{/* <img src={zoeImage} alt="Zoe" className="size-5 rounded-full" /> */}
-			<img src={zoeImage} alt="Zoe AI" className="h-10 w-8 rounded-full" />
-
+			<img src="/logo/zoe-logo.png" alt="" className="size-4" />
 			<Trans>Ask Zoe</Trans>
 		</Button>
 	);

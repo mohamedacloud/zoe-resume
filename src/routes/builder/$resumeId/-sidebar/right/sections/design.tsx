@@ -18,10 +18,18 @@ import { SectionBase } from "../shared/section-base";
 export function DesignSectionBuilder() {
 	return (
 		<SectionBase type="design" className="space-y-6">
+			<DesignPanelContent />
+		</SectionBase>
+	);
+}
+
+export function DesignPanelContent() {
+	return (
+		<div className="space-y-6">
 			<ColorSectionForm />
 			<Separator />
 			<LevelSectionForm />
-		</SectionBase>
+		</div>
 	);
 }
 

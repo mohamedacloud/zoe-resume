@@ -21,8 +21,43 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
 
 	function onSelectTemplate(template: Template) {
+		const templateMetadata = templates[template];
+		
 		updateResumeData((draft) => {
 			draft.metadata.template = template;
+			// Apply template default colors and typography
+			draft.metadata.design.colors = { ...templateMetadata.defaults.design.colors };
+			draft.metadata.typography = {
+				body: { ...templateMetadata.defaults.typography.body },
+				heading: { ...templateMetadata.defaults.typography.heading },
+			};
+
+			// Reorganize sections based on template's sidebar position
+			const sidebarPosition = templateMetadata.sidebarPosition;
+			
+			// Define which sections typically go in sidebar vs main
+			const sidebarSections = ["skills", "certifications", "awards", "languages", "interests", "publications"];
+			const mainSections = ["profiles", "summary", "education", "experience", "projects", "volunteer", "references"];
+			
+			// Get all current sections
+			const allSections = [...new Set([
+				...draft.metadata.layout.pages.flatMap(page => [...page.main, ...page.sidebar])
+			])];
+			
+			// Reorganize based on sidebar position
+			draft.metadata.layout.pages.forEach((page) => {
+				if (sidebarPosition === "none") {
+					// No sidebar - move everything to main
+					page.main = allSections;
+					page.sidebar = [];
+					page.fullWidth = true;
+				} else {
+					// Has sidebar (left or right) - organize sections appropriately
+					page.fullWidth = false;
+					page.sidebar = allSections.filter(section => sidebarSections.includes(section));
+					page.main = allSections.filter(section => !sidebarSections.includes(section));
+				}
+			});
 		});
 
 		closeDialog();

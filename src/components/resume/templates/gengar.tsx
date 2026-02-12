@@ -1,9 +1,10 @@
 import { cn } from "@/utils/style";
 import { getSectionComponent } from "../shared/get-section-component";
+import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
 import { PagePicture } from "../shared/page-picture";
-import { PageSummary } from "../shared/page-summary";
+
 import { useResumeStore } from "../store/resume";
 import type { TemplateProps } from "./types";
 
@@ -40,34 +41,21 @@ export function GengarTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 						{!fullWidth && (
 							<div className="shrink-0 space-y-4 overflow-x-hidden px-(--page-margin-x) pt-(--page-margin-y)">
-								{sidebar
-									.filter((section) => section !== "summary")
-									.map((section) => {
-										const Component = getSectionComponent(section, { sectionClassName });
-										return <Component key={section} id={section} />;
-									})}
+							{sidebar.map((section) => {
+								const Component = getSectionComponent(section, { sectionClassName });
+								return <Component key={section} id={section} />;
+							})}
 							</div>
 						)}
 					</aside>
 				)}
 
 				<main data-layout="main" className="group page-main z-10">
-					{isFirstPage && (
-						<PageSummary
-							className={cn(
-								sectionClassName,
-								"bg-(--page-primary-color)/20 px-(--page-margin-x) py-(--page-margin-y) [&>h6]:hidden",
-							)}
-						/>
-					)}
-
 					<div className="space-y-4 px-(--page-margin-x) pt-(--page-margin-y)">
-						{main
-							.filter((section) => section !== "summary")
-							.map((section) => {
-								const Component = getSectionComponent(section, { sectionClassName });
-								return <Component key={section} id={section} />;
-							})}
+						{main.map((section) => {
+							const Component = getSectionComponent(section, { sectionClassName });
+							return <Component key={section} id={section} />;
+						})}
 					</div>
 				</main>
 			</div>
@@ -77,6 +65,37 @@ export function GengarTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 function Header() {
 	const basics = useResumeStore((state) => state.resume.data.basics);
+	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const handleEmailChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.email = value;
+		});
+	};
+
+	const handlePhoneChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.phone = value;
+		});
+	};
+
+	const handleLocationChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.location = value;
+		});
+	};
+
+	const handleNameChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.name = value;
+		});
+	};
+
+	const handleHeadlineChange = (value: string) => {
+		updateResumeData((draft) => {
+			draft.basics.headline = value;
+		});
+	};
 
 	return (
 		<div className="page-header relative flex">
@@ -84,34 +103,48 @@ function Header() {
 				<PagePicture />
 
 				<div>
-					<h2 className="basics-name">{basics.name}</h2>
-					<p className="basics-headline">{basics.headline}</p>
+					<h2 className="basics-name">
+						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
+					</h2>
+					<p className="basics-headline">
+						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+					</p>
 				</div>
 
 				<div
 					className="basics-items flex flex-col gap-y-1 *:flex *:items-center *:gap-x-1.5"
 					style={{ "--page-primary-color": "var(--page-background-color)" } as React.CSSProperties}
 				>
-					{basics.email && (
-						<div className="basics-item-email">
-							<PageIcon icon="envelope" />
-							<PageLink url={`mailto:${basics.email}`} label={basics.email} />
-						</div>
-					)}
+					<div className="basics-item-email">
+						<PageIcon icon="envelope" />
+						<InlineEditableText
+							as="a"
+							href={basics.email ? `mailto:${basics.email}` : undefined}
+							value={basics.email}
+							placeholder="email@domain.com"
+							onChange={handleEmailChange}
+						/>
+					</div>
 
-					{basics.phone && (
-						<div className="basics-item-phone">
-							<PageIcon icon="phone" />
-							<PageLink url={`tel:${basics.phone}`} label={basics.phone} />
-						</div>
-					)}
+					<div className="basics-item-phone">
+						<PageIcon icon="phone" />
+						<InlineEditableText
+							as="a"
+							href={basics.phone ? `tel:${basics.phone}` : undefined}
+							value={basics.phone}
+							placeholder="+91 98765 43210"
+							onChange={handlePhoneChange}
+						/>
+					</div>
 
-					{basics.location && (
-						<div className="basics-item-location">
-							<PageIcon icon="map-pin" />
-							<span>{basics.location}</span>
-						</div>
-					)}
+					<div className="basics-item-location">
+						<PageIcon icon="map-pin" />
+						<InlineEditableText
+							value={basics.location}
+							placeholder="City, Country"
+							onChange={handleLocationChange}
+						/>
+					</div>
 
 					{basics.website.url && (
 						<div className="basics-item-website">
