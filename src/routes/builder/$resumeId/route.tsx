@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 import type React from "react";
@@ -20,11 +20,15 @@ import { useBuilderSidebar, useBuilderSidebarStore } from "./-store/sidebar";
 export const Route = createFileRoute("/builder/$resumeId")({
 	component: RouteComponent,
 	beforeLoad: async ({ context }) => {
-		// Allow guest mode access
-		const isGuestMode = typeof window !== "undefined" && localStorage.getItem("guestMode") === "true";
-		if (!context.session && !isGuestMode) {
-			throw redirect({ to: "/auth/login", replace: true });
+		// Check guest mode only on client side (localStorage is not available on server)
+		if (typeof window !== "undefined") {
+			const isGuestMode = localStorage.getItem("guestMode") === "true";
+			// If not in guest mode and no session, set guest mode and allow access
+			if (!context.session && !isGuestMode) {
+				localStorage.setItem("guestMode", "true");
+			}
 		}
+		// Always allow access - guest mode is enabled by default
 		return { session: context.session };
 	},
 	loader: async ({ params, context }) => {

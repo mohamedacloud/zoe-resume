@@ -2,8 +2,6 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
-	ArrowsInSimpleIcon,
-	ArrowsOutSimpleIcon,
 	CodeBlockIcon,
 	CodeSimpleIcon,
 	ColumnsPlusLeftIcon,
@@ -147,16 +145,6 @@ export function RichInput({ value, onChange, style, className, editorClassName, 
 			<EditorToolbar editor={editor} isFullscreen={isFullscreen} />
 
 			<EditorContent editor={editor} />
-
-			<Button
-				size="icon"
-				variant="secondary"
-				className="absolute right-2 bottom-2 size-7"
-				title={isFullscreen ? t`Exit Fullscreen` : t`Fullscreen`}
-				onClick={() => setIsFullscreen(!isFullscreen)}
-			>
-				{isFullscreen ? <ArrowsInSimpleIcon className="size-4" /> : <ArrowsOutSimpleIcon className="size-4" />}
-			</Button>
 		</div>
 	);
 

@@ -8,10 +8,8 @@ import type z from "zod";
 import { ColorPicker } from "@/components/input/color-picker";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { pictureSchema } from "@/schema/resume/data";
 import { SectionBase } from "../shared/section-base";
 
@@ -76,58 +74,80 @@ function PictureSectionForm() {
 		toast.success(t`Picture removed`);
 	};
 
+	const pictureUrl = form.watch("url");
+	const borderRadius = form.watch("borderRadius");
+	const borderWidth = form.watch("borderWidth");
+	const borderColor = form.watch("borderColor");
+	const shadowWidth = form.watch("shadowWidth");
+	const shadowColor = form.watch("shadowColor");
+	const rotation = form.watch("rotation");
+	const aspectRatio = form.watch("aspectRatio");
+
 	return (
 		<Form {...form}>
 			<form onChange={form.handleSubmit(onSubmit)} className="space-y-6">
 				{/* Profile Photo Upload Section */}
-				<div className="rounded-lg border border-gray-300 bg-gray-50/50 p-4 shadow-sm">
-					<div className="flex items-center gap-4">
-						{/* Photo Preview Circle */}
+				<div className="rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
+					{/* Section Header */}
+					<div className="mb-4 flex items-center gap-2 border-gray-200 border-b pb-3">
+						<CameraIcon className="h-5 w-5 text-emerald-600" weight="bold" />
+						<h3 className="font-semibold text-gray-900 text-sm">
+							<Trans>Profile Picture</Trans>
+						</h3>
+					</div>
+
+					<div className="flex items-center gap-6">
+						{/* Photo Preview with Live Customization */}
 						<div className="relative shrink-0">
-							<div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-2 border-gray-300 bg-white shadow-sm">
-								{picture.url ? (
-									<img src={picture.url} alt="Profile" className="h-full w-full object-cover" />
+							<div
+								className="flex items-center justify-center overflow-hidden bg-white shadow-md"
+								style={{
+									width: "112px",
+									height: "112px",
+									borderRadius: borderRadius === 100 ? "50%" : `${borderRadius}%`,
+									border: borderWidth > 0 ? `${borderWidth}px solid ${borderColor}` : "none",
+									boxShadow: shadowWidth > 0 ? `0 0 ${shadowWidth * 4}px ${shadowColor}40` : "none",
+									transform: `rotate(${rotation}deg)`,
+									aspectRatio: aspectRatio.toString(),
+								}}
+							>
+								{pictureUrl ? (
+									<img src={pictureUrl} alt="Profile" className="h-full w-full object-cover" />
 								) : (
-									<div className="flex flex-col items-center gap-1">
-										<CameraIcon className="h-8 w-8 text-gray-400" />
+									<div className="flex flex-col items-center gap-2">
+										<CameraIcon className="h-10 w-10 text-gray-300" />
 										<span className="text-gray-400 text-xs">No Photo</span>
 									</div>
 								)}
 							</div>
-							<input
-								type="file"
-								accept="image/*"
-								onChange={handlePhotoChange}
-								className="hidden"
-								id="picture-upload-input"
-							/>
+							<input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" id="picture-upload" />
 
 							{/* Action Buttons */}
-							{picture.url ? (
+							{pictureUrl ? (
 								<>
-									{/* Edit Button - Top Right */}
+									{/* Edit Button */}
 									<label
-										htmlFor="picture-upload-input"
-										className="absolute -top-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-blue-600 shadow-md transition-all hover:scale-110 hover:bg-blue-700"
+										htmlFor="picture-upload"
+										className="absolute -top-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-lg transition-all hover:scale-110 hover:bg-emerald-700"
 										title="Change photo"
 									>
 										<PencilSimpleIcon className="h-4 w-4 text-white" weight="bold" />
 									</label>
-									{/* Delete Button - Bottom Right */}
+									{/* Delete Button */}
 									<button
 										type="button"
 										onClick={handleRemovePhoto}
-										className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-md transition-all hover:scale-110 hover:bg-red-700"
+										className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg transition-all hover:scale-110 hover:bg-red-700"
 										title="Remove photo"
 									>
 										<TrashIcon className="h-4 w-4 text-white" weight="bold" />
 									</button>
 								</>
 							) : (
-								/* Upload Button - Center Bottom */
+								/* Upload Button */
 								<label
-									htmlFor="picture-upload-input"
-									className="absolute -right-1 -bottom-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md transition-all hover:scale-110 hover:bg-emerald-700"
+									htmlFor="picture-upload"
+									className="absolute -right-1 -bottom-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-lg transition-all hover:scale-110 hover:bg-emerald-700"
 									title="Upload photo"
 								>
 									<PlusIcon className="h-5 w-5 text-white" weight="bold" />
@@ -142,14 +162,24 @@ function PictureSectionForm() {
 								name="url"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel className="font-medium text-gray-900 text-xs">
+										<FormLabel className="font-medium text-gray-700 text-xs">
 											<Trans>Picture URL</Trans>
 										</FormLabel>
 										<FormControl>
-											<Input {...field} placeholder="Paste image URL here..." className="h-9 border-gray-300 bg-white text-sm" />
+											<Input
+												{...field}
+												placeholder="Paste image URL here..."
+												className="h-auto border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+												onChange={(e) => {
+													field.onChange(e);
+													if (e.target.value.trim() !== "") {
+														form.setValue("hidden", false, { shouldDirty: true });
+													}
+												}}
+											/>
 										</FormControl>
 										<FormMessage />
-										<p className="mt-1 text-gray-500 text-xs">Upload a photo or paste an image URL</p>
+										<p className="mt-1.5 text-gray-500 text-xs">Upload a photo or paste an image URL</p>
 									</FormItem>
 								)}
 							/>
@@ -157,55 +187,30 @@ function PictureSectionForm() {
 					</div>
 				</div>
 
-				{/* Picture Customization Options */}
-				<div className="space-y-4 rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+				{/* Customization Options */}
+				<div className="space-y-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+					<h3 className="mb-4 font-semibold text-gray-900 text-sm">
+						<Trans>Picture Customization</Trans>
+					</h3>
+
+					{/* Size */}
 					<FormField
 						control={form.control}
 						name="size"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>
+								<FormLabel className="font-medium text-gray-700 text-xs">
 									<Trans>Size</Trans>
 								</FormLabel>
-								<InputGroup>
-									<InputGroupInput
-										{...field}
-										type="number"
-										min={32}
-										max={512}
-										step={1}
-										onChange={(e) => {
-											const value = e.target.value;
-											if (value === "") field.onChange("");
-											else field.onChange(Number(value));
-										}}
-									/>
-
-									<InputGroupAddon align="inline-end">
-										<InputGroupText>pt</InputGroupText>
-									</InputGroupAddon>
-								</InputGroup>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-
-					<FormField
-						control={form.control}
-						name="rotation"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>
-									<Trans>Rotation</Trans>
-								</FormLabel>
-								<InputGroup>
+								<div className="flex items-center gap-2">
 									<FormControl>
-										<InputGroupInput
+										<Input
 											{...field}
 											type="number"
-											min={0}
-											max={360}
-											step={5}
+											min={32}
+											max={512}
+											step={1}
+											className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 											onChange={(e) => {
 												const value = e.target.value;
 												if (value === "") field.onChange("");
@@ -213,23 +218,55 @@ function PictureSectionForm() {
 											}}
 										/>
 									</FormControl>
-									<InputGroupAddon align="inline-end">
-										<InputGroupText>°</InputGroupText>
-									</InputGroupAddon>
-								</InputGroup>
+									<span className="font-medium text-gray-500 text-sm">pt</span>
+								</div>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
 
+					{/* Rotation */}
+					<FormField
+						control={form.control}
+						name="rotation"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel className="font-medium text-gray-700 text-xs">
+									<Trans>Rotation</Trans>
+								</FormLabel>
+								<div className="flex items-center gap-2">
+									<FormControl>
+										<Input
+											{...field}
+											type="number"
+											min={0}
+											max={360}
+											step={5}
+											className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+											onChange={(e) => {
+												const value = e.target.value;
+												if (value === "") field.onChange("");
+												else field.onChange(Number(value));
+											}}
+										/>
+									</FormControl>
+									<span className="font-medium text-gray-500 text-sm">°</span>
+								</div>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					{/* Aspect Ratio */}
 					<FormField
 						control={form.control}
 						name="aspectRatio"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>
+								<FormLabel className="font-medium text-gray-700 text-xs">
 									<Trans>Aspect Ratio</Trans>
 								</FormLabel>
-								<div className="flex items-center gap-x-2">
+								<div className="flex items-center gap-2">
 									<FormControl>
 										<Input
 											{...field}
@@ -237,6 +274,7 @@ function PictureSectionForm() {
 											min={0.5}
 											max={2.5}
 											step={0.1}
+											className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 											onChange={(e) => {
 												const value = e.target.value;
 												if (value === "") field.onChange("");
@@ -244,128 +282,154 @@ function PictureSectionForm() {
 											}}
 										/>
 									</FormControl>
-
-									<ButtonGroup className="shrink-0">
+									<div className="flex gap-1">
 										<Button
+											type="button"
 											size="icon"
 											variant="outline"
 											title={t`Square`}
+											className="h-10 w-10 border-gray-300 p-2 transition-all hover:bg-gray-50"
 											onClick={() => {
 												field.onChange(1);
 												form.handleSubmit(onSubmit)();
 											}}
 										>
-											<div className="aspect-square min-h-3 min-w-3 border border-primary" />
+											<div className="h-4 w-4 border-2 border-emerald-600" />
 										</Button>
 										<Button
+											type="button"
 											size="icon"
 											variant="outline"
 											title={t`Landscape`}
+											className="h-10 w-10 border-gray-300 p-2 transition-all hover:bg-gray-50"
 											onClick={() => {
 												field.onChange(1.5);
 												form.handleSubmit(onSubmit)();
 											}}
 										>
-											<div className="aspect-[1.5/1] min-h-3 min-w-3 border border-primary" />
+											<div className="h-3 w-5 border-2 border-emerald-600" />
 										</Button>
 										<Button
+											type="button"
 											size="icon"
 											variant="outline"
 											title={t`Portrait`}
+											className="h-10 w-10 border-gray-300 p-2 transition-all hover:bg-gray-50"
 											onClick={() => {
 												field.onChange(0.5);
 												form.handleSubmit(onSubmit)();
 											}}
 										>
-											<div className="aspect-[1/1.5] min-h-3 min-w-3 border border-primary" />
+											<div className="h-5 w-3 border-2 border-emerald-600" />
 										</Button>
-									</ButtonGroup>
+									</div>
 								</div>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
 
+					{/* Border Radius */}
 					<FormField
 						control={form.control}
 						name="borderRadius"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>
+								<FormLabel className="font-medium text-gray-700 text-xs">
 									<Trans>Border Radius</Trans>
 								</FormLabel>
-								<div className="flex items-center gap-x-2">
-									<InputGroup>
-										<FormControl>
-											<InputGroupInput
-												{...field}
-												type="number"
-												min={0}
-												max={100}
-												step={1}
-												onChange={(e) => {
-													const value = Number(e.target.value);
-													field.onChange(value);
-												}}
-											/>
-										</FormControl>
-										<InputGroupAddon align="inline-end">pt</InputGroupAddon>
-									</InputGroup>
-
-									<ButtonGroup className="shrink-0">
+								<div className="flex items-center gap-2">
+									<FormControl>
+										<Input
+											{...field}
+											type="number"
+											min={0}
+											max={100}
+											step={1}
+											className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+											onChange={(e) => {
+												const value = Number(e.target.value);
+												field.onChange(value);
+											}}
+										/>
+									</FormControl>
+									<span className="mr-1 font-medium text-gray-500 text-sm">pt</span>
+									<div className="flex gap-1">
 										<Button
+											type="button"
 											size="icon"
 											variant="outline"
-											title="0pt"
+											title={t`Square (0pt)`}
+											className="h-10 w-10 border-gray-300 p-2 transition-all hover:bg-gray-50"
 											onClick={() => {
 												field.onChange(0);
 												form.handleSubmit(onSubmit)();
 											}}
 										>
-											<div className="size-3 rounded-none border border-primary" />
+											<div className="h-4 w-4 rounded-none border-2 border-emerald-600" />
 										</Button>
 										<Button
+											type="button"
 											size="icon"
 											variant="outline"
-											title="10pt"
+											title={t`Rounded (10pt)`}
+											className="h-10 w-10 border-gray-300 p-2 transition-all hover:bg-gray-50"
 											onClick={() => {
 												field.onChange(10);
 												form.handleSubmit(onSubmit)();
 											}}
 										>
-											<div className="size-3 rounded-[10%] border border-primary" />
+											<div className="h-4 w-4 rounded-sm border-2 border-emerald-600" />
 										</Button>
 										<Button
+											type="button"
 											size="icon"
 											variant="outline"
-											title="100pt"
+											title={t`Circle (100pt)`}
+											className="h-10 w-10 border-gray-300 p-2 transition-all hover:bg-gray-50"
 											onClick={() => {
 												field.onChange(100);
 												form.handleSubmit(onSubmit)();
 											}}
 										>
-											<div className="size-3 rounded-full border border-primary" />
+											<div className="h-4 w-4 rounded-full border-2 border-emerald-600" />
 										</Button>
-									</ButtonGroup>
+									</div>
 								</div>
+								<FormMessage />
 							</FormItem>
 						)}
 					/>
 
-					<div className="flex items-center gap-x-2">
+					{/* Border Color & Width */}
+					<div className="grid grid-cols-2 gap-3">
 						<FormField
 							control={form.control}
 							name="borderColor"
 							render={({ field }) => (
-								<FormItem className="shrink-0 self-end">
-									<FormControl>
-										<ColorPicker
-											defaultValue={field.value}
-											onValueChange={(color) => {
-												field.onChange(color);
-												form.handleSubmit(onSubmit)();
-											}}
+								<FormItem>
+									<FormLabel className="font-medium text-gray-700 text-xs">
+										<Trans>Border Color</Trans>
+									</FormLabel>
+									<div className="flex items-center gap-2">
+										<FormControl>
+											<ColorPicker
+												{...field}
+												className="h-10 w-12 cursor-pointer rounded-lg border border-gray-300"
+												defaultValue={field.value}
+												onValueChange={(color) => {
+													field.onChange(color);
+													form.handleSubmit(onSubmit)();
+												}}
+											/>
+										</FormControl>
+										<Input
+											{...field}
+											placeholder="#10b981"
+											className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 										/>
-									</FormControl>
+									</div>
+									<FormMessage />
 								</FormItem>
 							)}
 						/>
@@ -374,48 +438,62 @@ function PictureSectionForm() {
 							control={form.control}
 							name="borderWidth"
 							render={({ field }) => (
-								<FormItem className="flex-1">
-									<FormLabel>
+								<FormItem>
+									<FormLabel className="font-medium text-gray-700 text-xs">
 										<Trans>Border Width</Trans>
 									</FormLabel>
-									<InputGroup>
+									<div className="flex items-center gap-2">
 										<FormControl>
-											<InputGroupInput
+											<Input
 												{...field}
 												type="number"
 												min={0}
 												step={1}
+												className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 												onChange={(e) => {
 													const value = e.target.value;
 													if (value === "") field.onChange("");
-													else field.onChange(Number(value));
+													else field.onChange(Number(e.target.value));
 												}}
 											/>
 										</FormControl>
-										<InputGroupAddon align="inline-end">
-											<InputGroupText>pt</InputGroupText>
-										</InputGroupAddon>
-									</InputGroup>
+										<span className="font-medium text-gray-500 text-sm">pt</span>
+									</div>
+									<FormMessage />
 								</FormItem>
 							)}
 						/>
 					</div>
 
-					<div className="flex items-center gap-x-2">
+					{/* Shadow Color & Width */}
+					<div className="grid grid-cols-2 gap-3">
 						<FormField
 							control={form.control}
 							name="shadowColor"
 							render={({ field }) => (
-								<FormItem className="shrink-0 self-end">
-									<FormControl>
-										<ColorPicker
-											defaultValue={field.value}
-											onValueChange={(color) => {
-												field.onChange(color);
-												form.handleSubmit(onSubmit)();
-											}}
+								<FormItem>
+									<FormLabel className="font-medium text-gray-700 text-xs">
+										<Trans>Shadow Color</Trans>
+									</FormLabel>
+									<div className="flex items-center gap-2">
+										<FormControl>
+											<ColorPicker
+												{...field}
+												className="h-10 w-12 cursor-pointer rounded-lg border border-gray-300"
+												defaultValue={field.value}
+												onValueChange={(color) => {
+													field.onChange(color);
+													form.handleSubmit(onSubmit)();
+												}}
+											/>
+										</FormControl>
+										<Input
+											{...field}
+											placeholder="#000000"
+											className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 										/>
-									</FormControl>
+									</div>
+									<FormMessage />
 								</FormItem>
 							)}
 						/>
@@ -424,17 +502,18 @@ function PictureSectionForm() {
 							control={form.control}
 							name="shadowWidth"
 							render={({ field }) => (
-								<FormItem className="flex-1">
-									<FormLabel>
+								<FormItem>
+									<FormLabel className="font-medium text-gray-700 text-xs">
 										<Trans>Shadow Width</Trans>
 									</FormLabel>
-									<InputGroup>
+									<div className="flex items-center gap-2">
 										<FormControl>
-											<InputGroupInput
+											<Input
 												{...field}
 												type="number"
 												min={0}
 												step={0.5}
+												className="flex-1 border-gray-300 px-3 py-2 text-sm transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 												onChange={(e) => {
 													const value = e.target.value;
 													if (value === "") field.onChange("");
@@ -442,10 +521,9 @@ function PictureSectionForm() {
 												}}
 											/>
 										</FormControl>
-										<InputGroupAddon align="inline-end">
-											<InputGroupText>pt</InputGroupText>
-										</InputGroupAddon>
-									</InputGroup>
+										<span className="font-medium text-gray-500 text-sm">pt</span>
+									</div>
+									<FormMessage />
 								</FormItem>
 							)}
 						/>
