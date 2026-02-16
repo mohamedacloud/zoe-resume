@@ -40,7 +40,7 @@ export function BuilderSidebarRight() {
 		<>
 			<SidebarEdge scrollAreaRef={scrollAreaRef} />
 
-			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 dark:bg-gray-900 sm:me-12">
+			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 sm:me-12">
 				<div className="space-y-4 p-4">
 					{rightSidebarSections.map((section) => (
 						<Fragment key={section}>

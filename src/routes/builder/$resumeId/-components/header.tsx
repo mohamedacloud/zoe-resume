@@ -12,7 +12,7 @@ export function BuilderHeader() {
 	const toggleSidebar = useBuilderSidebar((state) => state.toggleSidebar);
 
 	return (
-		<div className="absolute inset-x-0 top-0 z-10 flex h-14 items-center justify-between border-b bg-gray-100 dark:bg-gray-900 px-3">
+		<div className="absolute inset-x-0 top-0 z-10 flex h-14 items-center justify-between border-b bg-gray-100 px-3">
 			<div className="flex items-center gap-3">
 				<Button size="icon" variant="ghost" onClick={() => toggleSidebar("left")}>
 					<SidebarSimpleIcon />

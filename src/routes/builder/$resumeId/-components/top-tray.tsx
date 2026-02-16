@@ -5,7 +5,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ColorPicker } from "@/components/input/color-picker";
-import { useTheme } from "@/components/theme/provider";
 import { FontFamilyCombobox, FontWeightCombobox, getNextWeight } from "@/components/typography/combobox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +16,6 @@ import {
 	PopoverTitle,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
@@ -25,7 +23,6 @@ import { downloadFromUrl, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
 
 export function BuilderTopTray() {
-	const { theme, setTheme } = useTheme();
 	const openDialog = useDialogStore((state) => state.openDialog);
 	const params = useParams({ from: "/builder/$resumeId" });
 	const { data: resume } = useQuery(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } }));
@@ -67,28 +64,6 @@ export function BuilderTopTray() {
 						</PopoverTitle>
 					</PopoverHeader>
 					<ColorsPopoverContent />
-					<Separator />
-					<div className="flex items-center justify-between gap-3">
-						<span className="font-medium text-sm">
-							<Trans>Theme</Trans>
-						</span>
-						<div className="flex items-center gap-2">
-							<Button
-								size="sm"
-								variant={theme === "light" ? "secondary" : "outline"}
-								onClick={() => setTheme("light", { playSound: false })}
-							>
-								<Trans>Light</Trans>
-							</Button>
-							<Button
-								size="sm"
-								variant={theme === "dark" ? "secondary" : "outline"}
-								onClick={() => setTheme("dark", { playSound: false })}
-							>
-								<Trans>Dark</Trans>
-							</Button>
-						</div>
-					</div>
 				</PopoverContent>
 			</Popover>
 
