@@ -97,7 +97,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 		<div className="flex h-svh flex-col" {...props}>
 			<BuilderHeader />
 
-			<ResizableGroup orientation="horizontal" className="flex-1" onLayoutChange={onLayoutChange}>
+			<ResizableGroup orientation="horizontal" className="flex-1 mt-14" onLayoutChange={onLayoutChange}>
 				<ResizablePanel
 					collapsible
 					id="left"
