@@ -1,5 +1,5 @@
 import { useRouter } from "@tanstack/react-router";
-import { createContext, type PropsWithChildren, use } from "react";
+import { createContext, type PropsWithChildren, use, useEffect } from "react";
 import { setThemeServerFn, type Theme } from "@/utils/theme";
 
 type ThemeContextValue = {
@@ -15,11 +15,17 @@ type Props = PropsWithChildren<{ theme: Theme }>;
 export function ThemeProvider({ children, theme }: Props) {
 	const router = useRouter();
 
+	// Force light mode on mount
+	useEffect(() => {
+		document.documentElement.classList.remove("dark");
+	}, []);
+
 	async function setTheme(value: Theme, options: { playSound?: boolean } = {}) {
 		const { playSound = true } = options;
 
-		document.documentElement.classList.toggle("dark", value === "dark");
-		await setThemeServerFn({ data: value });
+		// Force light mode only
+		document.documentElement.classList.remove("dark");
+		await setThemeServerFn({ data: "light" });
 		router.invalidate();
 
 		if (!playSound) return;
@@ -34,10 +40,10 @@ export function ThemeProvider({ children, theme }: Props) {
 	}
 
 	function toggleTheme(options: { playSound?: boolean } = {}) {
-		setTheme(theme === "dark" ? "light" : "dark", options);
+		setTheme("light", options);
 	}
 
-	return <ThemeContext value={{ theme, setTheme, toggleTheme }}>{children}</ThemeContext>;
+	return <ThemeContext value={{ theme: "light", setTheme, toggleTheme }}>{children}</ThemeContext>;
 }
 
 export function useTheme() {
