@@ -1,8 +1,10 @@
 import { Trans } from "@lingui/react/macro";
 import { useState } from "react";
+import { toast } from "sonner";
 import { RichInput } from "@/components/input/rich-input";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { AIGenerateButton } from "@/components/ui/ai-generate-button";
+import { generateProfessionalSummary } from "@/utils/ai-service";
 import { SectionBase } from "../shared/section-base";
 
 export function SummarySectionBuilder() {
@@ -25,13 +27,41 @@ export function SummarySectionBuilder() {
 		setTimeout(() => setIsAIGenerating(false), 500);
 	};
 
-	const handleAskZoe = () => {
+	const handleAskZoe = async () => {
 		setIsAIGenerating(true);
-		// This will trigger the AI generation
-		// The actual AI logic is handled by AIGenerateButton component
+		
+		try {
+			// Prepare data for AI generation
+			const experienceItems = resumeData.sections.experience.items.slice(0, 2).map((exp) => ({
+				company: exp.company,
+				position: exp.position,
+			}));
+			
+			const skillItems = resumeData.sections.skills.items.slice(0, 5).map((skill) => skill.name);
+			
+			// Call real AI with user data INCLUDING current summary content
+			const aiSummary = await generateProfessionalSummary({
+				name: resumeData.basics.name,
+				headline: resumeData.basics.headline,
+				experience: experienceItems,
+				skills: skillItems,
+				currentSummary: section.content, // Pass the user's input!
+			});
+			
+			updateResumeData((draft) => {
+				draft.summary.content = aiSummary;
+			});
+			
+			toast.success("AI summary generated successfully!");
+		} catch (error) {
+			console.error("AI generation error:", error);
+			toast.error(error instanceof Error ? error.message : "Failed to generate summary");
+		} finally {
+			setIsAIGenerating(false);
+		}
 	};
 
-	// Prepare data for AI generation
+	// Prepare data for AI generation (used for the hidden AIGenerateButton)
 	const userData = {
 		name: resumeData.basics.name,
 		headline: resumeData.basics.headline,
@@ -94,30 +124,6 @@ export function SummarySectionBuilder() {
 						<span className="text-gray-400">Tip: Keep it between 50-200 words</span>
 					</div>
 				</div>
-
-				{/* AI Suggestion Box */}
-				{isAIGenerating && (
-					<div
-						className="animate-pulse rounded-xl border border-emerald-200 p-4"
-						style={{
-							backgroundImage: "linear-gradient(to bottom right, rgb(236 253 245), rgb(209 250 229))",
-						}}
-					>
-						<div className="flex items-start gap-3">
-							<img
-								src="https://api.dicebear.com/7.x/bottts/svg?seed=Zoe&backgroundColor=10b981"
-								alt="Zoe AI"
-								className="h-10 w-10 animate-bounce rounded-full"
-							/>
-							<div>
-								<h4 className="mb-1 font-semibold text-gray-900 text-sm">Zoe is writing...</h4>
-								<p className="text-gray-700 text-sm">
-									Crafting a professional summary based on your profile information.
-								</p>
-							</div>
-						</div>
-					</div>
-				)}
 
 				{/* Help/Tips Section */}
 				<div className="rounded-xl border border-blue-200 bg-blue-50 p-4">

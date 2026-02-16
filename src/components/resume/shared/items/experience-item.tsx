@@ -1,8 +1,8 @@
-import { TiptapContent } from "@/components/input/rich-input";
+import { useEffect, useRef } from "react";
+import { useResumeStore } from "@/components/resume/store/resume";
 import type { SectionItem } from "@/schema/resume/data";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
-import { LinkedTitle } from "../linked-title";
 import { PageLink } from "../page-link";
 
 type ExperienceItemProps = SectionItem<"experience"> & {
@@ -10,34 +10,105 @@ type ExperienceItemProps = SectionItem<"experience"> & {
 };
 
 export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
+	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+	const descriptionRef = useRef<HTMLDivElement>(null);
+
+	// Update description content when item.description changes
+	useEffect(() => {
+		if (descriptionRef.current && descriptionRef.current.innerHTML !== item.description) {
+			descriptionRef.current.innerHTML = item.description;
+		}
+	}, [item.description]);
+
+	const handleCompanyChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== item.company) {
+			updateResumeData((draft) => {
+				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+				if (exp) exp.company = newValue;
+			});
+		}
+	};
+
+	const handlePositionChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== item.position) {
+			updateResumeData((draft) => {
+				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+				if (exp) exp.position = newValue;
+			});
+		}
+	};
+
+	const handleLocationChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== item.location) {
+			updateResumeData((draft) => {
+				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+				if (exp) exp.location = newValue;
+			});
+		}
+	};
+
+	const handleDescriptionChange = (e: React.FocusEvent<HTMLDivElement>) => {
+		const newValue = e.currentTarget.innerHTML || "";
+		if (newValue !== item.description) {
+			updateResumeData((draft) => {
+				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+				if (exp) exp.description = newValue;
+			});
+		}
+	};
+
 	return (
-		<div className={cn("experience-item", className)}>
+		<div className={cn("experience-item group/item", className)}>
 			{/* Header */}
 			<div className="section-item-header experience-item-header">
 				{/* Row 1 */}
 				<div className="flex items-start justify-between gap-x-2">
-					<LinkedTitle
-						title={item.company}
-						website={item.website}
-						showLinkInTitle={item.options?.showLinkInTitle}
-						className="section-item-title experience-item-title"
-					/>
-					<span className="section-item-metadata experience-item-location shrink-0 text-end">{item.location}</span>
+					<span
+						contentEditable
+						suppressContentEditableWarning
+						onBlur={handleCompanyChange}
+						className="section-item-title experience-item-title cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+					>
+						{item.company}
+					</span>
+					<span
+						contentEditable
+						suppressContentEditableWarning
+						onBlur={handleLocationChange}
+						className="section-item-metadata experience-item-location shrink-0 cursor-text text-end outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+					>
+						{item.location}
+					</span>
 				</div>
 
 				{/* Row 2 */}
 				<div className="flex items-start justify-between gap-x-2">
-					<span className="section-item-metadata experience-item-position">{item.position}</span>
+					<span
+						contentEditable
+						suppressContentEditableWarning
+						onBlur={handlePositionChange}
+						className="section-item-metadata experience-item-position cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+					>
+						{item.position}
+					</span>
 					<span className="section-item-metadata experience-item-period shrink-0 text-end">{item.period}</span>
 				</div>
 			</div>
 
 			{/* Description */}
 			<div
-				className={cn("section-item-description experience-item-description", !stripHtml(item.description) && "hidden")}
-			>
-				<TiptapContent content={item.description} />
-			</div>
+				ref={descriptionRef}
+				contentEditable
+				suppressContentEditableWarning
+				onBlur={handleDescriptionChange}
+				className={cn(
+					"section-item-description experience-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
+					!stripHtml(item.description) && "hidden",
+				)}
+			/>
 
 			{/* Website */}
 			{!item.options?.showLinkInTitle && (
