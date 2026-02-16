@@ -50,6 +50,16 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 		}
 	};
 
+	const handlePeriodChange = (e: React.FocusEvent<HTMLSpanElement>) => {
+		const newValue = e.currentTarget.textContent || "";
+		if (newValue !== item.period) {
+			updateResumeData((draft) => {
+				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+				if (exp) exp.period = newValue;
+			});
+		}
+	};
+
 	const handleDescriptionChange = (e: React.FocusEvent<HTMLDivElement>) => {
 		const newValue = e.currentTarget.innerHTML || "";
 		if (newValue !== item.description) {
@@ -94,7 +104,14 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 					>
 						{item.position}
 					</span>
-					<span className="section-item-metadata experience-item-period shrink-0 text-end">{item.period}</span>
+					<span
+						contentEditable
+						suppressContentEditableWarning
+						onBlur={handlePeriodChange}
+						className="section-item-metadata experience-item-period shrink-0 cursor-text text-end outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+					>
+						{item.period}
+					</span>
 				</div>
 			</div>
 
