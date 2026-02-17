@@ -111,7 +111,7 @@ export function BuilderSidebarLeft() {
 		<>
 			<SidebarEdge scrollAreaRef={scrollAreaRef} />
 
-			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 dark:bg-gray-900 sm:ms-12">
+			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 sm:ms-12">
 				<div className="space-y-4 p-4">
 					{/* Fixed sections (picture and basics) - not draggable, always at top */}
 					{fixedSections.map((section) => (

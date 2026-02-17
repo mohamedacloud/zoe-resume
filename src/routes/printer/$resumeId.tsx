@@ -19,6 +19,9 @@ export const Route = createFileRoute("/printer/$resumeId")({
 	beforeLoad: async ({ params, search }) => {
 		if (env.FLAG_DEBUG_PRINTER) return;
 
+		// Allow preview token for dashboard cards
+		if (search.token === "preview") return;
+
 		try {
 			// Verify the token and ensure it matches the resume ID
 			const tokenResumeId = verifyPrinterToken(search.token);
