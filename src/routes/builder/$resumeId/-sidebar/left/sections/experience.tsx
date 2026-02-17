@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { RichInput } from "@/components/input/rich-input";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { generateExperienceDescription } from "@/utils/ai-service";
 import { SectionBase } from "../shared/section-base";
@@ -93,7 +94,7 @@ export function ExperienceSectionBuilder() {
 
 	const handleAskZoe = async (id: string) => {
 		setGeneratingIds((prev) => new Set([...prev, id]));
-		
+
 		try {
 			// Get the experience item data
 			const item = section.items.find((exp) => exp.id === id);
@@ -108,7 +109,7 @@ export function ExperienceSectionBuilder() {
 				location: item.location,
 				period: item.period,
 			});
-			
+
 			// Update the description with AI-generated content
 			updateResumeData((draft) => {
 				const draftItem = draft.sections.experience.items.find((exp) => exp.id === id);
@@ -343,12 +344,10 @@ export function ExperienceSectionBuilder() {
 											</button>
 										</div>
 										<div className="relative">
-											<textarea
+											<RichInput
 												value={exp.description}
-												onChange={(e) => handleUpdateExperience(exp.id, "description", e.target.value)}
-												rows={6}
-												placeholder="• Led development of..."
-												className="w-full resize-none rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+												onChange={(val: string) => handleUpdateExperience(exp.id, "description", val)}
+												className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
 											/>
 											<svg
 												className="pointer-events-none absolute right-3 bottom-3 size-5 text-gray-400"

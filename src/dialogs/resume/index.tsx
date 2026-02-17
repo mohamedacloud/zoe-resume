@@ -40,16 +40,53 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Extended form schema for multi-step creation
 const basicDetailsSchema = z.object({
-	fullName: z.string().min(2, "Full name must be at least 2 characters").max(100),
-	professionalTitle: z.string().min(2, "Professional title is required").max(100),
-	email: z.string().email("Invalid email address"),
-	phone: z.string().min(10, "Phone number is required"),
-	location: z.string().min(2, "Location is required"),
-	linkedinUrl: z.string().url().optional().or(z.literal("")),
-	githubUrl: z.string().url().optional().or(z.literal("")),
-	websiteUrl: z.string().url().optional().or(z.literal("")),
+	fullName: z.string().trim().min(2, "Full name must be at least 2 characters").max(100),
+
+	professionalTitle: z.string().trim().min(2, "Professional title is required").max(100),
+
+	   email: z
+		   .string()
+		   .trim()
+		   .min(5, "Email is required")
+		   .max(100, "Email must be at most 100 characters")
+		   .email("Please enter a valid email address")
+		   .transform((val) => val.toLowerCase()),
+
+	phone: z
+		.string()
+		.trim()
+		.transform((val) => val.replace(/\D/g, "")) // remove non-digits
+		.refine((val) => val.length === 10, {
+			message: "Phone number must be exactly 10 digits",
+		}),
+
+	location: z.string().trim().min(2, "Location is required"),
+
+	linkedinUrl: z
+		.string()
+		.trim()
+		.optional()
+		.or(z.literal(""))
+		.refine((val) => !val || (val.startsWith("https://") && val.includes("linkedin.com")), {
+			message: "Enter a valid LinkedIn URL",
+		}),
+
+	githubUrl: z
+		.string()
+		.trim()
+		.optional()
+		.or(z.literal(""))
+		.refine((val) => !val || (val.startsWith("https://") && val.includes("github.com")), {
+			message: "Enter a valid GitHub URL",
+		}),
+
+	websiteUrl: z
+		.string()
+		.trim()
+		.optional()
+		.or(z.literal(""))
+		.refine((val) => !val || /^https:\/\/.+\..+/.test(val), { message: "Website must start with https://" }),
 });
 
 type BasicDetailsFormValues = z.infer<typeof basicDetailsSchema>;
@@ -69,6 +106,7 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 
 	const basicDetailsForm = useForm<BasicDetailsFormValues>({
 		resolver: zodResolver(basicDetailsSchema),
+		mode: "onChange",
 		defaultValues: {
 			fullName: "",
 			professionalTitle: "",
@@ -88,30 +126,31 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 		}
 	}, [currentStep, basicDetails, basicDetailsForm]);
 
+	const isFormValid = basicDetailsForm.formState.isValid;
+
 	const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
-		if (file) {
-			// Validate file type
-			if (!file.type.startsWith("image/")) {
-				toast.error("Please select a valid image file");
-				return;
-			}
+		if (!file) return;
 
-			// Validate file size (max 5MB)
-			if (file.size > 5 * 1024 * 1024) {
-				toast.error("Image size should be less than 5MB");
-				return;
-			}
+		const allowedTypes = ["image/jpeg", "image/png"];
 
-			// Create preview URL
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				setProfilePhoto(reader.result as string);
-				setShowPhotoOptions(true);
-			};
-			reader.readAsDataURL(file);
+		if (!allowedTypes.includes(file.type)) {
+			toast.error("Only JPEG or PNG images are allowed");
+			return;
 		}
-		// Reset input value to allow selecting the same file again
+
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error("Image size must be under 5MB");
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onloadend = () => {
+			setProfilePhoto(reader.result as string);
+			setShowPhotoOptions(true);
+		};
+		reader.readAsDataURL(file);
+
 		event.target.value = "";
 	};
 
@@ -406,8 +445,13 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 											<Input
 												{...field}
 												type="tel"
-												className="border-2 border-gray-300 text-gray-900 focus:border-emerald-500 focus:ring-0"
-												placeholder="+1 (555) 123-4567"
+												inputMode="numeric"
+												maxLength={10}
+												onChange={(e) => {
+													const cleaned = e.target.value.replace(/\D/g, "");
+													field.onChange(cleaned);
+												}}
+												placeholder="9876543210"
 											/>
 										</FormControl>
 										<FormMessage />
@@ -521,9 +565,8 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 									<TestTubeIcon className="mr-2" />
 									Create Sample Resume
 								</Button>
-								<Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+								<Button type="submit" disabled={!isFormValid} className="bg-emerald-600 hover:bg-emerald-700">
 									Continue
-									<ArrowRightIcon className="ml-2" />
 								</Button>
 							</div>
 						</DialogFooter>
