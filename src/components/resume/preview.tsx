@@ -1,17 +1,18 @@
 import { Trans } from "@lingui/react/macro";
 import { ArrowRightIcon, IconContext, type IconProps, WarningIcon } from "@phosphor-icons/react";
-import { type RefObject, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, createContext } from "react";
 import { match } from "ts-pattern";
-import { useResizeObserver } from "usehooks-ts";
 import type z from "zod";
-import { pageDimensionsAsPixels } from "@/schema/page";
 import type { pageLayoutSchema } from "@/schema/resume/data";
 import type { Template } from "@/schema/templates";
 import { sanitizeCss } from "@/utils/sanitize";
 import { cn } from "@/utils/style";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { useCSSVariables } from "./hooks/use-css-variables";
+import { useResumePagination } from "./hooks/use-resume-pagination";
 import { useWebfonts } from "./hooks/use-webfonts";
+import { ResumePageContext } from "./preview/context";
+import { ResumeMeasurer } from "./preview/resume-measurer";
 import styles from "./preview.module.css";
 import { useResumeStore } from "./store/resume";
 import { AzurillTemplate } from "./templates/azurill";
@@ -30,6 +31,7 @@ import { RhyhornTemplate } from "./templates/rhyhorn";
 
 export type ExtendedIconProps = IconProps & {
 	hidden?: boolean;
+	visibleItemIds?: string[];
 };
 
 const CSS_RULE_SPLIT_PATTERN = /\n(?=\s*[.#a-zA-Z])/;
@@ -61,9 +63,12 @@ type Props = React.ComponentProps<"div"> & {
 export const ResumePreview = ({ showPageNumbers = false, pageClassName, className, ...props }: Props) => {
 	const picture = useResumeStore((state) => state.resume.data.picture);
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
+	const [measurements, setMeasurements] = useState<Record<string, number>>({});
 
 	useWebfonts(metadata.typography);
 	const style = useCSSVariables({ picture, metadata });
+	
+	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements, 0); // containerHeight is unused in hook
 
 	const iconProps = useMemo<ExtendedIconProps>(() => {
 		return {
@@ -100,17 +105,20 @@ export const ResumePreview = ({ showPageNumbers = false, pageClassName, classNam
 
 	return (
 		<IconContext.Provider value={iconProps}>
+			<ResumeMeasurer onMeasure={setMeasurements} />
 			{/** biome-ignore lint/security/noDangerouslySetInnerHtml: CSS is sanitized with sanitizeCss */}
 			{scopedCSS && <style dangerouslySetInnerHTML={{ __html: scopedCSS }} />}
 
 			<div style={style} className={cn("resume-preview-container", className)} {...props}>
-				{metadata.layout.pages.map((pageLayout, pageIndex) => (
+				{pages.map((pageLayout, pageIndex) => (
 					<PageContainer
 						key={pageIndex}
 						pageIndex={pageIndex}
 						pageLayout={pageLayout}
 						pageClassName={pageClassName}
 						showPageNumbers={showPageNumbers}
+						itemDistribution={itemDistribution}
+						isOverflowing={isOverflowing}
 					/>
 				))}
 			</div>
@@ -123,26 +131,18 @@ type PageContainerProps = {
 	pageLayout: z.infer<typeof pageLayoutSchema>;
 	pageClassName?: string;
 	showPageNumbers?: boolean;
+	itemDistribution?: Record<string, string[][]>;
+	isOverflowing?: boolean;
 };
 
-function PageContainer({ pageIndex, pageLayout, pageClassName, showPageNumbers = false }: PageContainerProps) {
+function PageContainer({ pageIndex, pageLayout, pageClassName, showPageNumbers = false, itemDistribution, isOverflowing }: PageContainerProps) {
 	const pageRef = useRef<HTMLDivElement>(null);
-	const [pageHeight, setPageHeight] = useState<number>(0);
-
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
 
 	const pageNumber = useMemo(() => pageIndex + 1, [pageIndex]);
-	const maxPageHeight = useMemo(() => pageDimensionsAsPixels[metadata.page.format].height, [metadata.page.format]);
 	const totalNumberOfPages = useMemo(() => metadata.layout.pages.length, [metadata.layout.pages]);
 	const TemplateComponent = useMemo(() => getTemplateComponent(metadata.template), [metadata.template]);
 
-	useResizeObserver({
-		ref: pageRef as RefObject<HTMLDivElement>,
-		onResize: (size) => {
-			if (!size.height) return;
-			setPageHeight(size.height);
-		},
-	});
 
 	return (
 		<div data-page-index={pageIndex} className="relative">
@@ -157,10 +157,12 @@ function PageContainer({ pageIndex, pageLayout, pageClassName, showPageNumbers =
 			)}
 
 			<div ref={pageRef} className={cn(`page page-${pageIndex}`, styles.page, pageClassName)}>
-				<TemplateComponent pageIndex={pageIndex} pageLayout={pageLayout} />
+				<ResumePageContext.Provider value={{ pageIndex, itemDistribution }}>
+					<TemplateComponent pageIndex={pageIndex} pageLayout={pageLayout} />
+				</ResumePageContext.Provider>
 			</div>
 
-			{metadata.page.format !== "free-form" && pageHeight > maxPageHeight && (
+			{metadata.page.format !== "free-form" && isOverflowing && pageIndex === 1 && (
 				<div className="absolute start-0 top-full mt-4 print:hidden">
 					<a
 						rel="noopener"
