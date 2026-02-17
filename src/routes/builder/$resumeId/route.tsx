@@ -75,10 +75,10 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 
 	const setLeftSidebar = useBuilderSidebarStore((state) => state.setLeftSidebar);
 
-	const { maxSidebarSize, collapsedSidebarSize } = useBuilderSidebar((state) => ({
+	const { maxSidebarSize } = useBuilderSidebar((state) => ({
 		maxSidebarSize: state.maxSidebarSize,
-		collapsedSidebarSize: state.collapsedSidebarSize,
 	}));
+	const collapsedSidebarSize = 0;
 
 	const onLayoutChange = useDebounceCallback((layout: Layout) => {
 		setBuilderLayoutServerFn({ data: layout });
@@ -97,14 +97,14 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 		<div className="flex h-svh flex-col" {...props}>
 			<BuilderHeader />
 
-			<ResizableGroup orientation="horizontal" className="flex-1 mt-14" onLayoutChange={onLayoutChange}>
+			<ResizableGroup orientation="horizontal" className="mt-14 flex-1" onLayoutChange={onLayoutChange}>
 				<ResizablePanel
 					collapsible
 					id="left"
 					panelRef={leftSidebarRef}
 					maxSize={maxSidebarSize}
-					minSize={collapsedSidebarSize * 2}
-					collapsedSize={collapsedSidebarSize}
+					minSize={0}
+					collapsedSize={0}
 					defaultSize={leftSidebarSize || 30}
 					className="z-20 h-[calc(100svh-3.5rem)]"
 				>

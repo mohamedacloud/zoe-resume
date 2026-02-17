@@ -1,9 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { templates } from "@/dialogs/resume/template/data";
 
 export const Route = createFileRoute("/_home/")({
-	component: RouteComponent,
+	beforeLoad: () => {
+		throw redirect({ to: "/dashboard/resumes" });
+	},
+	component: () => null,
 });
 
 function RouteComponent() {
@@ -25,7 +28,7 @@ function RouteComponent() {
 		currentIndex * itemsPerPage + itemsPerPage,
 	);
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 font-sans">
+		<div className="min-h-screen bg-linear-to-b from-gray-50 to-blue-50 font-sans">
 			{/* Hero Section */}
 			<div className="mx-auto max-w-7xl px-6 py-16">
 				{/* Powered by Badge */}
@@ -94,7 +97,7 @@ function RouteComponent() {
 
 					{/* Right Content - Resume Preview */}
 					<div className="relative mt-8 lg:mt-0">
-						<div className="rounded-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 p-8 shadow-2xl lg:p-12">
+						<div className="rounded-2xl bg-linear-to-br from-slate-800 via-slate-900 to-slate-800 p-8 shadow-2xl lg:p-12">
 							{/* Resume Document */}
 							<div className="rotate-3 transform rounded-lg bg-white shadow-xl transition-transform duration-300 hover:rotate-0">
 								<div className="p-6 lg:p-8">

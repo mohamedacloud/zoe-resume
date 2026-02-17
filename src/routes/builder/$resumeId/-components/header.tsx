@@ -1,8 +1,4 @@
-import { Trans } from "@lingui/react/macro";
-import { LockSimpleIcon, SidebarSimpleIcon } from "@phosphor-icons/react";
-import { Link } from "@tanstack/react-router";
 import { useResumeStore } from "@/components/resume/store/resume";
-import { Button } from "@/components/ui/button";
 import { useBuilderSidebar } from "../-store/sidebar";
 import { BuilderTopTray } from "./top-tray.tsx";
 
@@ -33,20 +29,18 @@ export function BuilderHeader() {
 						</span>
 					</div>
 				</div>
+				{/* Sidebar toggle button */}
+				<button
+					onClick={() => toggleSidebar("left")}
+					className="ml-4 rounded-lg bg-gray-100 px-3 py-2 font-medium text-gray-700 text-sm shadow-sm transition-all hover:bg-gray-200"
+					title="Toggle Sidebar"
+					type="button"
+				>
+					{/* You can use an icon here if desired */}
+					{"☰"}
+				</button>
 			</div>
-
-			<div className="flex items-center gap-x-1">
-				<Button asChild size="icon" variant="ghost">
-					<Link to="/dashboard/resumes" search={{ sort: "lastUpdatedAt", tags: [] }}>
-						<img src="/logo/zoe-logo.png" alt="Zoe" className="size-4" />
-					</Link>
-				</Button>
-				<span className="me-2.5 text-muted-foreground">/</span>
-				<h2 className="flex-1 truncate font-medium">{name}</h2>
-				{isLocked && <LockSimpleIcon className="ms-2 text-muted-foreground" />}
-			</div>
-
 			<BuilderTopTray />
-		</div>
+		</header>
 	);
 }
