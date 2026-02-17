@@ -57,7 +57,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 						.otherwise(() => {
 							return (
 								<div ref={containerRef} className="relative size-full overflow-hidden bg-white">
-									<div className="absolute top-0 right-0 left-0 bottom-[104px] flex justify-center overflow-hidden">
+									<div className="absolute top-0 right-0 left-0 bottom-22 flex justify-center overflow-hidden">
 										<div
 											style={{
 												width: "794px",
