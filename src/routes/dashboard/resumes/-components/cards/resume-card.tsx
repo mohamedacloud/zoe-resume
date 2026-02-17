@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { match, P } from "ts-pattern";
 import { orpc, type RouterOutput } from "@/integrations/orpc/client";
 import { cn } from "@/utils/style";
-import { ResumeContextMenu } from "../menus/context-menu";
+import { ResumeDropdownMenu } from "../menus/dropdown-menu";
 import { BaseCard } from "./base-card";
 
 type ResumeCardProps = {
@@ -27,7 +27,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 	}, [i18n.locale, resume.updatedAt]);
 
 	return (
-		<ResumeContextMenu resume={resume}>
+		<div className="relative">
 			<Link to="/builder/$resumeId" params={{ resumeId: resume.id }} className="cursor-default">
 				<BaseCard title={resume.name} description={t`Last updated on ${updatedAt}`} tags={resume.tags}>
 					{match({ isLoading, imageSrc: screenshotData?.url })
@@ -56,7 +56,23 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 					<ResumeLockOverlay isLocked={resume.isLocked} />
 				</BaseCard>
 			</Link>
-		</ResumeContextMenu>
+			{/* 3-dots menu at top right */}
+			<div className="absolute top-3 right-3 z-10">
+				<ResumeDropdownMenu resume={resume}>
+					<button
+						className="flex items-center justify-center rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none"
+						aria-label="Open menu"
+						tabIndex={0}
+					>
+						<svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+							<circle cx="10" cy="4" r="1.5" />
+							<circle cx="10" cy="10" r="1.5" />
+							<circle cx="10" cy="16" r="1.5" />
+						</svg>
+					</button>
+				</ResumeDropdownMenu>
+			</div>
+		</div>
 	);
 }
 
