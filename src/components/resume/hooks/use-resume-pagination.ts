@@ -16,6 +16,7 @@ export const useResumePagination = (
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
 	const sections = useResumeStore((state) => state.resume.data.sections);
 	const customSections = useResumeStore((state) => state.resume.data.customSections);
+	const summary = useResumeStore((state) => state.resume.data.summary);
 
 	// Get dimensions
 	const pageHeight = pageDimensionsAsPixels[metadata.page.format].height;
@@ -49,6 +50,9 @@ export const useResumePagination = (
 
 		// Helper to get items for a section
 		const getSectionItems = (sectionId: string) => {
+			if (sectionId === "summary") {
+				return [summary]; 
+			}
 			if (sectionId in sections) {
 				// @ts-ignore
 				return sections[sectionId].items.filter((i) => !i.hidden);
@@ -107,6 +111,13 @@ export const useResumePagination = (
 				}
 
 				// Add section to page
+				if (!pages[currentPageIndex]) {
+					pages[currentPageIndex] = {
+						fullWidth: metadata.layout.pages[0]?.fullWidth ?? false,
+						main: [],
+						sidebar: [],
+					};
+				}
 				if (!pages[currentPageIndex][columnName].includes(sectionId)) {
 					pages[currentPageIndex][columnName].push(sectionId);
 				}
