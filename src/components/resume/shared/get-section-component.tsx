@@ -1,4 +1,6 @@
+import { useContext } from "react";
 import { match } from "ts-pattern";
+import { ResumePageContext } from "../preview/context";
 import type {
 	CoverLetterItem as CoverLetterItemType,
 	CustomSectionItem,
@@ -29,6 +31,7 @@ import { PageSummary } from "./page-summary";
 type SectionComponentProps = {
 	sectionClassName?: string;
 	itemClassName?: string;
+	visibleItemIds?: string[];
 };
 
 // Helper to render item component based on type
@@ -57,104 +60,111 @@ function renderItemByType(type: CustomSectionType, item: CustomSectionItem, item
 
 export function getSectionComponent(
 	section: "summary" | SectionType | (string & {}),
-	{ sectionClassName, itemClassName }: SectionComponentProps = {},
+	{ sectionClassName, itemClassName, visibleItemIds: explicitVisibleItemIds }: SectionComponentProps = {},
 ) {
+	const useVisibleItemIds = (sectionId: string) => {
+		const { pageIndex, itemDistribution } = useContext(ResumePageContext);
+		if (explicitVisibleItemIds) return explicitVisibleItemIds;
+		if (!itemDistribution) return undefined;
+		return itemDistribution[sectionId]?.[pageIndex];
+	};
+
 	return match(section)
 		.with("summary", () => {
 			const SummarySection = ({ id: _id }: { id: string }) => <PageSummary className={sectionClassName} />;
 			return SummarySection;
 		})
 		.with("profiles", () => {
-			const ProfilesSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="profiles" className={sectionClassName}>
+			const ProfilesSection = ({ id }: { id: string }) => (
+				<PageSection type="profiles" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <ProfilesItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return ProfilesSection;
 		})
 		.with("experience", () => {
-			const ExperienceSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="experience" className={sectionClassName}>
+			const ExperienceSection = ({ id }: { id: string }) => (
+				<PageSection type="experience" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <ExperienceItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return ExperienceSection;
 		})
 		.with("education", () => {
-			const EducationSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="education" className={sectionClassName}>
+			const EducationSection = ({ id }: { id: string }) => (
+				<PageSection type="education" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <EducationItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return EducationSection;
 		})
 		.with("projects", () => {
-			const ProjectsSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="projects" className={sectionClassName}>
+			const ProjectsSection = ({ id }: { id: string }) => (
+				<PageSection type="projects" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <ProjectsItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return ProjectsSection;
 		})
 		.with("skills", () => {
-			const SkillsSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="skills" className={sectionClassName}>
+			const SkillsSection = ({ id }: { id: string }) => (
+				<PageSection type="skills" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <SkillsItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return SkillsSection;
 		})
 		.with("languages", () => {
-			const LanguagesSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="languages" className={sectionClassName}>
+			const LanguagesSection = ({ id }: { id: string }) => (
+				<PageSection type="languages" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <LanguagesItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return LanguagesSection;
 		})
 		.with("interests", () => {
-			const InterestsSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="interests" className={sectionClassName}>
+			const InterestsSection = ({ id }: { id: string }) => (
+				<PageSection type="interests" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <InterestsItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return InterestsSection;
 		})
 		.with("awards", () => {
-			const AwardsSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="awards" className={sectionClassName}>
+			const AwardsSection = ({ id }: { id: string }) => (
+				<PageSection type="awards" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <AwardsItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return AwardsSection;
 		})
 		.with("certifications", () => {
-			const CertificationsSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="certifications" className={sectionClassName}>
+			const CertificationsSection = ({ id }: { id: string }) => (
+				<PageSection type="certifications" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <CertificationsItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return CertificationsSection;
 		})
 		.with("publications", () => {
-			const PublicationsSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="publications" className={sectionClassName}>
+			const PublicationsSection = ({ id }: { id: string }) => (
+				<PageSection type="publications" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <PublicationsItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return PublicationsSection;
 		})
 		.with("volunteer", () => {
-			const VolunteerSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="volunteer" className={sectionClassName}>
+			const VolunteerSection = ({ id }: { id: string }) => (
+				<PageSection type="volunteer" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <VolunteerItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
 			return VolunteerSection;
 		})
 		.with("references", () => {
-			const ReferencesSection = ({ id: _id }: { id: string }) => (
-				<PageSection type="references" className={sectionClassName}>
+			const ReferencesSection = ({ id }: { id: string }) => (
+				<PageSection type="references" className={sectionClassName} visibleItemIds={useVisibleItemIds(id)}>
 					{(item) => <ReferencesItem {...item} className={itemClassName} />}
 				</PageSection>
 			);
@@ -164,12 +174,18 @@ export function getSectionComponent(
 			// Custom section - render based on its type
 			const CustomSectionComponent = ({ id }: { id: string }) => {
 				const customSection = useResumeStore((state) => state.resume.data.customSections.find((s) => s.id === id));
+				const visibleItemIds = useVisibleItemIds(id);
 
 				if (!customSection) return null;
 				if (customSection.hidden) return null;
 				if (customSection.items.length === 0) return null;
 
-				const visibleItems = customSection.items.filter((item) => !item.hidden);
+				const visibleItems = customSection.items.filter((item) => {
+					if (item.hidden) return false;
+					if (visibleItemIds && !visibleItemIds.includes(item.id)) return false;
+					return true;
+				});
+
 				if (visibleItems.length === 0) return null;
 
 				return (

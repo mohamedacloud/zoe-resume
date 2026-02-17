@@ -4,7 +4,8 @@ import { CircleNotchIcon, LockSimpleIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import { useResizeObserver } from "usehooks-ts";
 import { match, P } from "ts-pattern";
 import { orpc, type RouterOutput } from "@/integrations/orpc/client";
 import { cn } from "@/utils/style";
@@ -22,9 +23,19 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 		orpc.printer.getResumeScreenshot.queryOptions({ input: { id: resume.id } }),
 	);
 
+	const containerRef = useRef<HTMLDivElement>(null);
+	const { width: containerWidth = 0 } = useResizeObserver({
+		ref: containerRef as React.RefObject<HTMLElement>,
+	});
+
 	const updatedAt = useMemo(() => {
 		return Intl.DateTimeFormat(i18n.locale, { dateStyle: "long", timeStyle: "short" }).format(resume.updatedAt);
 	}, [i18n.locale, resume.updatedAt]);
+
+	const scale = useMemo(() => {
+		if (containerWidth === 0) return 0;
+		return containerWidth / 794;
+	}, [containerWidth]);
 
 	return (
 		<div className="relative">
@@ -43,15 +54,34 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 								className={cn("size-full object-cover object-top transition-all", resume.isLocked && "blur-xs")}
 							/>
 						))
-						.otherwise(() => (
-							<div className="relative size-full overflow-hidden bg-white">
-								<iframe
-									src={`/printer/${resume.id}`}
-									title={resume.name}
-									className="pointer-events-none absolute top-0 left-1/2 h-[600%] w-[600%] origin-top -translate-x-1/2 scale-[0.167] border-0"
-								/>
-							</div>
-						))}
+						.otherwise(() => {
+							return (
+								<div ref={containerRef} className="relative size-full overflow-hidden bg-white">
+									<div className="absolute top-0 right-0 left-0 bottom-22 flex justify-center overflow-hidden">
+										<div
+											style={{
+												width: "794px",
+												height: "1123px",
+												flexShrink: 0,
+												transform: `scale(${scale || 0.3})`,
+												transformOrigin: "top center",
+												backgroundColor: "white",
+											}}
+										>
+											<iframe
+												scrolling="no"
+												src={`/printer/${resume.id}?token=preview`}
+												title={resume.name}
+												className="pointer-events-none size-full border-0"
+												style={{
+													backgroundColor: "white",
+												}}
+											/>
+										</div>
+									</div>
+								</div>
+							);
+						})}
 
 					<ResumeLockOverlay isLocked={resume.isLocked} />
 				</BaseCard>

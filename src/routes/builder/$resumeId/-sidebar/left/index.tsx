@@ -112,13 +112,14 @@ export function BuilderSidebarLeft() {
 					</Fragment>
 				))}
 
-				{/* Reorderable content sections */}
-				<Reorder.Group axis="y" values={sectionOrder} onReorder={handleSectionReorder}>
-					{sectionOrder.map((section) => (
-						<Reorder.Item key={section} value={section} className="space-y-4">
-								{getSectionComponent(section)}
-								<Separator />
-						</Reorder.Item>
+			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 sm:ms-12">
+				<div className="space-y-4 p-4">
+					{/* Fixed sections (picture and basics) - not draggable, always at top */}
+					{fixedSections.map((section) => (
+						<Fragment key={section}>
+							{getSectionComponent(section)}
+							<Separator />
+						</Fragment>
 					))}
 				</Reorder.Group>
 			</div>
