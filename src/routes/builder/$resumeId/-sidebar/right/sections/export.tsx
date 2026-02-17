@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { CircleNotchIcon, FilePdfIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon, DownloadSimpleIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
@@ -69,10 +69,10 @@ export function ExportSectionBuilder() {
 				{isPrinting ? (
 					<CircleNotchIcon className="size-6 shrink-0 animate-spin" />
 				) : (
-					<FilePdfIcon className="size-6 shrink-0" />
-				)}
+				<DownloadSimpleIcon className="size-6 shrink-0" />
+			)}
 
-				<div className="flex flex-1 flex-col gap-y-1">
+			<div className="flex flex-1 flex-col gap-y-1">
 					<h6 className="font-medium">PDF</h6>
 					<p className="text-muted-foreground text-xs leading-normal">
 						<Trans>

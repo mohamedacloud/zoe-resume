@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { CircleNotchIcon, FilePdfIcon, PaletteIcon, SwapIcon, TextTIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon, DownloadSimpleIcon, PaletteIcon, SwapIcon, TextTIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -100,7 +100,7 @@ export function BuilderTopTray() {
 				disabled={isPrinting}
 				className="bg-emerald-600 text-white hover:bg-emerald-700"
 			>
-				{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <FilePdfIcon />}
+				{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
 				<Trans>Download</Trans>
 			</Button>
 		</div>
