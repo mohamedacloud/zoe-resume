@@ -8,7 +8,8 @@ import { getSectionIcon, getSectionTitle, type LeftSidebarSection, leftSidebarSe
 import { getInitials } from "@/utils/string";
 import { BuilderSidebarEdge } from "../../-components/edge";
 import { useBuilderSidebar } from "../../-store/sidebar";
-import { useResumeStore } from "@/components/resume/store/resume";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SortableList } from "@/components/ui/sortable-list";
 import { SortableItem } from "@/components/ui/sortable-item";
 import { AwardsSectionBuilder } from "./sections/awards";
