@@ -63,7 +63,7 @@ type MoveItemSubmenuProps = {
  * - Create new section on existing page
  * - Create new page with new section
  */
-function MoveItemSubmenu({ type, item, customSectionId }: MoveItemSubmenuProps) {
+export function MoveItemSubmenu({ type, item, customSectionId }: MoveItemSubmenuProps) {
 	const resume = useResumeStore((state) => state.resume);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
 

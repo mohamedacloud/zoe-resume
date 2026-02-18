@@ -1,5 +1,4 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Reorder } from "motion/react";
 import { match } from "ts-pattern";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,8 @@ import { getInitials } from "@/utils/string";
 import { BuilderSidebarEdge } from "../../-components/edge";
 import { useBuilderSidebar } from "../../-store/sidebar";
 import { useResumeStore } from "@/components/resume/store/resume";
+import { SortableList } from "@/components/ui/sortable-list";
+import { SortableItem } from "@/components/ui/sortable-item";
 import { AwardsSectionBuilder } from "./sections/awards";
 import { BasicsSectionBuilder } from "./sections/basics";
 import { CertificationsSectionBuilder } from "./sections/certifications";
@@ -96,12 +97,12 @@ export function BuilderSidebarLeft() {
 		setSectionOrder(nextOrder);
 		updateResumeData((draft) => {
 			draft.metadata.layout.pages.forEach((page) => {
-				const mainKnown = nextOrder.filter((section) => page.main.includes(section));
-				const mainUnknown = page.main.filter((section) => !nextOrder.includes(section));
+				const mainKnown = nextOrder.filter((section) => page.main.includes(section as any));
+				const mainUnknown = page.main.filter((section) => !nextOrder.includes(section as any)) as LeftSidebarSection[];
 				page.main = [...mainKnown, ...mainUnknown];
 
-				const sidebarKnown = nextOrder.filter((section) => page.sidebar.includes(section));
-				const sidebarUnknown = page.sidebar.filter((section) => !nextOrder.includes(section));
+				const sidebarKnown = nextOrder.filter((section) => page.sidebar.includes(section as any));
+				const sidebarUnknown = page.sidebar.filter((section) => !nextOrder.includes(section as any)) as LeftSidebarSection[];
 				page.sidebar = [...sidebarKnown, ...sidebarUnknown];
 			});
 		});
@@ -122,16 +123,20 @@ export function BuilderSidebarLeft() {
 					))}
 
 					{/* Reorderable content sections */}
-					<Reorder.Group axis="y" values={sectionOrder} onReorder={handleSectionReorder}>
-						{sectionOrder.map((section) => (
-							<Reorder.Item key={section} value={section} className="space-y-4">
+					<SortableList
+						items={sectionOrder}
+						onReorder={handleSectionReorder}
+						keyExtractor={(section) => section}
+						className="space-y-4"
+						renderItem={(section) => (
+							<SortableItem key={section} id={section} asHandle className="space-y-4">
 								<Fragment>
 									{getSectionComponent(section)}
 									<Separator />
 								</Fragment>
-							</Reorder.Item>
-						))}
-					</Reorder.Group>
+							</SortableItem>
+						)}
+					/>
 				</div>
 			</ScrollArea>
 		</>
