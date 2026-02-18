@@ -2,14 +2,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	CopySimpleIcon,
-	FolderOpenIcon,
-	LockSimpleIcon,
-	LockSimpleOpenIcon,
 	PencilSimpleLineIcon,
 	TrashSimpleIcon,
 } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+
 import { toast } from "sonner";
 import {
 	DropdownMenu,
@@ -32,7 +29,6 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 	const { openDialog } = useDialogStore();
 
 	const { mutate: deleteResume } = useMutation(orpc.resume.delete.mutationOptions());
-	const { mutate: setLockedResume } = useMutation(orpc.resume.setLocked.mutationOptions());
 
 	const handleUpdate = () => {
 		openDialog("resume.update", resume);
@@ -42,24 +38,7 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 		openDialog("resume.duplicate", resume);
 	};
 
-	const handleToggleLock = async () => {
-		if (!resume.isLocked) {
-			const confirmation = await confirm(t`Are you sure you want to lock this resume?`, {
-				description: t`When locked, the resume cannot be updated or deleted.`,
-			});
 
-			if (!confirmation) return;
-		}
-
-		setLockedResume(
-			{ id: resume.id, isLocked: !resume.isLocked },
-			{
-				onError: (error) => {
-					toast.error(error.message);
-				},
-			},
-		);
-	};
 
 	const handleDelete = async () => {
 		const confirmation = await confirm(t`Are you sure you want to delete this resume?`, {
@@ -88,14 +67,8 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 			<DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
 
 			<DropdownMenuContent {...props}>
-				<Link to="/builder/$resumeId" params={{ resumeId: resume.id }}>
-					<DropdownMenuItem>
-						<FolderOpenIcon />
-						<Trans>Open</Trans>
-					</DropdownMenuItem>
-				</Link>
 
-				<DropdownMenuSeparator />
+				   <DropdownMenuSeparator />
 
 				<DropdownMenuItem disabled={resume.isLocked} onSelect={handleUpdate}>
 					<PencilSimpleLineIcon />
@@ -107,12 +80,8 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 					<Trans>Duplicate</Trans>
 				</DropdownMenuItem>
 
-				<DropdownMenuItem onSelect={handleToggleLock}>
-					{resume.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
-					{resume.isLocked ? <Trans>Unlock</Trans> : <Trans>Lock</Trans>}
-				</DropdownMenuItem>
 
-				<DropdownMenuSeparator />
+				   <DropdownMenuSeparator />
 
 				<DropdownMenuItem variant="destructive" disabled={resume.isLocked} onSelect={handleDelete}>
 					<TrashSimpleIcon />
