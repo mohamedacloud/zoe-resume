@@ -1,6 +1,8 @@
-import type React from "react";
 import { useState } from "react";
 import { useResumeStore } from "@/components/resume/store/resume";
+import { DragHandle, SortableItem } from "@/components/ui/sortable-item";
+import { SortableList } from "@/components/ui/sortable-list";
+import { cn } from "@/utils/style";
 import { SectionBase } from "../shared/section-base";
 
 type ProfileFormData = {
@@ -29,7 +31,6 @@ export function ProfilesSectionBuilder() {
 
 	const [isAddingProfile, setIsAddingProfile] = useState(false);
 	const [editingId, setEditingId] = useState<string | null>(null);
-	const [draggedItem, setDraggedItem] = useState<number | null>(null);
 	const [formData, setFormData] = useState<ProfileFormData>({
 		network: "LinkedIn",
 		username: "",
@@ -79,28 +80,11 @@ export function ProfilesSectionBuilder() {
 		});
 	};
 
-	const handleDragStart = (index: number) => {
-		setDraggedItem(index);
-	};
-
-	const handleDragOver = (e: React.DragEvent, index: number) => {
-		e.preventDefault();
-		if (draggedItem === null || draggedItem === index) return;
-
-		updateResumeData((draft) => {
-			const items = [...draft.sections.profiles.items];
-			const draggedProfile = items[draggedItem];
-			items.splice(draggedItem, 1);
-			items.splice(index, 0, draggedProfile);
-			draft.sections.profiles.items = items;
-		});
-
-		setDraggedItem(index);
-	};
-
-	const handleDragEnd = () => {
-		setDraggedItem(null);
-	};
+    const handleReorder = (items: typeof section.items) => {
+        updateResumeData((draft) => {
+            draft.sections.profiles.items = items;
+        });
+    };
 
 	const startEditing = (profile: {
 		id: string;
@@ -138,85 +122,68 @@ export function ProfilesSectionBuilder() {
 			<div className="space-y-4">
 				{/* Section Card */}
 				<div
-					className={`overflow-hidden rounded-xl border-2 bg-white shadow-sm ${
+					className={cn(
+                        "overflow-hidden rounded-xl border-2 bg-white shadow-sm transition-colors",
 						section.items.length === 0 && !isAddingProfile ? "border-gray-300 border-dashed" : "border-gray-200"
-					}`}
+                    )}
 				>
 					{/* Profiles List */}
-					{section.items.length > 0 && (
-						<div className="divide-y divide-gray-200">
-							{section.items.map((profile, index) => (
-								<div
-									key={profile.id}
-									draggable
-									onDragStart={() => handleDragStart(index)}
-									onDragOver={(e) => handleDragOver(e, index)}
-									onDragEnd={handleDragEnd}
-									className={`cursor-move p-4 transition-all hover:bg-gray-50 ${
-										draggedItem === index ? "opacity-50" : ""
-									}`}
-								>
-									<div className="flex items-center gap-4">
-										{/* Drag Handle */}
-										<div className="shrink-0 cursor-move">
-											<svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-											</svg>
-										</div>
-
-										{/* Network Icon */}
-										<div
-											className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white text-xl ${getNetworkColor(
-												profile.network,
-											)}`}
-										>
-											{getNetworkIcon(profile.network)}
-										</div>
-
-										{/* Profile Info */}
-										<div className="min-w-0 flex-1">
-											<h4 className="font-semibold text-gray-900 text-sm">{profile.network}</h4>
-											<p className="truncate text-gray-600 text-sm">{profile.username}</p>
-										</div>
-
-										{/* Action Buttons */}
-										<div className="flex shrink-0 items-center gap-2">
-											<button
-												onClick={() => startEditing(profile)}
-												className="rounded-lg p-2 text-gray-600 transition-all hover:bg-emerald-50 hover:text-emerald-600"
-												title="Edit"
-												type="button"
-											>
-												<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={2}
-														d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-													/>
-												</svg>
-											</button>
-											<button
-												onClick={() => handleDeleteProfile(profile.id)}
-												className="rounded-lg p-2 text-gray-600 transition-all hover:bg-red-50 hover:text-red-600"
-												title="Delete"
-												type="button"
-											>
-												<svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={2}
-														d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-													/>
-												</svg>
-											</button>
-										</div>
-									</div>
-								</div>
-							))}
-						</div>
-					)}
+                    <SortableList
+                        items={section.items}
+                        onReorder={handleReorder}
+                        keyExtractor={(item) => item.id}
+                        renderItem={(profile) => (
+                            <SortableItem key={profile.id} id={profile.id} className="group border-gray-200 border-b last:border-b-0">
+                                <div className="flex items-center gap-4 p-4 transition-all hover:bg-gray-50">
+                                    <DragHandle className="shrink-0 p-1 text-gray-400 transition-colors hover:text-gray-600" />
+                                    <div
+                                        className={cn(
+                                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white text-xl",
+                                            getNetworkColor(profile.network)
+                                        )}
+                                    >
+                                        {getNetworkIcon(profile.network)}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="font-semibold text-gray-900 text-sm">{profile.network}</h4>
+                                        <p className="truncate text-gray-600 text-sm">{profile.username}</p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        <button
+                                            onClick={() => startEditing(profile)}
+                                            className="rounded-lg p-2 text-gray-600 transition-all hover:bg-emerald-50 hover:text-emerald-600"
+                                            title="Edit"
+                                            type="button"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                                />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteProfile(profile.id)}
+                                            className="rounded-lg p-2 text-gray-600 transition-all hover:bg-red-50 hover:text-red-600"
+                                            title="Delete"
+                                            type="button"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </SortableItem>
+                        )}
+                    />
 
 					{/* Add/Edit Form */}
 					{(isAddingProfile || editingId) && (
@@ -232,7 +199,7 @@ export function ProfilesSectionBuilder() {
 									<select
 										value={formData.network}
 										onChange={(e) => setFormData({ ...formData, network: e.target.value })}
-										className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+										className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 									>
 										{socialNetworks.map((network) => (
 											<option key={network.name} value={network.name}>
@@ -250,7 +217,7 @@ export function ProfilesSectionBuilder() {
 										value={formData.username}
 										onChange={(e) => setFormData({ ...formData, username: e.target.value })}
 										placeholder="johndoe"
-										className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+										className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 									/>
 								</div>
 
@@ -262,7 +229,7 @@ export function ProfilesSectionBuilder() {
 										value={formData.url}
 										onChange={(e) => setFormData({ ...formData, url: e.target.value })}
 										placeholder={socialNetworks.find((n) => n.name === formData.network)?.placeholder}
-										className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+										className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
 									/>
 								</div>
 

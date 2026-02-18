@@ -2,8 +2,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { RichInput } from "@/components/input/rich-input";
 import { useResumeStore } from "@/components/resume/store/resume";
+import { SortableItem } from "@/components/ui/sortable-item";
+import { SortableList } from "@/components/ui/sortable-list";
 import { generateExperienceDescription } from "@/utils/ai-service";
 import { SectionBase } from "../shared/section-base";
+import { DotsSixVerticalIcon, TrashSimpleIcon } from "@phosphor-icons/react";
+import { cn } from "@/utils/style";
 
 export function ExperienceSectionBuilder() {
 	const section = useResumeStore((state) => state.resume.data.sections.experience);
@@ -190,123 +194,103 @@ export function ExperienceSectionBuilder() {
 
 				{/* Experiences List */}
 				<div className="space-y-4">
-					{section.items.map((exp) => (
-						<div key={exp.id} className="overflow-hidden rounded-2xl border-2 border-emerald-500 bg-white">
-							{/* Card Header */}
-							<div className="flex items-center justify-between border-gray-200 border-b p-5">
-								<h3 className="font-bold text-gray-900 text-xl">{exp.position || "New Position"}</h3>
-								<div className="flex items-center gap-3">
-									<button
-										onClick={() => handleDeleteExperience(exp.id)}
-										className="rounded-lg p-2 text-red-600 transition-all hover:bg-red-50"
-										title="Delete"
-										type="button"
-									>
-										<svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-											/>
-										</svg>
-									</button>
-									<button
-										onClick={() => toggleExpanded(exp.id)}
-										className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100"
-										title={expandedIds.has(exp.id) ? "Collapse" : "Expand"}
-										type="button"
-									>
-										<svg
-											className={`h-5 w-5 transition-transform ${expandedIds.has(exp.id) ? "rotate-180" : ""}`}
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-										</svg>
-									</button>
-								</div>
-							</div>
-
-							{/* Card Content */}
-							{expandedIds.has(exp.id) && (
-								<div className="p-6">
-									{/* Position & Company Row */}
-									<div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-										<div>
-											<label className="mb-3 block font-semibold text-base text-gray-900">Position</label>
-											<input
-												type="text"
-												value={exp.position}
-												onChange={(e) => handleUpdateExperience(exp.id, "position", e.target.value)}
-												placeholder="Software Engineer"
-												className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
-											/>
+                    <SortableList
+                        items={section.items}
+                        onReorder={(newItems) => {
+                            updateResumeData((draft) => {
+                                draft.sections.experience.items = newItems;
+                            });
+                        }}
+                        keyExtractor={(item) => item.id}
+                        renderItem={(exp) => (
+							<SortableItem key={exp.id} id={exp.id} asHandle className="group/item relative">
+								<div className="overflow-hidden rounded-2xl border-2 border-emerald-500 bg-white shadow-sm transition-all hover:shadow-md">
+									{/* Card Header */}
+									<div className="flex items-center justify-between border-gray-200 border-b p-5">
+										<div className="flex items-center gap-1 overflow-hidden">
+											<div className="flex shrink-0 items-center p-2 text-gray-400 opacity-40 transition-opacity group-hover/item:opacity-100">
+												<DotsSixVerticalIcon size={20} />
+											</div>
+											<h3 className="truncate font-bold text-gray-900 text-xl">{exp.position || "New Position"}</h3>
 										</div>
-
-										<div>
-											<label className="mb-3 block font-semibold text-base text-gray-900">Company</label>
-											<input
-												type="text"
-												value={exp.company}
-												onChange={(e) => handleUpdateExperience(exp.id, "company", e.target.value)}
-												placeholder="Acme Inc."
-												className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
-											/>
+										<div className="flex items-center gap-3">
+											<button
+												onClick={() => handleDeleteExperience(exp.id)}
+												className="rounded-lg p-2 text-red-600 transition-all hover:bg-red-50"
+												title="Delete"
+												type="button"
+											>
+												<TrashSimpleIcon size={20} />
+											</button>
+											<button
+												onClick={() => toggleExpanded(exp.id)}
+												className="rounded-lg p-2 text-gray-600 transition-all hover:bg-gray-100"
+												title={expandedIds.has(exp.id) ? "Collapse" : "Expand"}
+												type="button"
+											>
+												<svg
+													className={cn("h-5 w-5 transition-transform", expandedIds.has(exp.id) && "rotate-180")}
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+												</svg>
+											</button>
 										</div>
 									</div>
 
-									{/* Location */}
-									<div className="mb-6">
-										<label className="mb-3 block font-semibold text-base text-gray-900">Location</label>
-										<input
-											type="text"
-											value={exp.location}
-											onChange={(e) => handleUpdateExperience(exp.id, "location", e.target.value)}
-											placeholder="San Francisco, CA"
-											className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
-										/>
-									</div>
+									{/* Card Content */}
+									{expandedIds.has(exp.id) && (
+										<div className="p-6">
+											{/* Position & Company Row */}
+											<div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+												<div>
+													<label className="mb-3 block font-semibold text-base text-gray-900">Position</label>
+													<input
+														type="text"
+														value={exp.position}
+														onChange={(e) => handleUpdateExperience(exp.id, "position", e.target.value)}
+														placeholder="Software Engineer"
+														className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+													/>
+												</div>
 
-									{/* Dates Row */}
-									<div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-										<div>
-											<label className="mb-3 block font-semibold text-base text-gray-900">Start Date</label>
-											<input
-												type="month"
-												value={parseDate(exp.period, "start")}
-												onChange={(e) => handleDateChange(exp.id, "start", e.target.value)}
-												className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
-											/>
-										</div>
+												<div>
+													<label className="mb-3 block font-semibold text-base text-gray-900">Company</label>
+													<input
+														type="text"
+														value={exp.company}
+														onChange={(e) => handleUpdateExperience(exp.id, "company", e.target.value)}
+														placeholder="Acme Inc."
+														className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+													/>
+												</div>
+											</div>
 
-										<div>
-											<label className="mb-3 block font-semibold text-base text-gray-900">End Date</label>
-											<input
-												type="month"
-												value={parseDate(exp.period, "end")}
-												onChange={(e) => handleDateChange(exp.id, "end", e.target.value)}
-												disabled={isCurrent(exp.period)}
-												placeholder="Present"
-												className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-100"
-											/>
-										</div>
-									</div>
+											{/* Location */}
+											<div className="mb-6">
+												<label className="mb-3 block font-semibold text-base text-gray-900">Location</label>
+												<input
+													type="text"
+													value={exp.location}
+													onChange={(e) => handleUpdateExperience(exp.id, "location", e.target.value)}
+													placeholder="San Francisco, CA"
+													className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+												/>
+											</div>
 
-									{/* Current Position Checkbox */}
-									<div className="mb-6 flex items-center gap-3">
-										<input
-											type="checkbox"
-											id={`current-${exp.id}`}
-											checked={isCurrent(exp.period)}
-											onChange={(e) => handleCurrentToggle(exp.id, e.target.checked)}
-											className="h-5 w-5 cursor-pointer rounded border-2 border-gray-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500"
-										/>
-										<label htmlFor={`current-${exp.id}`} className="cursor-pointer select-none text-base text-gray-900">
-											I currently work here
-										</label>
-									</div>
+											{/* Dates Row */}
+											<div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+												<div>
+													<label className="mb-3 block font-semibold text-base text-gray-900">Start Date</label>
+													<input
+														type="month"
+														value={parseDate(exp.period, "start")}
+														onChange={(e) => handleDateChange(exp.id, "start", e.target.value)}
+														className="w-full rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+													/>
+												</div>
 
 									{/* Description */}
 									<div>
@@ -361,13 +345,75 @@ export function ExperienceSectionBuilder() {
 													strokeWidth={2}
 													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
 												/>
-											</svg>
+												<label htmlFor={`current-${exp.id}`} className="cursor-pointer select-none text-base text-gray-900">
+													I currently work here
+												</label>
+											</div>
+
+											{/* Description */}
+											<div>
+												<div className="mb-3 flex items-center justify-between">
+													<label className="block font-semibold text-base text-gray-900">Description & Achievements</label>
+													<button
+														onClick={() => handleAskZoe(exp.id)}
+														disabled={generatingIds.has(exp.id)}
+														className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 text-sm shadow-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+														type="button"
+													>
+														{generatingIds.has(exp.id) ? (
+															<>
+																<svg
+																	className="h-4 w-4 animate-spin text-emerald-600"
+																	fill="none"
+																	stroke="currentColor"
+																	viewBox="0 0 24 24"
+																>
+																	<path
+																		strokeLinecap="round"
+																		strokeLinejoin="round"
+																		strokeWidth={2}
+																		d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+																	/>
+																</svg>
+																Generating...
+															</>
+														) : (
+															<>
+																<img src="/zoe-icon.png" alt="Zoe" className="h-5 w-5" />
+																Ask Zoe
+															</>
+														)}
+													</button>
+												</div>
+												<div className="relative">
+													<textarea
+														value={exp.description}
+														onChange={(e) => handleUpdateExperience(exp.id, "description", e.target.value)}
+														rows={6}
+														placeholder="• Led development of..."
+														className="w-full resize-none rounded-xl border-0 bg-gray-50 px-4 py-3 text-base text-gray-900 placeholder-gray-400 transition-all focus:bg-white focus:ring-2 focus:ring-emerald-500"
+													/>
+													<svg
+														className="pointer-events-none absolute right-3 bottom-3 size-5 text-gray-400"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															strokeLinecap="round"
+															strokeLinejoin="round"
+															strokeWidth={2}
+															d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+														/>
+													</svg>
+												</div>
+											</div>
 										</div>
-									</div>
+									)}
 								</div>
-							)}
-						</div>
-					))}
+							</SortableItem>
+						)}
+                    />
 				</div>
 
 				{/* Empty State */}

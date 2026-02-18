@@ -1,11 +1,12 @@
 import { Trans } from "@lingui/react/macro";
-import { AnimatePresence, Reorder } from "motion/react";
 import type z from "zod";
 import { useResumeStore } from "@/components/resume/store/resume";
+import { SortableList } from "@/components/ui/sortable-list";
 import type { certificationItemSchema } from "@/schema/resume/data";
 import { cn } from "@/utils/style";
 import { SectionBase } from "../shared/section-base";
-import { SectionAddItemButton, SectionItem } from "../shared/section-item";
+import { SectionAddItemButton } from "../shared/section-item";
+import { SortableSectionItem } from "../shared/sortable-section-item";
 
 export function CertificationsSectionBuilder() {
 	const section = useResumeStore((state) => state.resume.data.sections.certifications);
@@ -22,19 +23,20 @@ export function CertificationsSectionBuilder() {
 			type="certifications"
 			className={cn("rounded-md border", section.items.length === 0 && "border-dashed")}
 		>
-			<Reorder.Group axis="y" values={section.items} onReorder={handleReorder}>
-				<AnimatePresence>
-					{section.items.map((item) => (
-						<SectionItem
-							key={item.id}
-							type="certifications"
-							item={item}
-							title={item.title}
-							subtitle={[item.issuer, item.date].filter(Boolean).join(" • ") || undefined}
-						/>
-					))}
-				</AnimatePresence>
-			</Reorder.Group>
+			<SortableList
+				items={section.items}
+				onReorder={handleReorder}
+				keyExtractor={(item) => item.id}
+				renderItem={(item) => (
+					<SortableSectionItem
+						key={item.id}
+						type="certifications"
+						item={item}
+						title={item.title}
+						subtitle={[item.issuer, item.date].filter(Boolean).join(" • ") || undefined}
+					/>
+				)}
+			/>
 
 			<SectionAddItemButton type="certifications">
 				<Trans>Add a new certification</Trans>
