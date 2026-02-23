@@ -54,7 +54,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "Inter",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
@@ -84,7 +84,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "IBM Plex Sans",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
@@ -114,7 +114,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "Lato",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
@@ -144,7 +144,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "Roboto",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
@@ -204,7 +204,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "Open Sans",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
@@ -354,7 +354,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "IBM Plex Serif",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
@@ -384,7 +384,7 @@ export const templates = {
 			typography: {
 				body: {
 					fontFamily: "Raleway",
-					fontWeights: ["400", "500"],
+					fontWeights: ["400"],
 					fontSize: 10,
 					lineHeight: 1.5,
 				},
