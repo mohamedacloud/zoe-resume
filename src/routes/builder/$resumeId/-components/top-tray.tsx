@@ -57,7 +57,7 @@ export function BuilderTopTray() {
 						<Trans>Colours</Trans>
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="w-[320px]">
+				<PopoverContent className="w-[320px]" onOpenAutoFocus={(e) => e.preventDefault()}>
 					<PopoverHeader>
 						<PopoverTitle>
 							<Trans>Resume Colours</Trans>
