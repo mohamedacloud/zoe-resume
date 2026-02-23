@@ -9,11 +9,13 @@ type PanelImperativeHandle = ReturnType<typeof usePanelRef>;
 interface BuilderSidebarState {
 	leftSidebar: PanelImperativeHandle | null;
 	rightSidebar: PanelImperativeHandle | null;
+	isLeftSidebarCollapsed: boolean;
 }
 
 interface BuilderSidebarActions {
 	setLeftSidebar: (ref: PanelImperativeHandle | null) => void;
 	setRightSidebar: (ref: PanelImperativeHandle | null) => void;
+	setLeftSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 type BuilderSidebar = BuilderSidebarState & BuilderSidebarActions;
@@ -22,8 +24,10 @@ export const useBuilderSidebarStore = create<BuilderSidebar>((set) => ({
 	isDragging: false,
 	leftSidebar: null,
 	rightSidebar: null,
+	isLeftSidebarCollapsed: false,
 	setLeftSidebar: (ref) => set({ leftSidebar: ref }),
 	setRightSidebar: (ref) => set({ rightSidebar: ref }),
+	setLeftSidebarCollapsed: (collapsed) => set({ isLeftSidebarCollapsed: collapsed }),
 }));
 
 type UseBuilderSidebarReturn = {
@@ -70,8 +74,13 @@ export function useBuilderSidebar<T = UseBuilderSidebarReturn>(selector?: (build
 
 			const shouldExpand = forceState === undefined ? sidebar.isCollapsed() : forceState;
 
-			if (shouldExpand) sidebar.resize(expandSize);
-			else sidebar.collapse();
+			if (shouldExpand) {
+				sidebar.resize(expandSize);
+				if (side === "left") useBuilderSidebarStore.getState().setLeftSidebarCollapsed(false);
+			} else {
+				sidebar.collapse();
+				if (side === "left") useBuilderSidebarStore.getState().setLeftSidebarCollapsed(true);
+			}
 		},
 		[expandSize],
 	);

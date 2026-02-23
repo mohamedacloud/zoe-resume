@@ -106,6 +106,8 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 					collapsedSize={0}
 					defaultSize={leftSidebarSize || 30}
 					className="z-20 h-[calc(100svh-3.5rem)]"
+					onCollapse={() => useBuilderSidebarStore.getState().setLeftSidebarCollapsed(true)}
+					onExpand={() => useBuilderSidebarStore.getState().setLeftSidebarCollapsed(false)}
 				>
 					<BuilderSidebarLeft />
 				</ResizablePanel>
