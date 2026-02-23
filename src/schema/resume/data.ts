@@ -646,7 +646,7 @@ export const defaultResumeData: ResumeData = {
 		typography: {
 			body: {
 				fontFamily: "IBM Plex Serif",
-				fontWeights: ["400", "500"],
+				fontWeights: ["400"],
 				fontSize: 10,
 				lineHeight: 1.5,
 			},
