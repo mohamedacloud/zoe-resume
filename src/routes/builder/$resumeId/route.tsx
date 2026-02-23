@@ -78,7 +78,6 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	const { maxSidebarSize } = useBuilderSidebar((state) => ({
 		maxSidebarSize: state.maxSidebarSize,
 	}));
-	const collapsedSidebarSize = 0;
 
 	const onLayoutChange = useDebounceCallback((layout: Layout) => {
 		setBuilderLayoutServerFn({ data: layout });
@@ -97,7 +96,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 		<div className="flex h-svh flex-col" {...props}>
 			<BuilderHeader />
 
-			<ResizableGroup orientation="horizontal" className="mt-14 flex-1" onLayoutChange={onLayoutChange}>
+			<ResizableGroup orientation="horizontal" className="flex-1" onLayoutChange={onLayoutChange}>
 				<ResizablePanel
 					collapsible
 					id="left"

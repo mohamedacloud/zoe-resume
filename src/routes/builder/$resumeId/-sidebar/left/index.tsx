@@ -1,15 +1,9 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { match } from "ts-pattern";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { UserDropdownMenu } from "@/components/user/dropdown-menu";
-import { getSectionIcon, getSectionTitle, type LeftSidebarSection, leftSidebarSections } from "@/utils/resume/section";
-import { getInitials } from "@/utils/string";
-import { BuilderSidebarEdge } from "../../-components/edge";
-import { useBuilderSidebar } from "../../-store/sidebar";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { type LeftSidebarSection, leftSidebarSections } from "@/utils/resume/section";
 import { SortableList } from "@/components/ui/sortable-list";
 import { SortableItem } from "@/components/ui/sortable-item";
 import { AwardsSectionBuilder } from "./sections/awards";
@@ -109,10 +103,8 @@ export function BuilderSidebarLeft() {
 	};
 
 	return (
-		<>
-			<SidebarEdge scrollAreaRef={scrollAreaRef} />
 
-			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50 sm:ms-12">
+			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50">
 				<div className="space-y-4 p-4">
 					{/* Fixed sections (picture and basics) - not draggable, always at top */}
 					{fixedSections.map((section) => (
@@ -139,56 +131,5 @@ export function BuilderSidebarLeft() {
 					/>
 				</div>
 			</ScrollArea>
-		</>
-	);
-}
-
-type SidebarEdgeProps = {
-	scrollAreaRef: React.RefObject<HTMLDivElement | null>;
-};
-
-function SidebarEdge({ scrollAreaRef }: SidebarEdgeProps) {
-	const toggleSidebar = useBuilderSidebar((state) => state.toggleSidebar);
-
-	const scrollToSection = useCallback(
-		(section: LeftSidebarSection) => {
-			if (!scrollAreaRef.current) return;
-			toggleSidebar("left", true);
-
-			const sectionElement = scrollAreaRef.current.querySelector(`#sidebar-${section}`);
-			sectionElement?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-		},
-		[toggleSidebar, scrollAreaRef],
-	);
-
-	return (
-		<BuilderSidebarEdge side="left">
-			<div />
-
-			<div className="flex flex-col justify-center gap-y-2">
-				{leftSidebarSections.map((section) => (
-					<Button
-						key={section}
-						size="icon"
-						variant="ghost"
-						title={getSectionTitle(section)}
-						onClick={() => scrollToSection(section)}
-					>
-						{getSectionIcon(section)}
-					</Button>
-				))}
-			</div>
-
-			<UserDropdownMenu>
-				{({ session }) => (
-					<Button size="icon" variant="ghost">
-						<Avatar className="size-6">
-							<AvatarImage src={session.user.image ?? undefined} />
-							<AvatarFallback className="text-[0.5rem]">{getInitials(session.user.name)}</AvatarFallback>
-						</Avatar>
-					</Button>
-				)}
-			</UserDropdownMenu>
-		</BuilderSidebarEdge>
 	);
 }
