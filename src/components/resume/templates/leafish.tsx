@@ -1,4 +1,6 @@
 import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
+import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
 import { getSectionComponent } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
@@ -27,10 +29,12 @@ export function LeafishTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 			<div className="flex gap-x-(--page-margin-x) px-(--page-margin-x) pt-(--page-margin-y)">
 				<main data-layout="main" className="group page-main space-y-(--page-gap-y)">
-					{main.map((section) => {
-						const Component = getSectionComponent(section, { sectionClassName });
-						return <Component key={section} id={section} />;
-					})}
+					{main
+						.filter((section) => section !== "summary")
+						.map((section) => {
+							const Component = getSectionComponent(section, { sectionClassName });
+							return <Component key={section} id={section} />;
+						})}
 				</main>
 
 				{!fullWidth && (
@@ -38,10 +42,12 @@ export function LeafishTemplate({ pageIndex, pageLayout }: TemplateProps) {
 						data-layout="sidebar"
 						className="group page-sidebar w-(--page-sidebar-width) shrink-0 space-y-(--page-gap-y)"
 					>
-						{sidebar.map((section) => {
-							const Component = getSectionComponent(section, { sectionClassName });
-							return <Component key={section} id={section} />;
-						})}
+						{sidebar
+							.filter((section) => section !== "summary")
+							.map((section) => {
+								const Component = getSectionComponent(section, { sectionClassName });
+								return <Component key={section} id={section} />;
+							})}
 					</aside>
 				)}
 			</div>
@@ -51,7 +57,26 @@ export function LeafishTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 function Header() {
 	const basics = useResumeStore((state) => state.resume.data.basics);
+	const summary = useResumeStore((state) => state.resume.data.summary);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const contentRef = useRef<HTMLDivElement>(null);
+
+	// Update content when summary.content changes
+	useEffect(() => {
+		if (contentRef.current && contentRef.current.innerHTML !== summary.content) {
+			contentRef.current.innerHTML = summary.content;
+		}
+	}, [summary.content]);
+
+	const handleContentChange = (e: React.FocusEvent<HTMLDivElement>) => {
+		const newValue = e.currentTarget.innerHTML || "";
+		if (newValue !== summary.content) {
+			updateResumeData((draft) => {
+				draft.summary.content = newValue;
+			});
+		}
+	};
 
 	const handleEmailChange = (value: string) => {
 		updateResumeData((draft) => {
@@ -94,9 +119,23 @@ function Header() {
 							<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 						</h2>
 						<p className="basics-headline">
-							<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+							<InlineEditableText
+								value={basics.headline}
+								placeholder="Your Professional Title"
+								onChange={handleHeadlineChange}
+							/>
 						</p>
 					</div>
+
+					{!summary.hidden && !!stripHtml(summary.content) && (
+						<div
+							ref={contentRef}
+							contentEditable
+							suppressContentEditableWarning
+							onBlur={handleContentChange}
+							className="basics-summary cursor-text text-sm outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+						/>
+					)}
 				</div>
 			</div>
 
@@ -126,11 +165,7 @@ function Header() {
 
 					<div className="basics-item-location">
 						<MapPinIcon />
-						<InlineEditableText
-							value={basics.location}
-							placeholder="City, Country"
-							onChange={handleLocationChange}
-						/>
+						<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 					</div>
 
 					{basics.website.url && (
