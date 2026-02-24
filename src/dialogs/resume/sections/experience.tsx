@@ -4,7 +4,6 @@ import { PencilSimpleLineIcon, PlusIcon } from "@phosphor-icons/react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import type z from "zod";
 import { RichInput } from "@/components/input/rich-input";
-import { URLInput } from "@/components/input/url-input";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { AIGenerateButton } from "@/components/ui/ai-generate-button";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { DialogProps } from "@/dialogs/store";
 import { useDialogStore } from "@/dialogs/store";
-import { useFormBlocker } from "@/hooks/use-form-blocker";
 import { experienceItemSchema } from "@/schema/resume/data";
 import { generateId } from "@/utils/string";
 
@@ -35,8 +33,9 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			company: data?.item?.company ?? "",
 			position: data?.item?.position ?? "",
 			location: data?.item?.location ?? "",
-			period: data?.item?.period ?? "",
-			website: data?.item?.website ?? { url: "", label: "" },
+			startDate: data?.item?.startDate ?? "",
+			endDate: data?.item?.endDate ?? "",
+			currentlyWorkingHere: data?.item?.currentlyWorkingHere ?? false,
 			description: data?.item?.description ?? "",
 		},
 	});
@@ -53,10 +52,8 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 		closeDialog();
 	};
 
-	const { blockEvents, requestClose } = useFormBlocker(form);
-
 	return (
-		<DialogContent {...blockEvents}>
+		<DialogContent>
 			<DialogHeader>
 				<DialogTitle className="flex items-center gap-x-2">
 					<PlusIcon />
@@ -70,7 +67,7 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 					<ExperienceForm />
 
 					<DialogFooter className="sm:col-span-full">
-						<Button variant="ghost" onClick={requestClose}>
+						<Button variant="ghost" onClick={closeDialog}>
 							<Trans>Cancel</Trans>
 						</Button>
 
@@ -97,8 +94,9 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			company: data.item.company,
 			position: data.item.position,
 			location: data.item.location,
-			period: data.item.period,
-			website: data.item.website,
+			startDate: data.item.startDate ?? "",
+			endDate: data.item.endDate ?? "",
+			currentlyWorkingHere: data.item.currentlyWorkingHere ?? false,
 			description: data.item.description,
 		},
 	});
@@ -118,10 +116,8 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 		closeDialog();
 	};
 
-	const { blockEvents, requestClose } = useFormBlocker(form);
-
 	return (
-		<DialogContent {...blockEvents}>
+		<DialogContent>
 			<DialogHeader>
 				<DialogTitle className="flex items-center gap-x-2">
 					<PencilSimpleLineIcon />
@@ -135,7 +131,7 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 					<ExperienceForm />
 
 					<DialogFooter className="sm:col-span-full">
-						<Button variant="ghost" onClick={requestClose}>
+						<Button variant="ghost" onClick={closeDialog}>
 							<Trans>Cancel</Trans>
 						</Button>
 
@@ -212,14 +208,14 @@ function ExperienceForm() {
 
 			<FormField
 				control={form.control}
-				name="period"
+				name="startDate"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>
-							<Trans>Period</Trans>
+							<Trans>Start Date</Trans>
 						</FormLabel>
 						<FormControl>
-							<Input {...field} />
+							<Input type="date" {...field} />
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -228,19 +224,14 @@ function ExperienceForm() {
 
 			<FormField
 				control={form.control}
-				name="website"
+				name="endDate"
 				render={({ field }) => (
-					<FormItem className="sm:col-span-full">
+					<FormItem>
 						<FormLabel>
-							<Trans>Website</Trans>
+							<Trans>End Date</Trans>
 						</FormLabel>
 						<FormControl>
-							<URLInput
-								{...field}
-								value={field.value}
-								onChange={field.onChange}
-								hideLabelButton={form.watch("options.showLinkInTitle")}
-							/>
+							<Input type="date" {...field} disabled={form.watch("currentlyWorkingHere")} />
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -249,14 +240,14 @@ function ExperienceForm() {
 
 			<FormField
 				control={form.control}
-				name="options.showLinkInTitle"
+				name="currentlyWorkingHere"
 				render={({ field }) => (
-					<FormItem className="flex items-center gap-x-2 sm:col-span-full">
+					<FormItem className="flex items-center gap-x-2">
 						<FormControl>
 							<Switch checked={field.value} onCheckedChange={field.onChange} />
 						</FormControl>
-						<FormLabel className="!mt-0">
-							<Trans>Show link in title</Trans>
+						<FormLabel className="mt-0!">
+							<Trans>Currently working here</Trans>
 						</FormLabel>
 					</FormItem>
 				)}
@@ -271,7 +262,6 @@ function ExperienceForm() {
 							<FormLabel>
 								<Trans>Description</Trans>
 							</FormLabel>
-							{(company || position) && (
 								<AIGenerateButton
 									type="experience"
 									data={{
@@ -283,7 +273,6 @@ function ExperienceForm() {
 									}}
 									onGenerated={handleAIGenerated}
 								/>
-							)}
 						</div>
 						<FormControl>
 							<RichInput {...field} value={field.value} onChange={field.onChange} />

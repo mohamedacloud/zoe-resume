@@ -129,14 +129,16 @@ export const educationItemSchema = baseItemSchema.extend({
 	period: z.string().describe("The period of time the education was obtained over."),
 	website: urlSchema.describe("The website of the school or institution, if any."),
 	description: z.string().describe("The description of the education. This should be a HTML-formatted string."),
+	currentlyStudyingHere: z.boolean().describe("Indicates if the user is currently studying at this institution."),
 });
 
 export const experienceItemSchema = baseItemSchema.extend({
 	company: z.string().min(1).describe("The name of the company or organization."),
 	position: z.string().describe("The position held at the company or organization."),
 	location: z.string().describe("The location of the company or organization."),
-	period: z.string().describe("The period of time the author was employed at the company or organization."),
-	website: urlSchema.describe("The website of the company or organization, if any."),
+	startDate: z.string().optional().describe("The start date of the experience."),
+	endDate: z.string().optional().describe("The end date of the experience."),
+	currentlyWorkingHere: z.boolean().optional().describe("Whether the user is currently working here."),
 	description: z.string().describe("The description of the experience. This should be a HTML-formatted string."),
 });
 
