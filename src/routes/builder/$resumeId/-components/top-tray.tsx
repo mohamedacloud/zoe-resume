@@ -188,7 +188,13 @@ function TypographyPopoverContent() {
 				<FontWeightCombobox
 					fontFamily={typography.body.fontFamily}
 					value={typography.body.fontWeights}
-					onValueChange={(value) => updateBody({ fontWeights: value })}
+					onValueChange={(value) =>
+						updateBody({
+							fontWeights: value.filter((weight): weight is "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900" =>
+								["100", "200", "300", "400", "500", "600", "700", "800", "900"].includes(weight),
+							),
+						})
+					}
 				/>
 			</div>
 
@@ -206,12 +212,16 @@ function TypographyPopoverContent() {
 							value={typography.body.fontSize}
 							onChange={(e) => {
 								const value = e.target.value;
-								if (value === "") return;
+								if (value === "") {
+									return;
+								}
 								updateBody({ fontSize: Number(value) });
 							}}
 						/>
-						<InputGroupAddon align="inline-end">
-							<InputGroupText>pt</InputGroupText>
+						<InputGroupAddon>
+							<InputGroupText>
+								<Trans>px</Trans>
+							</InputGroupText>
 						</InputGroupAddon>
 					</InputGroup>
 				</div>
@@ -223,18 +233,22 @@ function TypographyPopoverContent() {
 					<InputGroup>
 						<InputGroupInput
 							type="number"
-							min={0.5}
-							max={4}
-							step={0.05}
+							min={1}
+							max={3}
+							step={0.1}
 							value={typography.body.lineHeight}
 							onChange={(e) => {
 								const value = e.target.value;
-								if (value === "") return;
+								if (value === "") {
+									return;
+								}
 								updateBody({ lineHeight: Number(value) });
 							}}
 						/>
-						<InputGroupAddon align="inline-end">
-							<InputGroupText>x</InputGroupText>
+						<InputGroupAddon>
+							<InputGroupText>
+								<Trans>em</Trans>
+							</InputGroupText>
 						</InputGroupAddon>
 					</InputGroup>
 				</div>
