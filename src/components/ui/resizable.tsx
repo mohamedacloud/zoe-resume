@@ -14,15 +14,13 @@ function ResizableGroup({ className, ...props }: React.ComponentProps<typeof Res
 
 function ResizablePanel({
 	className,
-	onCollapse,
 	...props
-}: React.ComponentProps<typeof ResizablePrimitive.Panel> & { onCollapse?: () => void }) {
+}: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
 	return (
 		<ResizablePrimitive.Panel
 			data-slot="resizable-panel"
 			className={cn("relative", className)}
 			{...props}
-			onCollapse={onCollapse}
 		/>
 	);
 }
