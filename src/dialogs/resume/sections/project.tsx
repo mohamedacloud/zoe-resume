@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { DialogProps } from "@/dialogs/store";
 import { useDialogStore } from "@/dialogs/store";
-import { useFormBlocker } from "@/hooks/use-form-blocker";
 import { projectItemSchema } from "@/schema/resume/data";
 import { generateId } from "@/utils/string";
 
@@ -51,10 +50,8 @@ export function CreateProjectDialog({ data }: DialogProps<"resume.sections.proje
 		closeDialog();
 	};
 
-	const { blockEvents, requestClose } = useFormBlocker(form);
-
 	return (
-		<DialogContent {...blockEvents}>
+		<DialogContent>
 			<DialogHeader>
 				<DialogTitle className="flex items-center gap-x-2">
 					<PlusIcon />
@@ -68,7 +65,7 @@ export function CreateProjectDialog({ data }: DialogProps<"resume.sections.proje
 					<ProjectForm />
 
 					<DialogFooter className="sm:col-span-full">
-						<Button variant="ghost" onClick={requestClose}>
+						<Button variant="ghost" onClick={closeDialog}>
 							<Trans>Cancel</Trans>
 						</Button>
 
@@ -114,10 +111,8 @@ export function UpdateProjectDialog({ data }: DialogProps<"resume.sections.proje
 		closeDialog();
 	};
 
-	const { blockEvents, requestClose } = useFormBlocker(form);
-
 	return (
-		<DialogContent {...blockEvents}>
+		<DialogContent>
 			<DialogHeader>
 				<DialogTitle className="flex items-center gap-x-2">
 					<PencilSimpleLineIcon />
@@ -131,7 +126,7 @@ export function UpdateProjectDialog({ data }: DialogProps<"resume.sections.proje
 					<ProjectForm />
 
 					<DialogFooter className="sm:col-span-full">
-						<Button variant="ghost" onClick={requestClose}>
+						<Button variant="ghost" onClick={closeDialog}>
 							<Trans>Cancel</Trans>
 						</Button>
 
@@ -218,7 +213,7 @@ function ProjectForm() {
 						<FormControl>
 							<Switch checked={field.value} onCheckedChange={field.onChange} />
 						</FormControl>
-						<FormLabel className="!mt-0">
+						<FormLabel className="mt-0!">
 							<Trans>Show link in title</Trans>
 						</FormLabel>
 					</FormItem>
@@ -234,18 +229,16 @@ function ProjectForm() {
 							<FormLabel>
 								<Trans>Description</Trans>
 							</FormLabel>
-							{name && (
-								<AIGenerateButton
-									type="projects"
-									data={{
-										name,
-										technologies: "",
-										description,
-										highlights: "",
-									}}
-									onGenerated={handleAIGenerated}
-								/>
-							)}
+							<AIGenerateButton
+								type="projects"
+								data={{
+									name,
+									technologies: "",
+									description,
+									highlights: "",
+								}}
+								onGenerated={handleAIGenerated}
+							/>
 						</div>
 						<FormControl>
 							<RichInput {...field} value={field.value} onChange={field.onChange} />

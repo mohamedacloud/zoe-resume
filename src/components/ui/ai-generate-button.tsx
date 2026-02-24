@@ -68,10 +68,10 @@ export function AIGenerateButton({ type, data, onGenerated, disabled, className 
 			variant="outline"
 			onClick={handleGenerate}
 			disabled={isDisabled}
-			className={className}
 			title={buttonTitle}
+			className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 text-sm shadow-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
 		>
-			<img src="/logo/zoe-logo.png" alt="" className="size-4" />
+			<img src="/src/dialogs/resume/zoe-talking.png" alt="" className="size-4" />
 			<Trans>Ask Zoe</Trans>
 		</Button>
 	);
