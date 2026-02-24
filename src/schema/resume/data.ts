@@ -404,6 +404,8 @@ export const pageLayoutSchema = z.object({
 		),
 });
 
+export type PageLayout = z.infer<typeof pageLayoutSchema>;
+
 export const layoutSchema = z.object({
 	sidebarWidth: z
 		.number()

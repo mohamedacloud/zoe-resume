@@ -104,7 +104,7 @@ function Header() {
 	};
 
 	return (
-		<div className="page-header w-full space-y-(--page-gap-y) rounded-(--picture-border-radius) bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
+		<div data-section-id="header" className="page-header w-full space-y-(--page-gap-y) rounded-(--picture-border-radius) bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
 			<div className="border-(--page-background-color)/50 border-b pb-2">
 				<h2 className="basics-name">
 					<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />

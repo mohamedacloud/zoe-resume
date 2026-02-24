@@ -99,7 +99,7 @@ function Header() {
 	};
 
 	return (
-		<div className="page-header space-y-4 bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
+		<div data-section-id="header" className="page-header space-y-4 bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
 			<PagePicture />
 
 			<div>

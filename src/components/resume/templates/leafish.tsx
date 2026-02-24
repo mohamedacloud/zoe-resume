@@ -109,7 +109,7 @@ function Header() {
 	};
 
 	return (
-		<div className="page-header bg-(--page-primary-color)/10">
+		<div data-section-id="header" className="page-header bg-(--page-primary-color)/10">
 			<div className="flex items-center gap-x-(--page-margin-x) px-(--page-margin-x) py-(--page-margin-y)">
 				<PagePicture />
 

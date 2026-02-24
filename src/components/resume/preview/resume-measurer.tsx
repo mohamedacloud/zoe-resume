@@ -1,7 +1,22 @@
 import { useState, useLayoutEffect, useMemo } from "react";
+import { match } from "ts-pattern";
 import { pageDimensionsAsPixels } from "@/schema/page";
+import type { Template } from "@/schema/templates";
 import { getSectionComponent } from "../shared/get-section-component";
 import { useResumeStore } from "../store/resume";
+import { AzurillTemplate } from "../templates/azurill";
+import { BronzorTemplate } from "../templates/bronzor";
+import { ChikoritaTemplate } from "../templates/chikorita";
+import { DitgarTemplate } from "../templates/ditgar";
+import { DittoTemplate } from "../templates/ditto";
+import { GengarTemplate } from "../templates/gengar";
+import { GlalieTemplate } from "../templates/glalie";
+import { KakunaTemplate } from "../templates/kakuna";
+import { LaprasTemplate } from "../templates/lapras";
+import { LeafishTemplate } from "../templates/leafish";
+import { OnyxTemplate } from "../templates/onyx";
+import { PikachuTemplate } from "../templates/pikachu";
+import { RhyhornTemplate } from "../templates/rhyhorn";
 
 // Constants for measurement
 
@@ -26,14 +41,6 @@ export const ResumeMeasurer = ({ onMeasure }: Props) => {
 		// Remove duplicates in case of configuration errors
 		return [...new Set(ids)];
 	}, [metadata.layout.pages]);
-
-	// We render all sections in a single continuous column to measure them
-	// We need to render them with the correct width context (Main vs Sidebar)
-	// But to simplify, we can just render them in a hidden container that mimics the page width
-	// For accurate item height, we need to respect columns count too.
-
-	// Actually, we need to measure items individually.
-	// So we will render every active section, and every active item within it.
 
 	// We use useLayoutEffect to measure immediately after render
 	useLayoutEffect(() => {
@@ -71,9 +78,6 @@ export const ResumeMeasurer = ({ onMeasure }: Props) => {
 			className="resume-measurer absolute top-0 left-0 -z-50 opacity-0 pointer-events-none"
 			style={{
 				width: pageDimensionsAsPixels[metadata.page.format].width, // Use full page width
-				// We might need to handle main/sidebar widths effectively if we want 100% precision
-				// For MVP, assuming items flow naturally is a good start, but wrapping might differ.
-				// Ideally we render this inside the preview container so it inherits styles.
 			}}
 		>
 			<style>{`
@@ -81,12 +85,49 @@ export const ResumeMeasurer = ({ onMeasure }: Props) => {
           margin-bottom: var(--page-gap-y);
         }
       `}</style>
+			{/* Measure the Header */}
+			<div data-section-id="header">
+				<TemplateHeader />
+			</div>
+
+			{/* Measure all Sections */}
 			{allSectionIds.map((sectionId) => (
 				<MeasurableSection key={sectionId} sectionId={sectionId} />
 			))}
 		</div>
 	);
 };
+
+const TemplateHeader = () => {
+	const metadata = useResumeStore((state) => state.resume.data.metadata);
+	const TemplateComponent = useMemo(() => getTemplateComponent(metadata.template), [metadata.template]);
+
+	// We only need to render the Header part of the template.
+	// Since templates usually render Header if pageIndex === 0, we can use that.
+	return (
+		<div className="page" style={{ height: "auto", minHeight: "0" }}>
+			<TemplateComponent pageIndex={0} pageLayout={{ fullWidth: true, main: [], sidebar: [] }} />
+		</div>
+	);
+};
+
+function getTemplateComponent(template: Template) {
+	return match(template)
+		.with("azurill", () => AzurillTemplate)
+		.with("bronzor", () => BronzorTemplate)
+		.with("chikorita", () => ChikoritaTemplate)
+		.with("ditto", () => DittoTemplate)
+		.with("ditgar", () => DitgarTemplate)
+		.with("gengar", () => GengarTemplate)
+		.with("glalie", () => GlalieTemplate)
+		.with("kakuna", () => KakunaTemplate)
+		.with("lapras", () => LaprasTemplate)
+		.with("leafish", () => LeafishTemplate)
+		.with("onyx", () => OnyxTemplate)
+		.with("pikachu", () => PikachuTemplate)
+		.with("rhyhorn", () => RhyhornTemplate)
+		.exhaustive();
+}
 
 const MeasurableSection = ({ sectionId }: { sectionId: string }) => {
 	const Component = useMemo(() => getSectionComponent(sectionId), [sectionId]);
