@@ -89,15 +89,13 @@ export const printerService = {
 		// Step 2: Prepare the URL and authentication for the printer route
 		// The printer route renders the resume in a format optimized for PDF generation
 		const baseUrl = env.PRINTER_APP_URL ?? env.APP_URL;
+		console.log(`[printer] printResumeAsPDF: baseUrl=${baseUrl}, resumeId=${id}, userId=${userId}`);
+
 		const domain = new URL(baseUrl).hostname;
 
 		const format = data.metadata.page.format;
 		const locale = data.metadata.page.locale;
 		const template = data.metadata.template;
-
-		// Generate a secure token to authenticate the printer request
-		const token = generatePrinterToken(id);
-		const url = `${baseUrl}/printer/${id}?token=${token}`;
 
 		// Step 3: Calculate PDF margins
 		// Some templates require margins to be applied via PDF (they use print:p-0 to remove CSS padding)
@@ -110,21 +108,47 @@ export const printerService = {
 			marginY = Math.round(data.metadata.page.marginY / 0.75);
 		}
 
+		// Generate a secure token to authenticate the printer request
+		const token = generatePrinterToken(id);
+		const url = `${baseUrl}/printer/${id}?token=${token}`;
+		console.log(`[printer] printResumeAsPDF: url=${url}`);
+
 		let browser: Browser | null = null;
 
 		try {
 			// Step 4: Connect to the browser and navigate to the printer route
+			console.log("[printer] printResumeAsPDF: connecting to browser...");
 			browser = await getBrowser();
+			console.log("[printer] printResumeAsPDF: browser connected.");
+
 
 			// Set locale cookie so the resume renders in the correct language
 			await browser.setCookie({ name: "locale", value: locale, domain });
 
 			const page = await browser.newPage();
 
+			// Pipe page console logs to terminal for easier debugging (conditional if needed, but keeping for now for production observability)
+			page.on("console", (message) => {
+				if (message.type() === "error") {
+					console.error(`[printer] browser console [error]: ${message.text()}`);
+				}
+			});
+
+			page.on("pageerror", (error: any) => {
+				console.error(`[printer] browser pageerror: ${error.message}`);
+			});
+
 			// Wait for the page to fully load (network idle + custom loaded attribute)
 			await page.setViewport(pageDimensionsAsPixels[format]);
-			await page.goto(url, { waitUntil: "networkidle0" });
-			await page.waitForFunction(() => document.body.getAttribute("data-wf-loaded") === "true", { timeout: 5_000 });
+			console.log(`[printer] printResumeAsPDF: navigating to ${url}...`);
+			
+			const navigationResponse = await page.goto(url, { waitUntil: "networkidle2", timeout: 30_000 });
+			console.log(`[printer] printResumeAsPDF: navigation status: ${navigationResponse?.status()}`);
+			
+			console.log("[printer] printResumeAsPDF: navigation complete, waiting for data-wf-loaded...");
+			await page.waitForFunction(() => document.body.getAttribute("data-wf-loaded") === "true", { timeout: 30_000 });
+			console.log("[printer] printResumeAsPDF: page is ready.");
+
 
 			// Step 5: Adjust the DOM for proper PDF pagination
 			// This runs in the browser context to modify CSS before PDF generation
@@ -132,7 +156,7 @@ export const printerService = {
 			// For A4/Letter: adjust page height for margins, add page breaks
 			const isFreeForm = format === "free-form";
 
-			const contentHeight = await page.evaluate(
+			const pageCountOrHeight = await page.evaluate(
 				(marginY: number, isFreeForm: boolean, minPageHeight: number) => {
 					const root = document.documentElement;
 					const pageElements = document.querySelectorAll("[data-page-index]");
@@ -165,8 +189,7 @@ export const printerService = {
 
 					// For A4/Letter: existing behavior
 					// The --page-height CSS variable controls the height of each resume page.
-					// We need to reduce it by the PDF margins so content fits within the printable area.
-					// Without this, content would overflow and create empty pages.
+					// We reduce it slightly to ensure content breathing room.
 					const rootHeight = getComputedStyle(root).getPropertyValue("--page-height").trim();
 					const containerHeight = container
 						? getComputedStyle(container).getPropertyValue("--page-height").trim()
@@ -175,8 +198,9 @@ export const printerService = {
 					const heightValue = Math.max(Number.parseFloat(currentHeight), minPageHeight);
 
 					if (!Number.isNaN(heightValue)) {
-						// Subtract top + bottom margins from page height
-						const newHeight = `${heightValue - marginY}px`;
+						// Subtract extra offset for margins and browser rounding safely
+						// Subtracting marginY + 10px buffer to prevent extra page triggers
+						const newHeight = `${heightValue - marginY - 10}px`;
 						if (container) container.style.setProperty("--page-height", newHeight);
 						root.style.setProperty("--page-height", newHeight);
 					}
@@ -195,7 +219,7 @@ export const printerService = {
 						element.style.breakInside = "auto";
 					}
 
-					return null; // Fixed height from pageDimensionsAsPixels for A4/Letter
+					return pageElements.length || 1; // Return the actual number of pages
 				},
 				marginY,
 				isFreeForm,
@@ -205,11 +229,13 @@ export const printerService = {
 			// Step 6: Generate the PDF with the specified dimensions and margins
 			// For free-form: use measured content height (with minimum constraint)
 			// For A4/Letter: use fixed dimensions from pageDimensionsAsPixels
-			const pdfHeight = isFreeForm && contentHeight ? contentHeight : pageDimensionsAsPixels[format].height;
+			const pdfHeight = isFreeForm && typeof pageCountOrHeight === "number" ? pageCountOrHeight : pageDimensionsAsPixels[format].height;
+			const pageRanges = isFreeForm ? "1" : `1-${typeof pageCountOrHeight === "number" ? pageCountOrHeight : 1}`;
 
 			const pdfBuffer = await page.pdf({
 				width: `${pageDimensionsAsPixels[format].width}px`,
 				height: `${pdfHeight}px`,
+				pageRanges, // Explicitly set page ranges to avoid trailing empty pages
 				tagged: true, // Adds accessibility tags to the PDF
 				waitForFonts: true, // Ensures all fonts are loaded before rendering
 				printBackground: true, // Includes background colors and images
@@ -224,6 +250,7 @@ export const printerService = {
 			await page.close();
 
 			// Step 7: Upload the generated PDF to storage
+			console.log("[printer] printResumeAsPDF: uploading to storage...");
 			const result = await uploadFile({
 				userId,
 				resumeId: id,
@@ -231,11 +258,15 @@ export const printerService = {
 				contentType: "application/pdf",
 				type: "pdf",
 			});
+			console.log(`[printer] printResumeAsPDF: upload successful, url=${result.url}`);
 
 			return result.url;
+
 		} catch (error) {
+			console.error("[printer] printResumeAsPDF: error:", error);
 			throw new ORPCError("INTERNAL_SERVER_ERROR", error as Error);
 		}
+
 	},
 
 	getResumeScreenshot: async (

@@ -78,7 +78,7 @@ function Header() {
 	};
 
 	return (
-		<div className="page-header flex flex-col items-center gap-y-(--page-gap-y)">
+		<div data-section-id="header" className="page-header flex flex-col items-center gap-y-(--page-gap-y)">
 			<PagePicture />
 
 			<div className="page-basics space-y-(--page-gap-y) text-center">

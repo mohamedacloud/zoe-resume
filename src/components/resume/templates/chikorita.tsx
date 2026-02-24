@@ -106,7 +106,7 @@ function Header() {
 	};
 
 	return (
-		<div className="page-header relative flex">
+		<div data-section-id="header" className="page-header relative flex">
 			<div className="flex flex-1 items-start">
 				<PagePicture />
 

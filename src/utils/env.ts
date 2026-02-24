@@ -1,12 +1,19 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+const stringbool = z.preprocess((val) => val === "true" || val === "1" || val === true, z.boolean());
+
 export const env = createEnv({
 	clientPrefix: "VITE_",
-	runtimeEnv: process.env,
+	runtimeEnv: {
+		...process.env,
+		VITE_FLAG_DEBUG_PRINTER: import.meta.env.VITE_FLAG_DEBUG_PRINTER,
+	},
 	emptyStringAsUndefined: true,
 
-	client: {},
+	client: {
+		VITE_FLAG_DEBUG_PRINTER: stringbool.default(false),
+	},
 
 	server: {
 		// Server
@@ -51,7 +58,7 @@ export const env = createEnv({
 		SMTP_USER: z.string().min(1).optional(),
 		SMTP_PASS: z.string().min(1).optional(),
 		SMTP_FROM: z.string().min(1).optional(),
-		SMTP_SECURE: z.stringbool().default(false),
+		SMTP_SECURE: stringbool.default(false),
 
 		// Storage (Optional)
 		S3_ACCESS_KEY_ID: z.string().min(1).optional(),
@@ -61,11 +68,11 @@ export const env = createEnv({
 		S3_BUCKET: z.string().min(1).optional(),
 		// Set to "true" for path-style URLs (endpoint/bucket), common with MinIO, SeaweedFS, etc.
 		// Set to "false" for virtual-hosted-style URLs (bucket.endpoint), common with AWS S3, Cloudflare R2, etc.
-		S3_FORCE_PATH_STYLE: z.stringbool().default(false),
+		S3_FORCE_PATH_STYLE: stringbool.default(false),
 
 		// Feature Flags
-		FLAG_DEBUG_PRINTER: z.stringbool().default(false),
-		FLAG_DISABLE_SIGNUPS: z.stringbool().default(false),
-		FLAG_DISABLE_EMAIL_AUTH: z.stringbool().default(false),
+		FLAG_DEBUG_PRINTER: stringbool.default(false),
+		FLAG_DISABLE_SIGNUPS: stringbool.default(false),
+		FLAG_DISABLE_EMAIL_AUTH: stringbool.default(false),
 	},
 });

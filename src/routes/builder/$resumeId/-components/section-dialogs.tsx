@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { orpc } from "@/integrations/orpc/client";
 import { CSSSectionBuilder } from "@/routes/builder/$resumeId/-sidebar/right/sections/css.tsx";
-import { downloadFromUrl, generateFilename } from "@/utils/file";
+import { downloadFromUrl, downloadWithAnchor, generateFilename } from "@/utils/file";
 
 // Wrapper that applies light theme styling to section content
 export function SectionDialogWrapper({ children }: { children: React.ReactNode }) {
@@ -1792,7 +1792,17 @@ export function ExportDialog() {
 				toast.dismiss(toastId);
 			}
 		} else {
-			toast.info(t`DOCX format is coming soon!`);
+			const toastId = toast.loading(t`Generating Word document...`);
+			try {
+				const { generateResumeDocx } = await import("@/utils/resume-to-docx");
+				const blob = await generateResumeDocx(resume.data);
+				downloadWithAnchor(blob, generateFilename(fileName, "docx"));
+				toast.success(t`Your Word document has been downloaded successfully!`);
+			} catch {
+				toast.error(t`There was a problem generating the Word document, please try again.`);
+			} finally {
+				toast.dismiss(toastId);
+			}
 		}
 	}, [selectedFormat, fileName, resume, printResumeAsPDF]);
 
