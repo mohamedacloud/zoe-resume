@@ -43,12 +43,12 @@ export function ProfilesSectionBuilder() {
 			const newProfile = {
 				id: crypto.randomUUID(),
 				hidden: false,
-				icon: "",
+				icon: networkData?.icon || "🔗",
 				network: formData.network,
 				username: formData.username,
 				website: {
 					url: formData.url || `https://${networkData?.placeholder}`,
-					label: "",
+					label: formData.username,
 				},
 			};
 
@@ -58,6 +58,8 @@ export function ProfilesSectionBuilder() {
 
 			setFormData({ network: "LinkedIn", username: "", url: "" });
 			setIsAddingProfile(false);
+		} else {
+			alert("Please enter a username before adding a profile.");
 		}
 	};
 

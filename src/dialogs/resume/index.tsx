@@ -8,7 +8,6 @@ import {
 	MagicWandIcon,
 	PencilSimpleLineIcon,
 	PlusIcon,
-	TestTubeIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,13 +44,13 @@ const basicDetailsSchema = z.object({
 
 	professionalTitle: z.string().trim().min(2, "Professional title is required").max(100),
 
-	   email: z
-		   .string()
-		   .trim()
-		   .min(5, "Email is required")
-		   .max(100, "Email must be at most 100 characters")
-		   .email("Please enter a valid email address")
-		   .transform((val) => val.toLowerCase()),
+	email: z
+		.string()
+		.trim()
+		.min(5, "Email is required")
+		.max(100, "Email must be at most 100 characters")
+		.email("Please enter a valid email address")
+		.transform((val) => val.toLowerCase()),
 
 	phone: z
 		.string()
@@ -556,15 +555,6 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 							</Button>
 
 							<div className="flex gap-2">
-								<Button
-									type="button"
-									className="bg-blue-600 text-white hover:bg-blue-700"
-									onClick={onCreateSampleResume}
-									disabled={isPending}
-								>
-									<TestTubeIcon className="mr-2" />
-									Create Sample Resume
-								</Button>
 								<Button type="submit" disabled={!isFormValid} className="bg-emerald-600 hover:bg-emerald-700">
 									Continue
 								</Button>

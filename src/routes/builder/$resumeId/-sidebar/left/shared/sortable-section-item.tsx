@@ -17,7 +17,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DragHandle, SortableItem } from "@/components/ui/sortable-item";
+import { SortableItem } from "@/components/ui/sortable-item";
 import { useDialogStore } from "@/dialogs/store";
 import { useConfirm } from "@/hooks/use-confirm";
 import type {

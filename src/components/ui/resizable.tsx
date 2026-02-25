@@ -12,8 +12,17 @@ function ResizableGroup({ className, ...props }: React.ComponentProps<typeof Res
 	);
 }
 
-function ResizablePanel({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
-	return <ResizablePrimitive.Panel data-slot="resizable-panel" className={cn("relative", className)} {...props} />;
+function ResizablePanel({
+	className,
+	...props
+}: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
+	return (
+		<ResizablePrimitive.Panel
+			data-slot="resizable-panel"
+			className={cn("relative", className)}
+			{...props}
+		/>
+	);
 }
 
 function ResizableSeparator({

@@ -1,8 +1,7 @@
 import { t } from "@lingui/core/macro";
-import { Plural, Trans } from "@lingui/react/macro";
+import { Trans } from "@lingui/react/macro";
 import {
 	BroomIcon,
-	ColumnsIcon,
 	EyeClosedIcon,
 	EyeIcon,
 	ListIcon,
@@ -16,12 +15,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
 	DropdownMenuSeparator,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDialogStore } from "@/dialogs/store";
@@ -71,16 +65,6 @@ export function SectionDropdownMenu({ type }: Props) {
 				draft.summary.title = newTitle ?? "";
 			} else {
 				draft.sections[type].title = newTitle ?? "";
-			}
-		});
-	};
-
-	const onSetColumns = (value: string) => {
-		updateResumeData((draft) => {
-			if (type === "summary") {
-				draft.summary.columns = parseInt(value, 10);
-			} else {
-				draft.sections[type].columns = parseInt(value, 10);
 			}
 		});
 	};
@@ -135,23 +119,6 @@ export function SectionDropdownMenu({ type }: Props) {
 						<PencilSimpleLineIcon />
 						<Trans>Rename</Trans>
 					</DropdownMenuItem>
-
-					<DropdownMenuSub>
-						<DropdownMenuSubTrigger>
-							<ColumnsIcon />
-							<Trans>Columns</Trans>
-						</DropdownMenuSubTrigger>
-
-						<DropdownMenuSubContent>
-							<DropdownMenuRadioGroup value={section.columns.toString()} onValueChange={onSetColumns}>
-								{[1, 2, 3, 4, 5, 6].map((column) => (
-									<DropdownMenuRadioItem key={column} value={column.toString()}>
-										<Plural value={column} one="# Column" other="# Columns" />
-									</DropdownMenuRadioItem>
-								))}
-							</DropdownMenuRadioGroup>
-						</DropdownMenuSubContent>
-					</DropdownMenuSub>
 				</DropdownMenuGroup>
 
 				<DropdownMenuSeparator />
