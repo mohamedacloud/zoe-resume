@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
+import type z from "zod";
 import { useResumeStore } from "@/components/resume/store/resume";
-import type { SectionItem } from "@/schema/resume/data";
+import type { experienceItemSchema } from "@/schema/resume/data";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
 import { PageLink } from "../page-link";
 
-type ExperienceItemProps = SectionItem<"experience"> & {
+type ExperienceItemProps = z.infer<typeof experienceItemSchema> & {
 	className?: string;
 };
 
@@ -50,26 +51,6 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 		}
 	};
 
-	const handlePeriodChange = (e: React.FocusEvent<HTMLSpanElement>) => {
-		const newValue = e.currentTarget.textContent || "";
-		if (newValue !== item.period) {
-			updateResumeData((draft) => {
-				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
-				if (exp) exp.period = newValue;
-			});
-		}
-	};
-
-	const handleDescriptionChange = (e: React.FocusEvent<HTMLDivElement>) => {
-		const newValue = e.currentTarget.innerHTML || "";
-		if (newValue !== item.description) {
-			updateResumeData((draft) => {
-				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
-				if (exp) exp.description = newValue;
-			});
-		}
-	};
-
 	return (
 		<div className={cn("experience-item group/item", className)}>
 			{/* Header */}
@@ -104,31 +85,32 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 					>
 						{item.position}
 					</span>
-					<span
-						contentEditable
-						suppressContentEditableWarning
-						onBlur={handlePeriodChange}
-						className="section-item-metadata experience-item-period shrink-0 cursor-text text-end outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
-					>
-						{item.period}
+					<span className="section-item-metadata experience-item-period shrink-0 text-end">
+						{item.startDate}
+						{item.startDate && " - "}
+						{item.currentlyWorkingHere ? "Present" : item.endDate}
 					</span>
 				</div>
 			</div>
 
 			{/* Description */}
-			<div
-				ref={descriptionRef}
-				contentEditable
-				suppressContentEditableWarning
-				onBlur={handleDescriptionChange}
-				className={cn(
-					"section-item-description experience-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
-					!stripHtml(item.description) && "hidden",
-				)}
-			/>
-
+			<div className={cn("section-item-description", !stripHtml(item.description) && "hidden")}>
+				{item.description
+					.split(/<ul>|<\/ul>/)
+					.filter((line) => line.trim() !== "")
+					.map((line, index) => (
+						<ul key={index} className="list-disc pl-5">
+							{line
+								.split(/<li>|<\/li>/)
+								.filter((item) => item.trim() !== "")
+								.map((item, idx) => (
+									<li key={idx}>{item}</li>
+								))}
+						</ul>
+					))}
+			</div>
 			{/* Website */}
-			{!item.options?.showLinkInTitle && (
+			{item.website?.label && (
 				<div className="section-item-website experience-item-website">
 					<PageLink {...item.website} label={item.website.label} />
 				</div>

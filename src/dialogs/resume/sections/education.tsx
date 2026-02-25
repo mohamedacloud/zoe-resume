@@ -38,20 +38,33 @@ export function CreateEducationDialog({ data }: DialogProps<"resume.sections.edu
 			period: data?.item?.period ?? "",
 			description: data?.item?.description ?? "",
 			currentlyStudyingHere: data?.item?.currentlyStudyingHere ?? false,
+			website: data?.item?.website ?? { url: "", label: "" },
 		},
 	});
 
 	const onSubmit = (formData: FormValues) => {
+		console.log("Form submission triggered");
+		console.log("Form data:", formData);
+		console.log("Calling updateResumeData with:", formData); // Log the data being passed to updateResumeData
+		console.log("Form data passed to updateResumeData:", formData); // Inspect the structure and values of formData
+
 		updateResumeData((draft) => {
 			if (data?.customSectionId) {
 				const section = draft.customSections.find((s) => s.id === data.customSectionId);
-				if (section) section.items.push(formData);
+				if (section) {
+					console.log("Updating custom section:", section); // Debugging log
+					section.items.push(formData);
+				}
 			} else {
+				console.log("Adding to education section:", draft.sections.education.items); // Debugging log
 				draft.sections.education.items.push(formData);
 			}
 		});
-		closeDialog();
+		console.log("Closing dialog"); // Debugging log
+		closeDialog(); // Ensure dialog closes after submission
 	};
+
+	const handleSubmit = form.handleSubmit(onSubmit); // Ensure handleSubmit is bound
 
 	const { blockEvents, requestClose } = useFormBlocker(form);
 
@@ -66,7 +79,7 @@ export function CreateEducationDialog({ data }: DialogProps<"resume.sections.edu
 			</DialogHeader>
 
 			<Form {...form}>
-				<form className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
+				<form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
 					<EducationForm />
 
 					<DialogFooter className="sm:col-span-full">
@@ -102,6 +115,7 @@ export function UpdateEducationDialog({ data }: DialogProps<"resume.sections.edu
 			period: data.item.period,
 			description: data.item.description,
 			currentlyStudyingHere: data.item.currentlyStudyingHere,
+			website: data.item.website ?? { url: "", label: "" },
 		},
 	});
 
@@ -121,7 +135,7 @@ export function UpdateEducationDialog({ data }: DialogProps<"resume.sections.edu
 	};
 
 	const { blockEvents, requestClose } = useFormBlocker(form);
-
+console.log("Form errors:", form.formState.errors);
 	return (
 		<DialogContent {...blockEvents}>
 			<DialogHeader>
@@ -141,7 +155,7 @@ export function UpdateEducationDialog({ data }: DialogProps<"resume.sections.edu
 							<Trans>Cancel</Trans>
 						</Button>
 
-						<Button type="submit" disabled={form.formState.isSubmitting}>
+						<Button type="submit" disabled={form.formState.isSubmitting} onClick={() => console.log("Save Changes button clicked")}>
 							<Trans>Save Changes</Trans>
 						</Button>
 					</DialogFooter>

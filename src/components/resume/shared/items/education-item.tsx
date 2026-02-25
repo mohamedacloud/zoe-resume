@@ -3,7 +3,6 @@ import { useResumeStore } from "@/components/resume/store/resume";
 import type { SectionItem } from "@/schema/resume/data";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
-import { LinkedTitle } from "../linked-title";
 import { PageLink } from "../page-link";
 
 type EducationItemProps = SectionItem<"education"> & {
@@ -54,8 +53,12 @@ export function EducationItem({ className, ...item }: EducationItemProps) {
 		const newValue = e.currentTarget.textContent || "";
 		if (newValue !== item.location) {
 			updateResumeData((draft) => {
-				const edu = draft.sections.education.items.find((e) => e.id === item.id);
-				if (edu) edu.location = newValue;
+				if (draft.sections.education?.items) {
+					const edu = draft.sections.education.items.find((e) => e.id === item.id);
+					if (edu) {
+						edu.location = newValue;
+					}
+				}
 			});
 		}
 	};

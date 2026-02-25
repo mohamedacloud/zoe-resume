@@ -62,6 +62,9 @@ export const useResumeStore = create<ResumeStore>()(
 						return state;
 					}
 
+					console.log("updateResumeData called");
+					console.log("Draft before update:", current(state.resume.data));
+
 					fn(state.resume.data);
 					syncResume(current(state.resume));
 				});

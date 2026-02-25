@@ -37,6 +37,8 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			endDate: data?.item?.endDate ?? "",
 			currentlyWorkingHere: data?.item?.currentlyWorkingHere ?? false,
 			description: data?.item?.description ?? "",
+			website: data?.item?.website ?? { url: "", label: "" },
+			period: data?.item?.period ?? "", // Ensure 'period' has a default value
 		},
 	});
 
@@ -44,7 +46,11 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 		updateResumeData((draft) => {
 			if (data?.customSectionId) {
 				const section = draft.customSections.find((s) => s.id === data.customSectionId);
-				if (section) section.items.push(formData);
+				if (section) {
+					section.items.push(formData);
+				} else {
+					console.error("Custom section not found for ID:", data.customSectionId);
+				}
 			} else {
 				draft.sections.experience.items.push(formData);
 			}
@@ -63,7 +69,10 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			</DialogHeader>
 
 			<Form {...form}>
-				<form className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
+				<form
+					className="grid gap-4 sm:grid-cols-2"
+					onSubmit={form.handleSubmit(onSubmit)}
+				>
 					<ExperienceForm />
 
 					<DialogFooter className="sm:col-span-full">
@@ -98,6 +107,8 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			endDate: data.item.endDate ?? "",
 			currentlyWorkingHere: data.item.currentlyWorkingHere ?? false,
 			description: data.item.description,
+			website: data.item.website ?? { url: "", label: "" },
+			period: data?.item?.period ?? "", // Ensure 'period' has a default value
 		},
 	});
 
@@ -127,7 +138,10 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			</DialogHeader>
 
 			<Form {...form}>
-				<form className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
+				<form
+					className="grid gap-4 sm:grid-cols-2"
+					onSubmit={form.handleSubmit(onSubmit)}
+				>
 					<ExperienceForm />
 
 					<DialogFooter className="sm:col-span-full">
@@ -153,9 +167,9 @@ function ExperienceForm() {
 	const description = useWatch({ control: form.control, name: "description" });
 
 	const handleAIGenerated = (content: string) => {
+		console.log("AI-generated content for description:", content);
 		form.setValue("description", content, { shouldDirty: true });
 	};
-
 	return (
 		<>
 			<FormField
@@ -262,17 +276,17 @@ function ExperienceForm() {
 							<FormLabel>
 								<Trans>Description</Trans>
 							</FormLabel>
-								<AIGenerateButton
-									type="experience"
-									data={{
-										company,
-										position,
-										title: position,
-										responsibilities: description,
-										projectDetails: "",
-									}}
-									onGenerated={handleAIGenerated}
-								/>
+							<AIGenerateButton
+								type="experience"
+								data={{
+									company,
+									position,
+									title: position,
+									responsibilities: description,
+									projectDetails: "",
+								}}
+								onGenerated={handleAIGenerated}
+							/>
 						</div>
 						<FormControl>
 							<RichInput {...field} value={field.value} onChange={field.onChange} />
