@@ -51,6 +51,16 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 		}
 	};
 
+	const handleDescriptionChange = (e: React.FocusEvent<HTMLDivElement>) => {
+		const newValue = e.currentTarget.innerHTML || "";
+		if (newValue !== item.description) {
+			updateResumeData((draft) => {
+				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+				if (exp) exp.description = newValue;
+			});
+		}
+	};
+
 	return (
 		<div className={cn("experience-item group/item", className)}>
 			{/* Header */}
@@ -94,21 +104,16 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 			</div>
 
 			{/* Description */}
-			<div className={cn("section-item-description", !stripHtml(item.description) && "hidden")}>
-				{item.description
-					.split(/<ul>|<\/ul>/)
-					.filter((line) => line.trim() !== "")
-					.map((line, index) => (
-						<ul key={index} className="list-disc pl-5">
-							{line
-								.split(/<li>|<\/li>/)
-								.filter((item) => item.trim() !== "")
-								.map((item, idx) => (
-									<li key={idx}>{item}</li>
-								))}
-						</ul>
-					))}
-			</div>
+			<div
+				ref={descriptionRef}
+				contentEditable
+				suppressContentEditableWarning
+				onBlur={handleDescriptionChange}
+				className={cn(
+					"section-item-description experience-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
+					!stripHtml(item.description) && "hidden",
+				)}
+			/>
 			{/* Website */}
 			{item.website?.label && (
 				<div className="section-item-website experience-item-website">

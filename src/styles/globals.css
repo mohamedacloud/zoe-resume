@@ -165,6 +165,9 @@
 }
 
 .resume-preview-container {
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+
 	.page-section .section-item {
 		break-inside: avoid;
 	}

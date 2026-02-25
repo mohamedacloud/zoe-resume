@@ -25,7 +25,7 @@ export function PikachuTemplate({ pageIndex, pageLayout }: TemplateProps) {
 	const { main, sidebar, fullWidth } = pageLayout;
 
 	return (
-		<div className="template-pikachu page-content px-(--page-margin-x) pt-(--page-margin-y) print:p-0">
+		<div className="template-pikachu page-content space-y-(--page-gap-y) px-(--page-margin-x) pt-(--page-margin-y)">
 			<div className="flex gap-x-(--page-margin-x)">
 				{!fullWidth && (
 					<aside
@@ -104,13 +104,20 @@ function Header() {
 	};
 
 	return (
-		<div data-section-id="header" className="page-header w-full space-y-(--page-gap-y) rounded-(--picture-border-radius) bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
+		<div
+			data-section-id="header"
+			className="page-header w-full space-y-(--page-gap-y) rounded-(--picture-border-radius) bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)"
+		>
 			<div className="border-(--page-background-color)/50 border-b pb-2">
 				<h2 className="basics-name">
 					<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 				</h2>
 				<p className="basics-headline">
-					<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+					<InlineEditableText
+						value={basics.headline}
+						placeholder="Your Professional Title"
+						onChange={handleHeadlineChange}
+					/>
 				</p>
 			</div>
 
@@ -142,11 +149,7 @@ function Header() {
 
 				<div className="basics-item-location">
 					<MapPinIcon />
-					<InlineEditableText
-						value={basics.location}
-						placeholder="City, Country"
-						onChange={handleLocationChange}
-					/>
+					<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 				</div>
 
 				{basics.website.url && (
