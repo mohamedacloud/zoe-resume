@@ -7,6 +7,9 @@
 	line-height: var(--page-body-line-height);
 	color: var(--page-text-color);
 	background-color: var(--page-background-color);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: geometricPrecision;
 
 	&:not(:first-child) {
 		content-visibility: auto;

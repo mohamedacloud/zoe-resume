@@ -62,7 +62,7 @@ export function AzurillTemplate({ pageIndex, pageLayout }: TemplateProps) {
 	const { main, sidebar, fullWidth } = pageLayout;
 
 	return (
-		<div className="template-azurill page-content space-y-(--page-gap-y) px-(--page-margin-x) pt-(--page-margin-y) print:p-0">
+		<div className="template-azurill page-content space-y-(--page-gap-y) px-(--page-margin-x) pt-(--page-margin-y)">
 			{isFirstPage && <Header />}
 
 			<div className="flex gap-x-(--page-gap-x)">
@@ -133,7 +133,11 @@ function Header() {
 						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 					</h2>
 					<p className="basics-headline">
-						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+						<InlineEditableText
+							value={basics.headline}
+							placeholder="Your Professional Title"
+							onChange={handleHeadlineChange}
+						/>
 					</p>
 				</div>
 
@@ -162,11 +166,7 @@ function Header() {
 
 					<div className="basics-item-location">
 						<MapPinIcon />
-						<InlineEditableText
-							value={basics.location}
-							placeholder="City, Country"
-							onChange={handleLocationChange}
-						/>
+						<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 					</div>
 
 					{basics.website.url && (
