@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { ArrowRightIcon, IconContext, type IconProps, WarningIcon } from "@phosphor-icons/react";
-import { useMemo, useRef, useState, createContext } from "react";
+import { useMemo, useRef, useState } from "react";
 import { match } from "ts-pattern";
 import type z from "zod";
 import type { pageLayoutSchema } from "@/schema/resume/data";
@@ -68,7 +68,7 @@ export const ResumePreview = ({ showPageNumbers = false, pageClassName, classNam
 	useWebfonts(metadata.typography);
 	const style = useCSSVariables({ picture, metadata });
 	
-	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements, 0); // containerHeight is unused in hook
+	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements);
 
 	const iconProps = useMemo<ExtendedIconProps>(() => {
 		return {
