@@ -1,12 +1,28 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { CircleNotchIcon, DownloadSimpleIcon, PaletteIcon, SwapIcon, TextTIcon } from "@phosphor-icons/react";
+import {
+	CaretDownIcon,
+	CircleNotchIcon,
+	DownloadSimpleIcon,
+	FilePdfIcon,
+	MicrosoftWordLogoIcon,
+	PaletteIcon,
+	SwapIcon,
+	TextTIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ColorPicker } from "@/components/input/color-picker";
 import { FontFamilyCombobox, FontWeightCombobox, getNextWeight } from "@/components/typography/combobox";
 import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import {
@@ -19,13 +35,14 @@ import {
 import { useResumeStore } from "@/components/resume/store/resume";
 import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
-import { downloadFromUrl, generateFilename } from "@/utils/file";
+import { downloadFromUrl, downloadWithAnchor, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
 
 export function BuilderTopTray() {
 	const openDialog = useDialogStore((state) => state.openDialog);
 	const params = useParams({ from: "/builder/$resumeId" });
 	const { data: resume } = useQuery(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } }));
+	const resumeData = useResumeStore((state) => state.resume.data);
 
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
 		orpc.printer.printResumeAsPDF.mutationOptions(),
@@ -43,6 +60,22 @@ export function BuilderTopTray() {
 			downloadFromUrl(url, filename);
 		} catch {
 			toast.error(t`There was a problem while generating the PDF, please try again in some time.`);
+		} finally {
+			toast.dismiss(toastId);
+		}
+	};
+
+	const onDownloadDocx = async () => {
+		const name = resumeData.basics.name || "resume";
+		const filename = generateFilename(name, "docx");
+		const toastId = toast.loading(t`Generating Word document...`);
+		try {
+			const { generateResumeDocx } = await import("@/utils/resume-to-docx");
+			const blob = await generateResumeDocx(resumeData);
+			downloadWithAnchor(blob, filename);
+			toast.success(t`Your Word document has been downloaded successfully!`);
+		} catch {
+			toast.error(t`There was a problem generating the Word document, please try again.`);
 		} finally {
 			toast.dismiss(toastId);
 		}
@@ -93,16 +126,47 @@ export function BuilderTopTray() {
 				<Trans>Templates</Trans>
 			</Button>
 
-			<Button
-				size="sm"
-				variant="default"
-				onClick={onDownloadPDF}
-				disabled={isPrinting}
-				className="bg-emerald-600 text-white hover:bg-emerald-700"
-			>
-				{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
-				<Trans>Download</Trans>
-			</Button>
+			{/* Download split button */}
+			<div className="flex">
+				{/* Main PDF download button */}
+				<Button
+					size="sm"
+					variant="default"
+					onClick={onDownloadPDF}
+					disabled={isPrinting}
+					className="rounded-r-none bg-emerald-600 text-white hover:bg-emerald-700"
+				>
+					{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
+					<Trans>Download PDF</Trans>
+				</Button>
+
+				{/* Dropdown chevron */}
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							size="sm"
+							variant="default"
+							className="rounded-l-none border-l border-emerald-500 bg-emerald-600 px-2 text-white hover:bg-emerald-700"
+							aria-label="More download options"
+						>
+							<CaretDownIcon className="size-3.5" />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" className="min-w-[180px]">
+						<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
+							<FilePdfIcon className="size-4 text-red-500" />
+							<Trans>Download PDF</Trans>
+						</DropdownMenuItem>
+
+						<DropdownMenuSeparator />
+
+						<DropdownMenuItem onClick={onDownloadDocx}>
+							<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
+							<Trans>Download Word (.docx)</Trans>
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</div>
 		</div>
 	);
 }
@@ -188,13 +252,7 @@ function TypographyPopoverContent() {
 				<FontWeightCombobox
 					fontFamily={typography.body.fontFamily}
 					value={typography.body.fontWeights}
-					onValueChange={(value) =>
-						updateBody({
-							fontWeights: value.filter((weight): weight is "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900" =>
-								["100", "200", "300", "400", "500", "600", "700", "800", "900"].includes(weight),
-							),
-						})
-					}
+					onValueChange={(value) => updateBody({ fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[] })}
 				/>
 			</div>
 

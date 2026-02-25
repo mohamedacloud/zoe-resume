@@ -297,7 +297,13 @@ class S3StorageService implements StorageService {
 }
 
 function createStorageService(): StorageService {
-	if (env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY && env.S3_BUCKET) {
+	const hasS3Credentials =
+		env.S3_ACCESS_KEY_ID &&
+		env.S3_SECRET_ACCESS_KEY &&
+		env.S3_BUCKET &&
+		env.S3_ACCESS_KEY_ID !== "seaweedfs";
+
+	if (hasS3Credentials) {
 		return new S3StorageService();
 	}
 

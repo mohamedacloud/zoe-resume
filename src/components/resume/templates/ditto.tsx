@@ -86,7 +86,7 @@ function Header() {
 	return (
 		<div className="page-header relative">
 			<div className="page-basics bg-(--page-primary-color) text-(--page-background-color)">
-				<div className="basics-header flex items-center">
+				<div data-section-id="header" className="basics-header flex items-center">
 					<div className="flex w-(--page-sidebar-width) shrink-0 justify-center ps-(--page-margin-x)">
 						<PagePicture className="absolute top-8" />
 					</div>

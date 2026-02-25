@@ -98,7 +98,7 @@ function Header() {
 	};
 
 	return (
-		<div className="page-header relative flex">
+		<div data-section-id="header" className="page-header relative flex">
 			<div className="flex w-full shrink-0 flex-col items-center justify-center gap-y-3">
 				<PagePicture />
 

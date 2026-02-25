@@ -11,7 +11,6 @@ export type PaginatedLayout = {
 
 export const useResumePagination = (
 	measurements: Record<string, number>,
-	containerHeight: number,
 ): PaginatedLayout => {
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
 	const sections = useResumeStore((state) => state.resume.data.sections);
@@ -39,6 +38,9 @@ export const useResumePagination = (
 		const itemDistribution: Record<string, string[][]> = {};
 		let isOverflowing = false;
 
+		// Get header height for the first page
+		const headerHeight = measurements.header || 0;
+
 		// Initialize distribution map
 		const allSectionIds = [
 			...metadata.layout.pages.flatMap((p) => p.main),
@@ -55,7 +57,7 @@ export const useResumePagination = (
 			}
 			if (sectionId in sections) {
 				// @ts-ignore
-				return sections[sectionId].items.filter((i) => !i.hidden);
+				return sections[sectionId].items.filter((i: any) => !i.hidden);
 			}
 			const custom = customSections.find((s) => s.id === sectionId);
 			if (custom) {
@@ -92,15 +94,15 @@ export const useResumePagination = (
 				const items = getSectionItems(sectionId);
 				if (items.length === 0) continue;
 
-				const itemIds = items.map((i) => i.id);
-				const itemHeights = itemIds.map((id) => measurements[id] || 50);
+				const itemIds = items.map((i: any) => i.id);
+				const itemHeights = itemIds.map((id: string) => measurements[id] || 50);
 				const totalMeasuredHeight = measurements[sectionId] || 0;
-				const totalItemHeight = itemHeights.reduce((a, b) => a + b, 0);
-				// Estimate header height
-				const headerHeight = Math.max(0, totalMeasuredHeight - totalItemHeight);
+				const totalItemHeight = itemHeights.reduce((a: number, b: number) => a + b, 0);
+				// Estimate header height (section header)
+				const sectionHeaderHeight = Math.max(0, totalMeasuredHeight - totalItemHeight);
 
 				// Does header fit?
-				if (currentHeight + headerHeight > contentHeight) {
+				if (currentHeight + sectionHeaderHeight > contentHeight) {
 					// Header doesn't fit, move to next page
 					currentPageIndex++;
 					currentHeight = 0;
@@ -121,7 +123,7 @@ export const useResumePagination = (
 				if (!pages[currentPageIndex][columnName].includes(sectionId)) {
 					pages[currentPageIndex][columnName].push(sectionId);
 				}
-				currentHeight += headerHeight;
+				currentHeight += sectionHeaderHeight;
 
 				// Fit items
 				for (let i = 0; i < items.length; i++) {
@@ -157,12 +159,6 @@ export const useResumePagination = (
 							pages[currentPageIndex][columnName].push(sectionId);
 						}
 						
-						// Add header height again for new page? 
-						// Usually sections split across pages don't repeat headers in this design, 
-						// they just continue. 
-						// But if we wanted to repeat header we would add headerHeight here.
-						// For now, let's assume NO repeated header.
-
 						const currentDist = itemDistribution[sectionId][currentPageIndex] || [];
 						itemDistribution[sectionId][currentPageIndex] = [...currentDist, itemId];
 						currentHeight += itemHeight + gapY;
@@ -190,9 +186,10 @@ export const useResumePagination = (
 			p.sidebar.forEach(s => sidebarSections.add(s));
 		});
 
-		fillColumn(Array.from(mainSections), 0, 0, "main");
+		// Pass headerHeight to the first page (index 0)
+		fillColumn(Array.from(mainSections), 0, headerHeight, "main");
 		if (!metadata.layout.pages[0]?.fullWidth) {
-			fillColumn(Array.from(sidebarSections), 0, 0, "sidebar");
+			fillColumn(Array.from(sidebarSections), 0, headerHeight, "sidebar");
 		}
 
 		return {
@@ -200,5 +197,5 @@ export const useResumePagination = (
 			itemDistribution,
 			isOverflowing,
 		};
-	}, [metadata, measurements, contentHeight]);
+	}, [metadata, measurements, contentHeight, summary, sections, customSections, gapY]);
 };

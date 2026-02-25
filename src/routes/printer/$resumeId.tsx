@@ -17,7 +17,7 @@ export const Route = createFileRoute("/printer/$resumeId")({
 	component: RouteComponent,
 	validateSearch: zodValidator(searchSchema),
 	beforeLoad: async ({ params, search }) => {
-		if (env.FLAG_DEBUG_PRINTER) return;
+		if (env.VITE_FLAG_DEBUG_PRINTER) return;
 
 		// Allow preview token for dashboard cards
 		if (search.token === "preview") return;
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/printer/$resumeId")({
 function RouteComponent() {
 	const { resume } = Route.useLoaderData();
 
+
 	const isReady = useResumeStore((state) => state.isReady);
 	const initialize = useResumeStore((state) => state.initialize);
 
@@ -51,7 +52,17 @@ function RouteComponent() {
 		return () => initialize(null);
 	}, [resume, initialize]);
 
+	// Signal to Puppeteer that the page is fully loaded and ready for PDF generation
+	useEffect(() => {
+		if (isReady) {
+			document.body.setAttribute("data-wf-loaded", "true");
+		} else {
+			document.body.removeAttribute("data-wf-loaded");
+		}
+	}, [isReady]);
+
 	if (!isReady) return <LoadingScreen />;
 
 	return <ResumePreview pageClassName="print:w-full!" />;
 }
+
