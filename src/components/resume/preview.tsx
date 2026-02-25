@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { ArrowRightIcon, IconContext, type IconProps, WarningIcon } from "@phosphor-icons/react";
-import { useMemo, useRef, useState, createContext } from "react";
+import { useMemo, useRef, useState } from "react";
 import { match } from "ts-pattern";
 import type z from "zod";
 import type { pageLayoutSchema } from "@/schema/resume/data";
@@ -67,8 +67,8 @@ export const ResumePreview = ({ showPageNumbers = false, pageClassName, classNam
 
 	useWebfonts(metadata.typography);
 	const style = useCSSVariables({ picture, metadata });
-	
-	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements, 0); // containerHeight is unused in hook
+
+	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements);
 
 	const iconProps = useMemo<ExtendedIconProps>(() => {
 		return {
@@ -135,14 +135,20 @@ type PageContainerProps = {
 	isOverflowing?: boolean;
 };
 
-function PageContainer({ pageIndex, pageLayout, pageClassName, showPageNumbers = false, itemDistribution, isOverflowing }: PageContainerProps) {
+function PageContainer({
+	pageIndex,
+	pageLayout,
+	pageClassName,
+	showPageNumbers = false,
+	itemDistribution,
+	isOverflowing,
+}: PageContainerProps) {
 	const pageRef = useRef<HTMLDivElement>(null);
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
 
 	const pageNumber = useMemo(() => pageIndex + 1, [pageIndex]);
 	const totalNumberOfPages = useMemo(() => metadata.layout.pages.length, [metadata.layout.pages]);
 	const TemplateComponent = useMemo(() => getTemplateComponent(metadata.template), [metadata.template]);
-
 
 	return (
 		<div data-page-index={pageIndex} className="relative">
