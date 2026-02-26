@@ -6,6 +6,7 @@ import { current } from "immer";
 import { toast } from "sonner";
 import type { TemporalState } from "zundo";
 import { temporal } from "zundo";
+import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { create } from "zustand/react";
 import { useStoreWithEqualityFn } from "zustand/traditional";
@@ -17,11 +18,14 @@ type Resume = Pick<RouterOutput["resume"]["getByIdForPrinter"], "id" | "name" | 
 type ResumeStoreState = {
 	resume: Resume;
 	isReady: boolean;
+	summaryAIRoundsUsed: number;
 };
 
 type ResumeStoreActions = {
 	initialize: (resume: Resume | null) => void;
 	updateResumeData: (fn: (draft: WritableDraft<ResumeData>) => void) => void;
+	incrementSummaryRounds: () => void;
+	resetSummaryRounds: () => void;
 };
 
 type ResumeStore = ResumeStoreState & ResumeStoreActions;
@@ -40,41 +44,71 @@ let errorToastId: string | number | undefined;
 type PartializedState = { resume: Resume | null };
 
 export const useResumeStore = create<ResumeStore>()(
-	temporal(
-		immer((set) => ({
-			resume: null as unknown as Resume,
-			isReady: false,
+	persist(
+		temporal(
+			immer((set) => ({
+				resume: null as unknown as Resume,
+				isReady: false,
+				summaryAIRoundsUsed: 0,
 
-			initialize: (resume) => {
-				set((state) => {
-					state.resume = resume as Resume;
-					state.isReady = resume !== null;
-					useResumeStore.temporal.getState().clear();
-				});
+				initialize: (resume) => {
+					set((state) => {
+						const isNewResume = state.resume?.id !== resume?.id;
+
+						state.resume = resume as Resume;
+						state.isReady = resume !== null;
+
+						if (isNewResume) {
+							state.summaryAIRoundsUsed = 0;
+						}
+
+						useResumeStore.temporal.getState().clear();
+					});
+				},
+
+				updateResumeData: (fn) => {
+					set((state) => {
+						if (!state.resume) return state;
+
+						if (state.resume.isLocked) {
+							errorToastId = toast.error(t`This resume is locked and cannot be updated.`, { id: errorToastId });
+							return state;
+						}
+
+						console.log("updateResumeData called");
+						console.log("Draft before update:", current(state.resume.data));
+
+						fn(state.resume.data);
+						console.log("Draft after update:", current(state.resume.data));
+						syncResume(current(state.resume));
+					});
+				},
+				incrementSummaryRounds: () => {
+					set((state) => {
+						if (state.summaryAIRoundsUsed < 2) {
+							state.summaryAIRoundsUsed += 1;
+						}
+					});
+				},
+
+				resetSummaryRounds: () => {
+					set((state) => {
+						state.summaryAIRoundsUsed = 0;
+					});
+				},
+			})),
+			{
+				partialize: (state) => ({ resume: state.resume }),
+				equality: (pastState, currentState) => isDeepEqual(pastState, currentState),
+				limit: 100,
 			},
-
-			updateResumeData: (fn) => {
-				set((state) => {
-					if (!state.resume) return state;
-
-					if (state.resume.isLocked) {
-						errorToastId = toast.error(t`This resume is locked and cannot be updated.`, { id: errorToastId });
-						return state;
-					}
-
-					console.log("updateResumeData called");
-					console.log("Draft before update:", current(state.resume.data));
-
-					fn(state.resume.data);
-					console.log("Draft after update:", current(state.resume.data));
-					syncResume(current(state.resume));
-				});
-			},
-		})),
+		),
 		{
-			partialize: (state) => ({ resume: state.resume }),
-			equality: (pastState, currentState) => isDeepEqual(pastState, currentState),
-			limit: 100,
+			name: "resume-store",
+			partialize: (state) => ({
+				resume: state.resume,
+				summaryAIRoundsUsed: state.summaryAIRoundsUsed,
+			}),
 		},
 	),
 );

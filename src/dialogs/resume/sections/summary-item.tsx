@@ -184,8 +184,13 @@ function SummaryItemForm({
 	const content = useWatch({ control: form.control, name: "content" });
 	const previousContentRef = useRef(content); // Track previous content
 
-	const { roundsUsed, maxRounds, incrementRoundsUsed, resetRounds } = aiUsage;
+	// const { roundsUsed, maxRounds, incrementRoundsUsed, resetRounds } = aiUsage;
 	const isAIUpdatingRef = useRef(false);
+	const roundsUsed = useResumeStore((state) => state.summaryAIRoundsUsed);
+	const incrementRoundsUsed = useResumeStore((state) => state.incrementSummaryRounds);
+	const resetRounds = useResumeStore((state) => state.resetSummaryRounds);
+
+	const maxRounds = 2;
 	// Reset rounds when content changes
 	useEffect(() => {
 		if (isAIUpdatingRef.current) {
