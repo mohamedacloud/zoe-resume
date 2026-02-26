@@ -185,13 +185,21 @@ function SummaryItemForm({
 	const previousContentRef = useRef(content); // Track previous content
 
 	const { roundsUsed, maxRounds, incrementRoundsUsed, resetRounds } = aiUsage;
-
+	const isAIUpdatingRef = useRef(false);
 	// Reset rounds when content changes
 	useEffect(() => {
+		if (isAIUpdatingRef.current) {
+			// Skip reset when AI updates content
+			isAIUpdatingRef.current = false;
+			previousContentRef.current = content;
+			return;
+		}
+
 		if (content !== previousContentRef.current) {
 			resetRounds();
-			previousContentRef.current = content;
 		}
+
+		previousContentRef.current = content;
 	}, [content, resetRounds]);
 
 	const isWordCountValid = (() => {
@@ -201,10 +209,13 @@ function SummaryItemForm({
 
 	const handleAIGenerated = (aiSummary: string) => {
 		if (aiSummary && aiSummary.length > 10) {
+			isAIUpdatingRef.current = true;
+
 			form.setValue("content", aiSummary, {
 				shouldDirty: true,
 				shouldValidate: true,
 			});
+
 			incrementRoundsUsed();
 		}
 	};
@@ -222,20 +233,20 @@ function SummaryItemForm({
 									<Trans>Content</Trans>
 								</FormLabel>
 								<AIGenerateButton
-										type="summary"
-										data={{
-											name: resumeData.basics.name,
-											headline: resumeData.basics.headline,
-											experience: resumeData.sections.experience.items.slice(0, 2),
-											skills: resumeData.sections.skills.items.slice(0, 5).map((skill) => skill.name),
-											currentSummary: typeof field.value === "string" ? field.value : "",
-										}}
-										onGenerated={handleAIGenerated}
-										roundsUsed={roundsUsed}
-										maxRounds={maxRounds}
-										isWordCountValid={isWordCountValid}
-										disabled={roundsUsed >= maxRounds} // Disable button after maxRounds
-									/>
+									type="summary"
+									data={{
+										name: resumeData.basics.name,
+										headline: resumeData.basics.headline,
+										experience: resumeData.sections.experience.items.slice(0, 2),
+										skills: resumeData.sections.skills.items.slice(0, 5).map((skill) => skill.name),
+										currentSummary: typeof field.value === "string" ? field.value : "",
+									}}
+									onGenerated={handleAIGenerated}
+									roundsUsed={roundsUsed}
+									maxRounds={maxRounds}
+									isWordCountValid={isWordCountValid}
+									disabled={roundsUsed >= maxRounds || !isWordCountValid} // Disable button after maxRounds
+								/>
 							</div>
 							<FormControl>
 								<RichInput
