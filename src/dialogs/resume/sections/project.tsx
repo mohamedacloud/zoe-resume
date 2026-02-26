@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { DialogProps } from "@/dialogs/store";
 import { useDialogStore } from "@/dialogs/store";
+import { useAIUsage } from "@/hooks/use-ai-usage";
 import { projectItemSchema } from "@/schema/resume/data";
 import { generateId } from "@/utils/string";
 
@@ -140,11 +141,17 @@ export function UpdateProjectDialog({ data }: DialogProps<"resume.sections.proje
 	);
 }
 
+// Update the ProjectForm component
 function ProjectForm() {
 	const form = useFormContext<FormValues>();
+	const { control } = form;
 
-	const name = useWatch({ control: form.control, name: "name" });
-	const description = useWatch({ control: form.control, name: "description" });
+	const name = useWatch({ control, name: "name" });
+	const description = useWatch({ control, name: "description" });
+
+	// Use the AI usage hook
+	const { roundsUsed, canUseAI, recordAIUsage, isWordCountValid, maxRounds, roundsRemaining, hasReachedLimit } =
+		useAIUsage(description || "", 2); // Ensure description is valid and the second argument is the correct limit
 
 	const handleAIGenerated = (content: string) => {
 		form.setValue("description", content, { shouldDirty: true });
@@ -153,7 +160,7 @@ function ProjectForm() {
 	return (
 		<>
 			<FormField
-				control={form.control}
+				control={control}
 				name="name"
 				render={({ field }) => (
 					<FormItem>
@@ -169,7 +176,7 @@ function ProjectForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="period"
 				render={({ field }) => (
 					<FormItem>
@@ -185,7 +192,7 @@ function ProjectForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="website"
 				render={({ field }) => (
 					<FormItem className="sm:col-span-full">
@@ -206,7 +213,7 @@ function ProjectForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="options.showLinkInTitle"
 				render={({ field }) => (
 					<FormItem className="flex items-center gap-x-2 sm:col-span-full">
@@ -221,7 +228,7 @@ function ProjectForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="description"
 				render={({ field }) => (
 					<FormItem className="sm:col-span-full">
@@ -234,15 +241,78 @@ function ProjectForm() {
 								data={{
 									name,
 									technologies: "",
-									description,
+									description: field.value,
 									highlights: "",
 								}}
 								onGenerated={handleAIGenerated}
+								roundsUsed={roundsUsed}
+								isWordCountValid={isWordCountValid}
+								onRoundComplete={recordAIUsage}
 							/>
 						</div>
 						<FormControl>
 							<RichInput {...field} value={field.value} onChange={field.onChange} />
 						</FormControl>
+						{!isWordCountValid && field.value && field.value.trim().split(/\s+/).filter(Boolean).length < 5 && (
+							<p className="mt-1 text-amber-600 text-xs">
+								<Trans>Write at least 5 words to enable Ask Zoe</Trans>
+							</p>
+						)}
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+			<FormField
+				control={control}
+				name="description"
+				render={({ field }) => (
+					<FormItem className="sm:col-span-full">
+						<div className="flex items-center justify-between">
+							<FormLabel>
+								<Trans>Description</Trans>
+							</FormLabel>
+							<AIGenerateButton
+								type="projects"
+								data={{
+									name,
+									technologies: "",
+									description: field.value,
+									highlights: "",
+								}}
+								onGenerated={handleAIGenerated}
+								roundsUsed={roundsUsed}
+								maxRounds={2}
+								roundsRemaining={2 - roundsUsed}
+								hasReachedLimit={roundsUsed >= 2}
+								isWordCountValid={isWordCountValid}
+								onRoundComplete={recordAIUsage}
+							/>
+						</div>
+						<FormControl>
+							<RichInput {...field} value={field.value} onChange={field.onChange} />
+						</FormControl>
+
+						{/* Status messages */}
+						{!isWordCountValid && field.value && field.value.trim().split(/\s+/).filter(Boolean).length < 5 && (
+							<p className="mt-1 text-amber-600 text-xs">
+								<Trans>Write at least 5 words to enable Ask Zoe</Trans>
+							</p>
+						)}
+
+						{roundsUsed > 0 && roundsUsed < 2 && (
+							<p className="mt-1 text-blue-600 text-xs">
+								<Trans>
+									You have {2 - roundsUsed} more AI suggestion{2 - roundsUsed !== 1 ? "s" : ""} left for this text.
+								</Trans>
+							</p>
+						)}
+
+						{roundsUsed >= 2 && (
+							<p className="mt-1 font-medium text-red-600 text-xs">
+								<Trans>✓ You've used both AI suggestions for this text. Edit the content to get new suggestions.</Trans>
+							</p>
+						)}
+
 						<FormMessage />
 					</FormItem>
 				)}
