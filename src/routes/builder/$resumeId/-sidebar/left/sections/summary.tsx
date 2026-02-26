@@ -3,19 +3,17 @@ import { SectionBase } from "../shared/section-base";
 import { SortableSectionItem } from "../shared/sortable-section-item";
 
 export function SummarySectionBuilder() {
-	const section = useResumeStore((state) => state.resume.data.summary);
-
-	console.log("📘 Summary Section Builder Rendered:", section);
+	const summary = useResumeStore((state) => state.resume.data.summary);
 
 	return (
 		<SectionBase type="summary">
 			<SortableSectionItem
 				type="summary"
-				item={{ id: "summary", ...section }}
+				item={{ id: "summary", ...summary }}
 				title="Edit Summary"
 				subtitle={
-					section.content
-						? section.content.replace(/<[^>]*>?/gm, "").slice(0, 120)
+					summary.content
+						? summary.content.replace(/<[^>]*>?/gm, "").slice(0, 120)
 						: "Click to add your professional summary"
 				}
 			/>

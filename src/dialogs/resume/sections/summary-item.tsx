@@ -89,16 +89,32 @@ export function UpdateSummaryItemDialog({ data }: DialogProps<"resume.sections.s
 	});
 
 	const onSubmit = (formData: FormValues) => {
-		updateResumeStore((draft) => {
-			if (data?.customSectionId) {
-				const section = draft.customSections.find((s) => s.id === data.customSectionId);
-				if (!section) return;
-				const index = section.items.findIndex((item) => item.id === formData.id);
-				if (index !== -1) section.items[index] = formData;
-			}
-		});
-		closeDialog();
-	};
+  updateResumeStore((draft) => {
+
+    if (data?.customSectionId) {
+
+      const section = draft.customSections.find(
+        (s) => s.id === data.customSectionId
+      );
+
+      if (!section) {
+        return;
+      }
+
+      const index = section.items.findIndex(
+        (item) => item.id === formData.id
+      );
+
+      if (index !== -1) {
+        section.items[index] = formData;
+      }
+    } else {
+      draft.summary.content = formData.content;
+    }
+  });
+
+  closeDialog();
+};
 
 	const { blockEvents, requestClose } = useFormBlocker(form);
 
@@ -185,7 +201,6 @@ function SummaryItemForm() {
 				control={form.control}
 				name="content"
 				render={({ field }) => {
-					console.log("📝 Field Value:", field.value);
 
 					return (
 						<FormItem>
@@ -196,7 +211,6 @@ function SummaryItemForm() {
 								<RichInput
 									{...field}
 									onChange={(value) => {
-										console.log("✍️ RichInput Changed:", value);
 										field.onChange(value);
 									}}
 								/>
