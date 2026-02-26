@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { debounce } from "es-toolkit";
+import { useEffect, useMemo, useRef } from "react";
 import { getSectionTitle } from "@/utils/resume/section";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
@@ -16,16 +17,27 @@ export function PageSummary({ className }: PageSummaryProps) {
 	// Update content when section.content changes
 	useEffect(() => {
 		if (contentRef.current && contentRef.current.innerHTML !== section.content) {
-			contentRef.current.innerHTML = section.content;
+			// Avoid updating innerHTML if the user is currently typing to prevent cursor reset
+			if (document.activeElement !== contentRef.current) {
+				contentRef.current.innerHTML = section.content;
+			}
 		}
 	}, [section.content]);
 
-	const handleContentChange = (e: React.FocusEvent<HTMLDivElement>) => {
+	const debouncedUpdate = useMemo(
+		() =>
+			debounce((newValue: string) => {
+				updateResumeData((draft) => {
+					draft.summary.content = newValue;
+				});
+			}, 100),
+		[updateResumeData],
+	);
+
+	const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
 		const newValue = e.currentTarget.innerHTML || "";
 		if (newValue !== section.content) {
-			updateResumeData((draft) => {
-				draft.summary.content = newValue;
-			});
+			debouncedUpdate(newValue);
 		}
 	};
 
@@ -45,7 +57,7 @@ export function PageSummary({ className }: PageSummaryProps) {
 					ref={contentRef}
 					contentEditable
 					suppressContentEditableWarning
-					onBlur={handleContentChange}
+					onInput={handleContentChange}
 					className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
 					style={{ columnCount: section.columns }}
 				/>

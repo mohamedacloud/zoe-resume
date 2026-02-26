@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { debounce } from "es-toolkit";
+import { useEffect, useMemo, useRef } from "react";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { SummaryItem as SummaryItemType } from "@/schema/resume/data";
 import { stripHtml } from "@/utils/string";
@@ -15,16 +16,26 @@ export function SummaryItem({ className, ...item }: SummaryItemProps) {
 	// Update content when item.content changes
 	useEffect(() => {
 		if (contentRef.current && contentRef.current.innerHTML !== item.content) {
-			contentRef.current.innerHTML = item.content;
+			if (document.activeElement !== contentRef.current) {
+				contentRef.current.innerHTML = item.content;
+			}
 		}
 	}, [item.content]);
 
-	const handleContentChange = (e: React.FocusEvent<HTMLDivElement>) => {
+	const debouncedUpdate = useMemo(
+		() =>
+			debounce((newValue: string) => {
+				updateResumeData((draft) => {
+					draft.summary.content = newValue;
+				});
+			}, 100),
+		[updateResumeData],
+	);
+
+	const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
 		const newValue = e.currentTarget.innerHTML || "";
 		if (newValue !== item.content) {
-			updateResumeData((draft) => {
-				draft.summary.content = newValue;
-			});
+			debouncedUpdate(newValue);
 		}
 	};
 
@@ -39,7 +50,7 @@ export function SummaryItem({ className, ...item }: SummaryItemProps) {
 			)}
 			contentEditable
 			suppressContentEditableWarning
-			onBlur={handleContentChange}
+			onInput={handleContentChange}
 		/>
 	);
 }
