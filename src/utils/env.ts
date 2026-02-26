@@ -19,10 +19,6 @@ export const env = createEnv({
 		// Server
 		TZ: z.string().default("Etc/UTC"),
 		APP_URL: z.url({ protocol: /https?/ }),
-		PRINTER_APP_URL: z.url({ protocol: /https?/ }).optional(),
-
-		// Printer
-		PRINTER_ENDPOINT: z.url({ protocol: /^(wss?|https?)$/ }),
 
 		// Database
 		DATABASE_URL: z.url({ protocol: /postgres(ql)?/ }),
