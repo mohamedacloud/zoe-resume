@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { match } from "ts-pattern";
 import { pageDimensionsAsPixels } from "@/schema/page";
 import type { Template } from "@/schema/templates";
@@ -75,9 +75,11 @@ export const ResumeMeasurer = ({ onMeasure }: Props) => {
 	return (
 		<div
 			ref={setMeasurementRef}
-			className="resume-measurer absolute top-0 left-0 -z-50 opacity-0 pointer-events-none"
+			className="resume-measurer pointer-events-none absolute top-0 left-0 -z-50 opacity-0"
 			style={{
 				width: pageDimensionsAsPixels[metadata.page.format].width, // Use full page width
+				height: 0,
+				overflow: "hidden",
 			}}
 		>
 			<style>{`
@@ -141,16 +143,16 @@ const MeasurableSection = ({ sectionId }: { sectionId: string }) => {
 	// If we render the section normally, `PageSection` renders children.
 	// The `children` prop in `PageSection` is a function `(item) => ReactNode`.
 	// We can't easily hook into that from here without modifying `getSectionComponent` again or `PageSection`.
-	
+
 	// Wait, we modified `PageSection` to accept `filter`.
 	// But `PageSection` uses a `map` to render items.
 	// The `children` is passed from `getSectionComponent`.
-	
+
 	// To measure individual items, we need `PageSection` to attach a ref or attribute to the item container.
 	// In `PageSection.tsx`:
 	// <div key={item.id} className={...}> {children(item)} </div>
 	// We can add `data-item-id={item.id}` to that div.
-	
+
 	return (
 		<div data-section-id={sectionId}>
 			<Component id={sectionId} />

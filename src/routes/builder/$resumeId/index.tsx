@@ -27,14 +27,19 @@ function RouteComponent() {
 	);
 
 	return (
-		<div className="relative h-full w-full overflow-y-auto bg-gray-100" style={{backgroundColor: "#f0f0f0"}}>
+		<div className="relative h-full w-full overflow-y-auto bg-gray-100" style={{ backgroundColor: "#f0f0f0" }}>
 			{/* Fixed Resume Preview with Scroll */}
-			<div className="flex min-h-full items-start justify-center p-8">
+			<div
+				className={cn(
+					"flex min-h-full items-start justify-center p-8 transition-[padding] duration-300 ease-in-out",
+					isLeftSidebarCollapsed ? "pt-12 pb-[60vh]" : "pb-8",
+				)}
+			>
 				<ResumePreview
 					showPageNumbers
 					className={cn(
-						"flex flex-col items-center gap-6 transition-transform duration-300 ease-in-out origin-top",
-						isLeftSidebarCollapsed ? "scale-150" : "scale-100"
+						"flex origin-top flex-col items-center gap-6 transition-transform duration-300 ease-in-out",
+						isLeftSidebarCollapsed ? "scale-150" : "scale-100",
 					)}
 					pageClassName="shadow-xl rounded-md overflow-hidden"
 				/>
