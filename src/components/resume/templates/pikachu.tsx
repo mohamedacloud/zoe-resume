@@ -1,6 +1,6 @@
 import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react";
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -40,10 +40,9 @@ export function PikachuTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 						{!fullWidth && (
 							<div className="shrink-0 space-y-(--page-gap-y) overflow-x-hidden">
-								{sidebar.map((section) => {
-									const Component = getSectionComponent(section, { sectionClassName });
-									return <Component key={section} id={section} />;
-								})}
+								{sidebar.map((section) => (
+									<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+								))}
 							</div>
 						)}
 					</aside>
@@ -58,10 +57,9 @@ export function PikachuTemplate({ pageIndex, pageLayout }: TemplateProps) {
 					)}
 
 					<div className="space-y-(--page-gap-y)">
-						{main.map((section) => {
-							const Component = getSectionComponent(section, { sectionClassName });
-							return <Component key={section} id={section} />;
-						})}
+						{main.map((section) => (
+							<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+						))}
 					</div>
 				</main>
 			</div>

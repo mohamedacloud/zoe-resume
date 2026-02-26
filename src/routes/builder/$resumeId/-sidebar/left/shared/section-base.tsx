@@ -2,6 +2,7 @@ import { CaretRightIcon } from "@phosphor-icons/react";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { DragHandle } from "@/components/ui/sortable-item";
 import type { SectionType } from "@/schema/resume/data";
 import { getSectionIcon, getSectionTitle, type LeftSidebarSection } from "@/utils/resume/section";
 import { cn } from "@/utils/style";
@@ -36,9 +37,11 @@ export function SectionBase({ type, className, ...props }: Props) {
 		>
 			<AccordionItem value={type} className="group/accordion space-y-4">
 				<div className="flex items-center">
+					<DragHandle className="mr-2" />
+
 					<AccordionTrigger asChild className="me-2 items-center justify-center">
 						<Button size="icon" variant="ghost">
-							<CaretRightIcon />
+							<CaretRightIcon className="transition-transform group-data-[state=open]/accordion:rotate-90" />
 						</Button>
 					</AccordionTrigger>
 

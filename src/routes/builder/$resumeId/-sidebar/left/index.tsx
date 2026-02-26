@@ -3,9 +3,9 @@ import { match } from "ts-pattern";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { type LeftSidebarSection, leftSidebarSections } from "@/utils/resume/section";
-import { SortableList } from "@/components/ui/sortable-list";
 import { SortableItem } from "@/components/ui/sortable-item";
+import { SortableList } from "@/components/ui/sortable-list";
+import { type LeftSidebarSection, leftSidebarSections } from "@/utils/resume/section";
 import { AwardsSectionBuilder } from "./sections/awards";
 import { BasicsSectionBuilder } from "./sections/basics";
 import { CertificationsSectionBuilder } from "./sections/certifications";
@@ -96,40 +96,41 @@ export function BuilderSidebarLeft() {
 				page.main = [...mainKnown, ...mainUnknown];
 
 				const sidebarKnown = nextOrder.filter((section) => page.sidebar.includes(section as any));
-				const sidebarUnknown = page.sidebar.filter((section) => !nextOrder.includes(section as any)) as LeftSidebarSection[];
+				const sidebarUnknown = page.sidebar.filter(
+					(section) => !nextOrder.includes(section as any),
+				) as LeftSidebarSection[];
 				page.sidebar = [...sidebarKnown, ...sidebarUnknown];
 			});
 		});
 	};
 
 	return (
+		<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50">
+			<div className="space-y-4 p-4">
+				{/* Fixed sections (picture and basics) - not draggable, always at top */}
+				{fixedSections.map((section) => (
+					<Fragment key={section}>
+						{getSectionComponent(section)}
+						<Separator />
+					</Fragment>
+				))}
 
-			<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50">
-				<div className="space-y-4 p-4">
-					{/* Fixed sections (picture and basics) - not draggable, always at top */}
-					{fixedSections.map((section) => (
-						<Fragment key={section}>
-							{getSectionComponent(section)}
-							<Separator />
-						</Fragment>
-					))}
-
-					{/* Reorderable content sections */}
-					<SortableList
-						items={sectionOrder}
-						onReorder={handleSectionReorder}
-						keyExtractor={(section) => section}
-						className="space-y-4"
-						renderItem={(section) => (
-							<SortableItem key={section} id={section} asHandle className="space-y-4">
-								<Fragment>
-									{getSectionComponent(section)}
-									<Separator />
-								</Fragment>
-							</SortableItem>
-						)}
-					/>
-				</div>
-			</ScrollArea>
+				{/* Reorderable content sections */}
+				<SortableList
+					items={sectionOrder}
+					onReorder={handleSectionReorder}
+					keyExtractor={(section) => section}
+					className="space-y-4"
+					renderItem={(section) => (
+						<SortableItem key={section} id={section} className="space-y-4">
+							<Fragment>
+								{getSectionComponent(section)}
+								<Separator />
+							</Fragment>
+						</SortableItem>
+					)}
+				/>
+			</div>
+		</ScrollArea>
 	);
 }

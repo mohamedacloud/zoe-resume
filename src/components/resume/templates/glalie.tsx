@@ -1,6 +1,6 @@
 import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react";
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -41,10 +41,9 @@ export function GlalieTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 						{!fullWidth && (
 							<div className="shrink-0 space-y-4 overflow-x-hidden">
-								{sidebar.map((section) => {
-									const Component = getSectionComponent(section, { sectionClassName });
-									return <Component key={section} id={section} />;
-								})}
+								{sidebar.map((section) => (
+									<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+								))}
 							</div>
 						)}
 					</aside>
@@ -52,10 +51,9 @@ export function GlalieTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 				<main data-layout="main" className="group page-main z-10">
 					<div className="space-y-4 px-(--page-margin-x) pt-(--page-margin-y)">
-						{main.map((section) => {
-							const Component = getSectionComponent(section, { sectionClassName });
-							return <Component key={section} id={section} />;
-						})}
+						{main.map((section) => (
+							<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+						))}
 					</div>
 				</main>
 			</div>
@@ -107,7 +105,11 @@ function Header() {
 						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 					</h2>
 					<p className="basics-headline">
-						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+						<InlineEditableText
+							value={basics.headline}
+							placeholder="Your Professional Title"
+							onChange={handleHeadlineChange}
+						/>
 					</p>
 				</div>
 
@@ -115,36 +117,32 @@ function Header() {
 					style={{ "--box-radius": "calc(var(--picture-border-radius) / 4)" } as React.CSSProperties}
 					className="basics-items flex w-full flex-col gap-y-1 rounded-(--box-radius) border border-(--page-primary-color) p-3 *:flex *:items-center *:gap-x-1.5"
 				>
-				<div className="basics-item-email">
-					<EnvelopeIcon />
-					<InlineEditableText
-						as="a"
-						href={basics.email ? `mailto:${basics.email}` : undefined}
-						value={basics.email}
-						placeholder="email@domain.com"
-						onChange={handleEmailChange}
-					/>
-				</div>
+					<div className="basics-item-email">
+						<EnvelopeIcon />
+						<InlineEditableText
+							as="a"
+							href={basics.email ? `mailto:${basics.email}` : undefined}
+							value={basics.email}
+							placeholder="email@domain.com"
+							onChange={handleEmailChange}
+						/>
+					</div>
 
-				<div className="basics-item-phone">
-					<PhoneIcon />
-					<InlineEditableText
-						as="a"
-						href={basics.phone ? `tel:${basics.phone}` : undefined}
-						value={basics.phone}
-						placeholder="+91 98765 43210"
-						onChange={handlePhoneChange}
-					/>
-				</div>
+					<div className="basics-item-phone">
+						<PhoneIcon />
+						<InlineEditableText
+							as="a"
+							href={basics.phone ? `tel:${basics.phone}` : undefined}
+							value={basics.phone}
+							placeholder="+91 98765 43210"
+							onChange={handlePhoneChange}
+						/>
+					</div>
 
-				<div className="basics-item-location">
-					<MapPinIcon />
-					<InlineEditableText
-						value={basics.location}
-						placeholder="City, Country"
-						onChange={handleLocationChange}
-					/>
-				</div>
+					<div className="basics-item-location">
+						<MapPinIcon />
+						<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
+					</div>
 
 					{basics.website.url && (
 						<div className="basics-item-website">

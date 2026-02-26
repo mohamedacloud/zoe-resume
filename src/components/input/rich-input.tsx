@@ -95,7 +95,10 @@ export function RichInput({ value, onChange, style, className, editorClassName, 
 	// Sync editor content when value prop changes (e.g. from preview)
 	useEffect(() => {
 		if (editor && value !== editor.getHTML()) {
-			editor.commands.setContent(value);
+			// Only update if not focused to avoid cursor jumping and focus loss
+			if (!editor.isFocused) {
+				editor.commands.setContent(value);
+			}
 		}
 	}, [editor, value]);
 

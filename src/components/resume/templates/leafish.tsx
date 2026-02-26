@@ -2,7 +2,7 @@ import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/
 import { useEffect, useRef } from "react";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -31,10 +31,9 @@ export function LeafishTemplate({ pageIndex, pageLayout }: TemplateProps) {
 				<main data-layout="main" className="group page-main space-y-(--page-gap-y)">
 					{main
 						.filter((section) => section !== "summary")
-						.map((section) => {
-							const Component = getSectionComponent(section, { sectionClassName });
-							return <Component key={section} id={section} />;
-						})}
+						.map((section) => (
+							<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+						))}
 				</main>
 
 				{!fullWidth && (
@@ -44,10 +43,9 @@ export function LeafishTemplate({ pageIndex, pageLayout }: TemplateProps) {
 					>
 						{sidebar
 							.filter((section) => section !== "summary")
-							.map((section) => {
-								const Component = getSectionComponent(section, { sectionClassName });
-								return <Component key={section} id={section} />;
-							})}
+							.map((section) => (
+								<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+							))}
 					</aside>
 				)}
 			</div>

@@ -1,5 +1,5 @@
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -43,20 +43,18 @@ export function DitgarTemplate({ pageIndex, pageLayout }: TemplateProps) {
 						{isFirstPage && <Header />}
 
 						<div className="flex-1 space-y-4 px-(--page-margin-x) pt-(--page-margin-y)">
-							{sidebar.map((section) => {
-								const Component = getSectionComponent(section, { sectionClassName });
-								return <Component key={section} id={section} />;
-							})}
+							{sidebar.map((section) => (
+								<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+							))}
 						</div>
 					</aside>
 				)}
 
 				<main data-layout="main" className={cn("main group z-10", !fullWidth ? "col-span-2" : "col-span-3")}>
 					<div className="space-y-4 px-(--page-margin-x) pt-(--page-margin-y)">
-						{main.map((section) => {
-							const Component = getSectionComponent(section, { sectionClassName });
-							return <Component key={section} id={section} />;
-						})}
+						{main.map((section) => (
+							<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+						))}
 					</div>
 				</main>
 			</div>
@@ -99,7 +97,10 @@ function Header() {
 	};
 
 	return (
-		<div data-section-id="header" className="page-header space-y-4 bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
+		<div
+			data-section-id="header"
+			className="page-header space-y-4 bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)"
+		>
 			<PagePicture />
 
 			<div>
@@ -107,18 +108,18 @@ function Header() {
 					<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 				</h2>
 				<p>
-					<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+					<InlineEditableText
+						value={basics.headline}
+						placeholder="Your Professional Title"
+						onChange={handleHeadlineChange}
+					/>
 				</p>
 			</div>
 
 			<div className="flex flex-col items-start gap-y-2 text-sm [&>div>i]:text-(--page-background-color)!">
 				<div className="basics-item-location flex items-center gap-x-1.5">
 					<PageIcon icon="map-pin" className="ph-bold" />
-					<InlineEditableText
-						value={basics.location}
-						placeholder="City, Country"
-						onChange={handleLocationChange}
-					/>
+					<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 				</div>
 
 				<div className="basics-item-phone flex items-center gap-x-1.5">
