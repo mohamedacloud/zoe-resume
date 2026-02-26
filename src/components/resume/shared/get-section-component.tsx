@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import { match } from "ts-pattern";
-import { ResumePageContext } from "../preview/context";
 import type {
 	CoverLetterItem as CoverLetterItemType,
 	CustomSectionItem,
@@ -10,7 +9,9 @@ import type {
 	SummaryItem as SummaryItemType,
 } from "@/schema/resume/data";
 import { cn } from "@/utils/style";
+import { ResumePageContext } from "../preview/context";
 import { useResumeStore } from "../store/resume";
+import { InlineEditableText } from "./inline-editable-text";
 import { AwardsItem } from "./items/awards-item";
 import { CertificationsItem } from "./items/certifications-item";
 import { CoverLetterItem } from "./items/cover-letter-item";
@@ -173,6 +174,7 @@ export function getSectionComponent(
 		.otherwise(() => {
 			// Custom section - render based on its type
 			const CustomSectionComponent = ({ id }: { id: string }) => {
+				const updateResumeData = useResumeStore((state) => state.updateResumeData);
 				const customSection = useResumeStore((state) => state.resume.data.customSections.find((s) => s.id === id));
 				const visibleItemIds = useVisibleItemIds(id);
 
@@ -191,7 +193,18 @@ export function getSectionComponent(
 				return (
 					<section className={cn(`page-section page-section-custom page-section-${id}`, sectionClassName)}>
 						{customSection.type !== "summary" && customSection.type !== "cover-letter" && (
-							<h6 className="mb-1.5 text-(--page-primary-color)">{customSection.title}</h6>
+							<h6 className="mb-1.5 text-(--page-primary-color)">
+								<InlineEditableText
+									value={customSection.title}
+									placeholder="Section Title"
+									onChange={(value) => {
+										updateResumeData((draft) => {
+											const section = draft.customSections.find((s) => s.id === id);
+											if (section) section.title = value;
+										});
+									}}
+								/>
+							</h6>
 						)}
 
 						<div

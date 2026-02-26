@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trans } from "@lingui/react/macro";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import type z from "zod";
 import { URLInput } from "@/components/input/url-input";
@@ -31,6 +32,15 @@ function BasicsSectionForm() {
 		defaultValues: basics,
 		mode: "onChange",
 	});
+
+	// Sync form with store changes (e.g. from preview)
+	const basicsRef = useRef(basics);
+	useEffect(() => {
+		if (basics !== basicsRef.current) {
+			form.reset(basics);
+			basicsRef.current = basics;
+		}
+	}, [basics, form]);
 
 	const onSubmit = (data: FormValues) => {
 		updateResumeData((draft) => {
