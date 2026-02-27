@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trans } from "@lingui/react/macro";
 import { PencilSimpleLineIcon, PlusIcon } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import type z from "zod";
 import { RichInput } from "@/components/input/rich-input";
@@ -23,6 +24,8 @@ type FormValues = z.infer<typeof formSchema>;
 export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.experience.create">) {
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const maxRounds = 2;
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -69,10 +72,7 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			</DialogHeader>
 
 			<Form {...form}>
-				<form
-					className="grid gap-4 sm:grid-cols-2"
-					onSubmit={form.handleSubmit(onSubmit)}
-				>
+				<form className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
 					<ExperienceForm />
 
 					<DialogFooter className="sm:col-span-full">
@@ -93,6 +93,8 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.experience.update">) {
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
+
+	const maxRounds = 2;
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -138,10 +140,7 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 			</DialogHeader>
 
 			<Form {...form}>
-				<form
-					className="grid gap-4 sm:grid-cols-2"
-					onSubmit={form.handleSubmit(onSubmit)}
-				>
+				<form className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit(onSubmit)}>
 					<ExperienceForm />
 
 					<DialogFooter className="sm:col-span-full">
@@ -161,19 +160,58 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 
 function ExperienceForm() {
 	const form = useFormContext<FormValues>();
-
-	const company = useWatch({ control: form.control, name: "company" });
-	const position = useWatch({ control: form.control, name: "position" });
+	const resumeData = useResumeStore((state) => state.resume.data);
+	const experienceId = form.getValues("id");
+	// Watch the "description" field (was incorrectly watching "content")
 	const description = useWatch({ control: form.control, name: "description" });
+	const previousDescriptionRef = useRef(description); // Track previous description
 
-	const handleAIGenerated = (content: string) => {
-		console.log("AI-generated content for description:", content);
-		form.setValue("description", content, { shouldDirty: true });
+	const isAIUpdatingRef = useRef(false);
+	const roundsUsed = useResumeStore((state) => state.experienceAIRoundsUsed?.[experienceId] ?? 0);
+	const incrementRoundsUsed = useResumeStore((state) => state.incrementExperienceRounds);
+
+	const resetRounds = useResumeStore((state) => state.resetExperienceRounds);
+	const maxRounds = 2;
+
+	useEffect(() => {
+		if (isAIUpdatingRef.current) {
+			// Skip reset when AI updates description
+			isAIUpdatingRef.current = false;
+			previousDescriptionRef.current = description;
+			return;
+		}
+
+		if (description !== previousDescriptionRef.current) {
+			resetRounds(experienceId);
+		}
+
+		previousDescriptionRef.current = description;
+	}, [description, resetRounds, experienceId]);
+
+	const isWordCountValid = (() => {
+		if (typeof description !== "string") return false;
+		return description.trim().split(/\s+/).filter(Boolean).length >= 5;
+	})();
+
+	const { control } = form;
+
+	const handleAIGenerated = (aiExperience: string) => {
+		if (aiExperience && aiExperience.length > 10) {
+			isAIUpdatingRef.current = true;
+
+			form.setValue("description", aiExperience, {
+				shouldDirty: true,
+				shouldValidate: true,
+			});
+
+			incrementRoundsUsed(experienceId);
+		}
 	};
+
 	return (
 		<>
 			<FormField
-				control={form.control}
+				control={control}
 				name="company"
 				render={({ field }) => (
 					<FormItem>
@@ -189,7 +227,7 @@ function ExperienceForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="position"
 				render={({ field }) => (
 					<FormItem>
@@ -205,7 +243,7 @@ function ExperienceForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="location"
 				render={({ field }) => (
 					<FormItem>
@@ -221,7 +259,7 @@ function ExperienceForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="startDate"
 				render={({ field }) => (
 					<FormItem>
@@ -237,7 +275,7 @@ function ExperienceForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="endDate"
 				render={({ field }) => (
 					<FormItem>
@@ -253,7 +291,7 @@ function ExperienceForm() {
 			/>
 
 			<FormField
-				control={form.control}
+				control={control}
 				name="currentlyWorkingHere"
 				render={({ field }) => (
 					<FormItem className="flex items-center gap-x-2">
@@ -266,31 +304,52 @@ function ExperienceForm() {
 					</FormItem>
 				)}
 			/>
-
 			<FormField
-				control={form.control}
+				control={control}
 				name="description"
 				render={({ field }) => (
 					<FormItem className="sm:col-span-full">
 						<div className="flex items-center justify-between">
-							<FormLabel>
-								<Trans>Description</Trans>
-							</FormLabel>
+							<FormLabel>Description</FormLabel>
+
 							<AIGenerateButton
 								type="experience"
 								data={{
-									company,
-									position,
-									title: position,
-									responsibilities: description,
-									projectDetails: "",
+									company: form.getValues("company"),
+									position: form.getValues("position"),
+									description: description,
 								}}
 								onGenerated={handleAIGenerated}
+								roundsUsed={roundsUsed}
+								maxRounds={maxRounds}
+								isWordCountValid={isWordCountValid}
+								disabled={roundsUsed >= maxRounds || !isWordCountValid} // Disable button after maxRounds
 							/>
 						</div>
+
 						<FormControl>
-							<RichInput {...field} value={field.value} onChange={field.onChange} />
+							<RichInput {...field} value={field.value || ""} onChange={field.onChange} />
 						</FormControl>
+
+						{/* Status messages */}
+						{!isWordCountValid && field.value && field.value.trim().split(/\s+/).filter(Boolean).length < 5 && (
+							<p className="mt-1 text-amber-600 text-xs">
+								<Trans>Write at least 5 words to enable Ask Zoe</Trans>
+							</p>
+						)}
+
+						{roundsUsed === 1 && (
+							<p className="mt-1 text-blue-600 text-xs">
+								<Trans>You have 1 more AI suggestion left for this text.</Trans>
+							</p>
+						)}
+
+						{roundsUsed >= maxRounds && (
+							<p className="mt-1 font-medium text-red-600 text-xs">
+								<Trans>✓ You've used both AI suggestions. Edit the text to get new suggestions.</Trans>
+							</p>
+						)}
+
 						<FormMessage />
 					</FormItem>
 				)}

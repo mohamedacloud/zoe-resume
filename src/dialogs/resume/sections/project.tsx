@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trans } from "@lingui/react/macro";
 import { PencilSimpleLineIcon, PlusIcon } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import type z from "zod";
 import { RichInput } from "@/components/input/rich-input";
@@ -14,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { DialogProps } from "@/dialogs/store";
 import { useDialogStore } from "@/dialogs/store";
-import { useAIUsage } from "@/hooks/use-ai-usage";
 import { projectItemSchema } from "@/schema/resume/data";
 import { generateId } from "@/utils/string";
 
@@ -148,14 +148,37 @@ function ProjectForm() {
 
 	const name = useWatch({ control, name: "name" });
 	const description = useWatch({ control, name: "description" });
-
+	const isWordCountValid =
+		typeof description === "string" && description.trim().split(/\s+/).filter(Boolean).length >= 5;
 	// Use the AI usage hook
-	const { roundsUsed, canUseAI, recordAIUsage, isWordCountValid, maxRounds, roundsRemaining, hasReachedLimit } =
-		useAIUsage(description || "", 2); // Ensure description is valid and the second argument is the correct limit
+	const projectId = form.getValues("id");
+	const isAIUpdatingRef = useRef(false);
+	const roundsUsed = useResumeStore((state) => state.projectAIRoundsUsed?.[projectId] ?? 0);
 
+	const incrementRoundsUsed = useResumeStore((state) => state.incrementProjectRounds);
+
+	const resetRounds = useResumeStore((state) => state.resetProjectRounds);
+
+	const maxRounds = 2;
 	const handleAIGenerated = (content: string) => {
 		form.setValue("description", content, { shouldDirty: true });
 	};
+
+	const previousDescriptionRef = useRef(description);
+
+	useEffect(() => {
+		if (isAIUpdatingRef.current) {
+			isAIUpdatingRef.current = false;
+			previousDescriptionRef.current = description;
+			return;
+		}
+
+		if (description !== previousDescriptionRef.current) {
+			resetRounds(projectId);
+		}
+
+		previousDescriptionRef.current = description;
+	}, [description, projectId, resetRounds]);
 
 	return (
 		<>
@@ -226,7 +249,6 @@ function ProjectForm() {
 					</FormItem>
 				)}
 			/>
-
 			<FormField
 				control={control}
 				name="description"
@@ -244,48 +266,15 @@ function ProjectForm() {
 									description: field.value,
 									highlights: "",
 								}}
-								onGenerated={handleAIGenerated}
-								roundsUsed={roundsUsed}
-								isWordCountValid={isWordCountValid}
-								onRoundComplete={recordAIUsage}
-							/>
-						</div>
-						<FormControl>
-							<RichInput {...field} value={field.value} onChange={field.onChange} />
-						</FormControl>
-						{!isWordCountValid && field.value && field.value.trim().split(/\s+/).filter(Boolean).length < 5 && (
-							<p className="mt-1 text-amber-600 text-xs">
-								<Trans>Write at least 5 words to enable Ask Zoe</Trans>
-							</p>
-						)}
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-			<FormField
-				control={control}
-				name="description"
-				render={({ field }) => (
-					<FormItem className="sm:col-span-full">
-						<div className="flex items-center justify-between">
-							<FormLabel>
-								<Trans>Description</Trans>
-							</FormLabel>
-							<AIGenerateButton
-								type="projects"
-								data={{
-									name,
-									technologies: "",
-									description: field.value,
-									highlights: "",
+								onGenerated={(content) => {
+									isAIUpdatingRef.current = true;
+									form.setValue("description", content, { shouldDirty: true });
+									incrementRoundsUsed(projectId);
 								}}
-								onGenerated={handleAIGenerated}
 								roundsUsed={roundsUsed}
-								maxRounds={2}
-								roundsRemaining={2 - roundsUsed}
-								hasReachedLimit={roundsUsed >= 2}
+								maxRounds={maxRounds}
 								isWordCountValid={isWordCountValid}
-								onRoundComplete={recordAIUsage}
+								disabled={roundsUsed >= maxRounds || !isWordCountValid}
 							/>
 						</div>
 						<FormControl>
@@ -299,17 +288,15 @@ function ProjectForm() {
 							</p>
 						)}
 
-						{roundsUsed > 0 && roundsUsed < 2 && (
+						{roundsUsed === 1 && (
 							<p className="mt-1 text-blue-600 text-xs">
-								<Trans>
-									You have {2 - roundsUsed} more AI suggestion{2 - roundsUsed !== 1 ? "s" : ""} left for this text.
-								</Trans>
+								<Trans>You have 1 more AI suggestion left for this text.</Trans>
 							</p>
 						)}
 
-						{roundsUsed >= 2 && (
+						{roundsUsed >= maxRounds && (
 							<p className="mt-1 font-medium text-red-600 text-xs">
-								<Trans>✓ You've used both AI suggestions for this text. Edit the content to get new suggestions.</Trans>
+								<Trans>✓ You've used both AI suggestions. Edit the text to get new suggestions.</Trans>
 							</p>
 						)}
 

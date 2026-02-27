@@ -3,7 +3,6 @@ import { useResumeStore } from "@/components/resume/store/resume";
 import type { SectionItem } from "@/schema/resume/data";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
-import { LinkedTitle } from "../linked-title";
 import { PageLink } from "../page-link";
 
 type ProjectsItemProps = SectionItem<"projects"> & {
@@ -50,6 +49,10 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 		}
 	};
 
+	const descriptionBullets = item.description
+		? item.description.split("\n").filter((line) => line.trim() !== "")
+		: [];
+
 	return (
 		<div className={cn("projects-item", className)}>
 			{/* Header */}
@@ -76,7 +79,7 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 			</div>
 
 			{/* Description */}
-			<div
+			<ul
 				ref={descriptionRef}
 				contentEditable
 				suppressContentEditableWarning
@@ -85,7 +88,11 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 					"section-item-description projects-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
 					!stripHtml(item.description) && "hidden",
 				)}
-			/>
+			>
+				{descriptionBullets.map((bullet, index) => (
+					<li key={index}>{bullet}</li>
+				))}
+			</ul>
 
 			{/* Website */}
 			{!item.options?.showLinkInTitle && (

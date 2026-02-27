@@ -99,6 +99,7 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 							.replace(/<b>(.*?)<\/b>/g, "<b>$1</b>")
 							.replace(/<i>(.*?)<\/i>/g, "<i>$1</i>");
 
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
 						return <p key={index} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{ __html: formattedText }} />;
 					})}
 				</div>

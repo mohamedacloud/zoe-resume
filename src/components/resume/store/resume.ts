@@ -19,6 +19,8 @@ type ResumeStoreState = {
 	resume: Resume;
 	isReady: boolean;
 	summaryAIRoundsUsed: number;
+	experienceAIRoundsUsed: Record<string, number>;
+	projectAIRoundsUsed: Record<string, number>;
 };
 
 type ResumeStoreActions = {
@@ -26,6 +28,11 @@ type ResumeStoreActions = {
 	updateResumeData: (fn: (draft: WritableDraft<ResumeData>) => void) => void;
 	incrementSummaryRounds: () => void;
 	resetSummaryRounds: () => void;
+	incrementExperienceRounds: (id: string) => void;
+	resetExperienceRounds: (id: string) => void;
+
+	incrementProjectRounds: (id: string) => void;
+	resetProjectRounds: (id: string) => void;
 };
 
 type ResumeStore = ResumeStoreState & ResumeStoreActions;
@@ -44,45 +51,52 @@ let errorToastId: string | number | undefined;
 type PartializedState = { resume: Resume | null };
 
 export const useResumeStore = create<ResumeStore>()(
-	persist(
-		temporal(
+	temporal(
+		persist(
 			immer((set) => ({
+				// --- STATE ---
 				resume: null as unknown as Resume,
 				isReady: false,
 				summaryAIRoundsUsed: 0,
+				experienceAIRoundsUsed: {},
+				projectAIRoundsUsed: {},
 
+				// --- ACTIONS ---
 				initialize: (resume) => {
 					set((state) => {
-						const isNewResume = state.resume?.id !== resume?.id;
-
-						state.resume = resume as Resume;
-						state.isReady = resume !== null;
-
-						if (isNewResume) {
-							state.summaryAIRoundsUsed = 0;
+						if (!resume) {
+							state.resume = null as unknown as Resume;
+							state.isReady = false;
+							return;
 						}
 
-						useResumeStore.temporal.getState().clear();
+						const isDifferentResume = state.resume && state.resume.id !== resume.id;
+
+						state.resume = resume as Resume;
+						state.isReady = true;
+
+						// ✅ Only reset if switching to a completely different resume
+						if (isDifferentResume) {
+							state.summaryAIRoundsUsed = 0;
+							state.experienceAIRoundsUsed = {};
+							state.projectAIRoundsUsed = {};
+						}
 					});
 				},
-
 				updateResumeData: (fn) => {
 					set((state) => {
-						if (!state.resume) return state;
+						if (!state.resume) return;
 
 						if (state.resume.isLocked) {
 							errorToastId = toast.error(t`This resume is locked and cannot be updated.`, { id: errorToastId });
-							return state;
+							return;
 						}
 
-						console.log("updateResumeData called");
-						console.log("Draft before update:", current(state.resume.data));
-
 						fn(state.resume.data);
-						console.log("Draft after update:", current(state.resume.data));
 						syncResume(current(state.resume));
 					});
 				},
+
 				incrementSummaryRounds: () => {
 					set((state) => {
 						if (state.summaryAIRoundsUsed < 2) {
@@ -96,19 +110,50 @@ export const useResumeStore = create<ResumeStore>()(
 						state.summaryAIRoundsUsed = 0;
 					});
 				},
+
+				incrementExperienceRounds: (id) => {
+					set((state) => {
+						const current = state.experienceAIRoundsUsed[id] ?? 0;
+						if (current < 2) {
+							state.experienceAIRoundsUsed[id] = current + 1;
+						}
+					});
+				},
+
+				resetExperienceRounds: (id) => {
+					set((state) => {
+						state.experienceAIRoundsUsed[id] = 0;
+					});
+				},
+
+				incrementProjectRounds: (id) => {
+					set((state) => {
+						const current = state.projectAIRoundsUsed[id] ?? 0;
+						if (current < 2) {
+							state.projectAIRoundsUsed[id] = current + 1;
+						}
+					});
+				},
+
+				resetProjectRounds: (id) => {
+					set((state) => {
+						state.projectAIRoundsUsed[id] = 0;
+					});
+				},
 			})),
 			{
-				partialize: (state) => ({ resume: state.resume }),
-				equality: (pastState, currentState) => isDeepEqual(pastState, currentState),
-				limit: 100,
+				name: "resume-store", // ✅ belongs to persist
+				partialize: (state) => ({
+					resume: state.resume,
+					summaryAIRoundsUsed: state.summaryAIRoundsUsed,
+					experienceAIRoundsUsed: state.experienceAIRoundsUsed,
+					projectAIRoundsUsed: state.projectAIRoundsUsed,
+				}),
 			},
 		),
 		{
-			name: "resume-store",
-			partialize: (state) => ({
-				resume: state.resume,
-				summaryAIRoundsUsed: state.summaryAIRoundsUsed,
-			}),
+			limit: 100, // ✅ belongs to temporal
+			equality: (pastState, currentState) => isDeepEqual(pastState, currentState),
 		},
 	),
 );
