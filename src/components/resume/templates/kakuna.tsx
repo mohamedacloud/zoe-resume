@@ -1,6 +1,6 @@
 import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react";
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -21,22 +21,20 @@ export function KakunaTemplate({ pageIndex, pageLayout }: TemplateProps) {
 	const { main, sidebar, fullWidth } = pageLayout;
 
 	return (
-		<div className="template-kakuna page-content space-y-(--page-gap-y) px-(--page-margin-x) pt-(--page-margin-y) print:p-0">
+		<div className="template-kakuna page-content space-y-(--page-gap-y) px-(--page-margin-x) pt-(--page-margin-y)">
 			{isFirstPage && <Header />}
 
 			<main data-layout="main" className="group page-main space-y-(--page-gap-y)">
-				{main.map((section) => {
-					const Component = getSectionComponent(section, { sectionClassName });
-					return <Component key={section} id={section} />;
-				})}
+				{main.map((section) => (
+					<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+				))}
 			</main>
 
 			{!fullWidth && (
 				<aside data-layout="sidebar" className="group page-sidebar space-y-(--page-gap-y)">
-					{sidebar.map((section) => {
-						const Component = getSectionComponent(section, { sectionClassName });
-						return <Component key={section} id={section} />;
-					})}
+					{sidebar.map((section) => (
+						<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+					))}
 				</aside>
 			)}
 		</div>
@@ -87,7 +85,11 @@ function Header() {
 						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 					</h2>
 					<p className="basics-headline">
-						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+						<InlineEditableText
+							value={basics.headline}
+							placeholder="Your Professional Title"
+							onChange={handleHeadlineChange}
+						/>
 					</p>
 				</div>
 
@@ -116,11 +118,7 @@ function Header() {
 
 					<div className="basics-item-location">
 						<MapPinIcon />
-						<InlineEditableText
-							value={basics.location}
-							placeholder="City, Country"
-							onChange={handleLocationChange}
-						/>
+						<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 					</div>
 
 					{basics.website.url && (

@@ -119,6 +119,7 @@ export const ResumePreview = ({ showPageNumbers = false, pageClassName, classNam
 						showPageNumbers={showPageNumbers}
 						itemDistribution={itemDistribution}
 						isOverflowing={isOverflowing}
+						totalNumberOfPages={pages.length}
 					/>
 				))}
 			</div>
@@ -133,16 +134,23 @@ type PageContainerProps = {
 	showPageNumbers?: boolean;
 	itemDistribution?: Record<string, string[][]>;
 	isOverflowing?: boolean;
+	totalNumberOfPages: number;
 };
 
-function PageContainer({ pageIndex, pageLayout, pageClassName, showPageNumbers = false, itemDistribution, isOverflowing }: PageContainerProps) {
+function PageContainer({
+	pageIndex,
+	pageLayout,
+	pageClassName,
+	showPageNumbers = false,
+	itemDistribution,
+	isOverflowing,
+	totalNumberOfPages,
+}: PageContainerProps) {
 	const pageRef = useRef<HTMLDivElement>(null);
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
 
 	const pageNumber = useMemo(() => pageIndex + 1, [pageIndex]);
-	const totalNumberOfPages = useMemo(() => metadata.layout.pages.length, [metadata.layout.pages]);
 	const TemplateComponent = useMemo(() => getTemplateComponent(metadata.template), [metadata.template]);
-
 
 	return (
 		<div data-page-index={pageIndex} className="relative">

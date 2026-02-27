@@ -14,6 +14,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ColorPicker } from "@/components/input/color-picker";
+import { useResumeStore } from "@/components/resume/store/resume";
 import { FontFamilyCombobox, FontWeightCombobox, getNextWeight } from "@/components/typography/combobox";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,24 +26,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
-import {
-	Popover,
-	PopoverContent,
-	PopoverHeader,
-	PopoverTitle,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import { useResumeStore } from "@/components/resume/store/resume";
+import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
-import { downloadFromUrl, downloadWithAnchor, generateFilename } from "@/utils/file";
+import { downloadFromUrl, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
 
 export function BuilderTopTray() {
 	const openDialog = useDialogStore((state) => state.openDialog);
 	const params = useParams({ from: "/builder/$resumeId" });
 	const { data: resume } = useQuery(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } }));
-	const resumeData = useResumeStore((state) => state.resume.data);
 
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
 		orpc.printer.printResumeAsPDF.mutationOptions(),
@@ -66,19 +59,7 @@ export function BuilderTopTray() {
 	};
 
 	const onDownloadDocx = async () => {
-		const name = resumeData.basics.name || "resume";
-		const filename = generateFilename(name, "docx");
-		const toastId = toast.loading(t`Generating Word document...`);
-		try {
-			const { generateResumeDocx } = await import("@/utils/resume-to-docx");
-			const blob = await generateResumeDocx(resumeData);
-			downloadWithAnchor(blob, filename);
-			toast.success(t`Your Word document has been downloaded successfully!`);
-		} catch {
-			toast.error(t`There was a problem generating the Word document, please try again.`);
-		} finally {
-			toast.dismiss(toastId);
-		}
+		toast.error(t`Word download is not yet implemented on the backend.`);
 	};
 
 	return (
@@ -117,11 +98,7 @@ export function BuilderTopTray() {
 				</PopoverContent>
 			</Popover>
 
-			<Button
-				size="sm"
-				variant="outline"
-				onClick={() => openDialog("resume.template.gallery", undefined)}
-			>
+			<Button size="sm" variant="outline" onClick={() => openDialog("resume.template.gallery", undefined)}>
 				<SwapIcon />
 				<Trans>Templates</Trans>
 			</Button>
@@ -146,7 +123,7 @@ export function BuilderTopTray() {
 						<Button
 							size="sm"
 							variant="default"
-							className="rounded-l-none border-l border-emerald-500 bg-emerald-600 px-2 text-white hover:bg-emerald-700"
+							className="rounded-l-none border-emerald-500 border-l bg-emerald-600 px-2 text-white hover:bg-emerald-700"
 							aria-label="More download options"
 						>
 							<CaretDownIcon className="size-3.5" />
@@ -184,7 +161,7 @@ function ColorsPopoverContent() {
 	return (
 		<div className="space-y-4">
 			<div className="space-y-2">
-				<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 					<Trans>Primary Color</Trans>
 				</p>
 				<div className="flex items-center gap-2">
@@ -194,7 +171,7 @@ function ColorsPopoverContent() {
 			</div>
 
 			<div className="space-y-2">
-				<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 					<Trans>Text Color</Trans>
 				</p>
 				<div className="flex items-center gap-2">
@@ -204,7 +181,7 @@ function ColorsPopoverContent() {
 			</div>
 
 			<div className="space-y-2">
-				<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 					<Trans>Background Color</Trans>
 				</p>
 				<div className="flex items-center gap-2">
@@ -229,7 +206,7 @@ function TypographyPopoverContent() {
 	return (
 		<div className="space-y-4">
 			<div className="space-y-2">
-				<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 					<Trans>Font Family</Trans>
 				</p>
 				<FontFamilyCombobox
@@ -246,19 +223,23 @@ function TypographyPopoverContent() {
 			</div>
 
 			<div className="space-y-2">
-				<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 					<Trans>Font Weight</Trans>
 				</p>
 				<FontWeightCombobox
 					fontFamily={typography.body.fontFamily}
 					value={typography.body.fontWeights}
-					onValueChange={(value) => updateBody({ fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[] })}
+					onValueChange={(value) =>
+						updateBody({
+							fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[],
+						})
+					}
 				/>
 			</div>
 
 			<div className="grid grid-cols-2 gap-3">
 				<div className="space-y-2">
-					<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+					<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 						<Trans>Size</Trans>
 					</p>
 					<InputGroup>
@@ -285,7 +266,7 @@ function TypographyPopoverContent() {
 				</div>
 
 				<div className="space-y-2">
-					<p className="text-xs font-semibold tracking-wide text-muted-foreground">
+					<p className="font-semibold text-muted-foreground text-xs tracking-wide">
 						<Trans>Line Height</Trans>
 					</p>
 					<InputGroup>

@@ -1,5 +1,5 @@
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -41,10 +41,9 @@ export function GengarTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 						{!fullWidth && (
 							<div className="shrink-0 space-y-4 overflow-x-hidden px-(--page-margin-x) pt-(--page-margin-y)">
-							{sidebar.map((section) => {
-								const Component = getSectionComponent(section, { sectionClassName });
-								return <Component key={section} id={section} />;
-							})}
+								{sidebar.map((section) => (
+									<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+								))}
 							</div>
 						)}
 					</aside>
@@ -52,10 +51,9 @@ export function GengarTemplate({ pageIndex, pageLayout }: TemplateProps) {
 
 				<main data-layout="main" className="group page-main z-10">
 					<div className="space-y-4 px-(--page-margin-x) pt-(--page-margin-y)">
-						{main.map((section) => {
-							const Component = getSectionComponent(section, { sectionClassName });
-							return <Component key={section} id={section} />;
-						})}
+						{main.map((section) => (
+							<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+						))}
 					</div>
 				</main>
 			</div>
@@ -99,7 +97,10 @@ function Header() {
 
 	return (
 		<div className="page-header relative flex">
-		<div data-section-id="header" className="flex w-full shrink-0 flex-col justify-center gap-y-2 bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)">
+			<div
+				data-section-id="header"
+				className="flex w-full shrink-0 flex-col justify-center gap-y-2 bg-(--page-primary-color) px-(--page-margin-x) py-(--page-margin-y) text-(--page-background-color)"
+			>
 				<PagePicture />
 
 				<div>
@@ -107,7 +108,11 @@ function Header() {
 						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 					</h2>
 					<p className="basics-headline">
-						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+						<InlineEditableText
+							value={basics.headline}
+							placeholder="Your Professional Title"
+							onChange={handleHeadlineChange}
+						/>
 					</p>
 				</div>
 
@@ -139,11 +144,7 @@ function Header() {
 
 					<div className="basics-item-location">
 						<PageIcon icon="map-pin" />
-						<InlineEditableText
-							value={basics.location}
-							placeholder="City, Country"
-							onChange={handleLocationChange}
-						/>
+						<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 					</div>
 
 					{basics.website.url && (

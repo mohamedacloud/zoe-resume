@@ -1,7 +1,7 @@
 import { EnvelopeIcon, GlobeIcon, MapPinIcon, PhoneIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { cn } from "@/utils/style";
-import { getSectionComponent } from "../shared/get-section-component";
+import { Section } from "../shared/get-section-component";
 import { InlineEditableText } from "../shared/inline-editable-text";
 import { PageIcon } from "../shared/page-icon";
 import { PageLink } from "../shared/page-link";
@@ -42,18 +42,16 @@ export function LaprasTemplate({ pageIndex, pageLayout }: TemplateProps) {
 			{isFirstPage && <Header />}
 
 			<main data-layout="main" className="group page-main space-y-6">
-				{main.map((section) => {
-					const Component = getSectionComponent(section, { sectionClassName });
-					return <Component key={section} id={section} />;
-				})}
+				{main.map((section) => (
+					<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+				))}
 			</main>
 
 			{!fullWidth && (
 				<aside data-layout="sidebar" className="group page-sidebar space-y-6">
-					{sidebar.map((section) => {
-						const Component = getSectionComponent(section, { sectionClassName });
-						return <Component key={section} id={section} />;
-					})}
+					{sidebar.map((section) => (
+						<Section key={section} type={section} id={section} sectionClassName={sectionClassName} />
+					))}
 				</aside>
 			)}
 		</div>
@@ -110,7 +108,11 @@ function Header() {
 						<InlineEditableText value={basics.name} placeholder="Your Name" onChange={handleNameChange} />
 					</h2>
 					<p className="basics-headline">
-						<InlineEditableText value={basics.headline} placeholder="Your Professional Title" onChange={handleHeadlineChange} />
+						<InlineEditableText
+							value={basics.headline}
+							placeholder="Your Professional Title"
+							onChange={handleHeadlineChange}
+						/>
 					</p>
 				</div>
 
@@ -139,11 +141,7 @@ function Header() {
 
 					<div className="basics-item-location">
 						<MapPinIcon />
-						<InlineEditableText
-							value={basics.location}
-							placeholder="City, Country"
-							onChange={handleLocationChange}
-						/>
+						<InlineEditableText value={basics.location} placeholder="City, Country" onChange={handleLocationChange} />
 					</div>
 
 					{basics.website.url && (

@@ -14,7 +14,7 @@ import {
 } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { VisuallyHidden } from "radix-ui";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,16 @@ export function RichInput({ value, onChange, style, className, editorClassName, 
 			onChange(editor.getHTML());
 		},
 	});
+
+	// Sync editor content when value prop changes (e.g. from preview)
+	useEffect(() => {
+		if (editor && value !== editor.getHTML()) {
+			// Only update if not focused to avoid cursor jumping and focus loss
+			if (!editor.isFocused) {
+				editor.commands.setContent(value);
+			}
+		}
+	}, [editor, value]);
 
 	const providerValue = useMemo(() => ({ editor }), [editor]);
 
