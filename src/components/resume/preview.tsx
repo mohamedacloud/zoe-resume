@@ -67,7 +67,7 @@ export const ResumePreview = ({ showPageNumbers = false, pageClassName, classNam
 
 	useWebfonts(metadata.typography);
 	const style = useCSSVariables({ picture, metadata });
-
+	
 	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements);
 
 	const iconProps = useMemo<ExtendedIconProps>(() => {

@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import type z from "zod";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { experienceItemSchema } from "@/schema/resume/data";
-import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
 import { PageLink } from "../page-link";
 
@@ -51,14 +50,89 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 		}
 	};
 
-	const handleDescriptionChange = (e: React.FocusEvent<HTMLDivElement>) => {
-		const newValue = e.currentTarget.innerHTML || "";
-		if (newValue !== item.description) {
-			updateResumeData((draft) => {
-				const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
-				if (exp) exp.description = newValue;
-			});
+	// Function to check if text contains HTML list markup
+	const containsListMarkup = (text: string) => {
+		return text.includes("<ul>") || text.includes("<li>") || text.includes("</ul>") || text.includes("</li>");
+	};
+
+	// Function to render description based on content
+	// Function to render description based on content
+	const renderDescription = () => {
+		if (!item.description) return null;
+
+		const text = item.description;
+
+		// Case 1: Check if it contains HTML list markup
+		if (text.includes("<ul>") || text.includes("<ol>") || text.includes("<li>")) {
+			// Render as HTML lists
+			const listContent = text
+				.replace(/\n\s*<ul>/g, "<ul>")
+				.replace(/<\/ul>\s*\n/g, "</ul>")
+				.split(/<ul>|<\/ul>/)
+				.filter((line) => line.trim() !== "")
+				.map((line, index) => (
+					<ul key={index} className="list-disc pl-5">
+						{line
+							.split(/<li>|<\/li>/)
+							.filter((item) => item.trim() !== "")
+							.map((item, idx) => (
+								<li key={idx}>{item.replace(/<[^>]*>/g, "")}</li>
+							))}
+					</ul>
+				));
+
+			return <div className="section-item-description">{listContent}</div>;
 		}
+
+		// Case 2: Check if it contains paragraph tags (with possible inline formatting)
+		if (text.includes("<p>")) {
+			// Extract paragraphs and preserve inline formatting
+			const paragraphs = text.split(/<p>|<\/p>/).filter((p) => p.trim() !== "");
+
+			return (
+				<div className="section-item-description">
+					{paragraphs.map((paragraph, index) => {
+						// Handle inline formatting like <strong>, <em>, etc.
+						const formattedText = paragraph
+							.replace(/<strong>(.*?)<\/strong>/g, "<strong>$1</strong>")
+							.replace(/<em>(.*?)<\/em>/g, "<em>$1</em>")
+							.replace(/<b>(.*?)<\/b>/g, "<b>$1</b>")
+							.replace(/<i>(.*?)<\/i>/g, "<i>$1</i>");
+
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+						return <p key={index} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{ __html: formattedText }} />;
+					})}
+				</div>
+			);
+		}
+
+		// Case 3: Check for bullet point markers in plain text
+		const lines = text.split("\n").filter((line) => line.trim() !== "");
+		const hasBulletMarkers = lines.some((line) => line.trim().match(/^[*\-•]\s+/));
+
+		if (hasBulletMarkers) {
+			// Convert markdown-style bullet points to HTML lists
+			const listItems = lines.map((line) => line.replace(/^[*\-•]\s+/, "").trim());
+
+			return (
+				<ul className="list-disc pl-5">
+					{listItems.map((item, index) => (
+						<li key={index}>{item}</li>
+					))}
+				</ul>
+			);
+		}
+
+		// Case 4: Plain text with line breaks
+		return (
+			<div className="section-item-description whitespace-pre-wrap">
+				{lines.map((paragraph, index) => (
+					<p key={index} className="mb-2 last:mb-0">
+						{paragraph}
+					</p>
+				))}
+			</div>
+		);
 	};
 
 	return (
@@ -103,17 +177,9 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 				</div>
 			</div>
 
-			{/* Description */}
-			<div
-				ref={descriptionRef}
-				contentEditable
-				suppressContentEditableWarning
-				onBlur={handleDescriptionChange}
-				className={cn(
-					"section-item-description experience-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
-					!stripHtml(item.description) && "hidden",
-				)}
-			/>
+			{/* Description - Smart rendering based on content */}
+			{renderDescription()}
+
 			{/* Website */}
 			{item.website?.label && (
 				<div className="section-item-website experience-item-website">
