@@ -122,15 +122,17 @@ export function BuilderTopTray() {
 				<Trans>Templates</Trans>
 			</Button>
 
-			{/* Final Review button */}
 			<Button
 				size="sm"
-				variant={isReviewing ? "secondary" : "outline"}
 				disabled={isPrinting || isReviewing}
-				className={cn("transition-all duration-300", isReviewing && "border-blue-200 bg-blue-50 text-blue-600")}
+				className={cn(
+					"bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
+					"border-0 shadow-sm transition-all duration-300",
+					isReviewing && "scale-[0.98] brightness-90",
+				)}
 				onClick={onFinalReview}
 			>
-				{isReviewing ? <CircleNotchIcon className="animate-spin" /> : <MagnifyingGlassIcon />}
+				{isReviewing ? <CircleNotchIcon className="animate-spin" /> : <MagnifyingGlassIcon className="text-white" />}
 				<Trans>Final Review</Trans>
 			</Button>
 
