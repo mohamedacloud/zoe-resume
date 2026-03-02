@@ -15,7 +15,6 @@ import { ExperienceSectionBuilder } from "./sections/experience";
 import { InterestsSectionBuilder } from "./sections/interests";
 import { LanguagesSectionBuilder } from "./sections/languages";
 import { PictureSectionBuilder } from "./sections/picture";
-import { ProfilesSectionBuilder } from "./sections/profiles";
 import { ProjectsSectionBuilder } from "./sections/projects";
 import { PublicationsSectionBuilder } from "./sections/publications";
 import { ReferencesSectionBuilder } from "./sections/references";
@@ -28,7 +27,6 @@ function getSectionComponent(type: LeftSidebarSection) {
 		.with("picture", () => <PictureSectionBuilder />)
 		.with("basics", () => <BasicsSectionBuilder />)
 		.with("summary", () => <SummarySectionBuilder />)
-		.with("profiles", () => <ProfilesSectionBuilder />)
 		.with("experience", () => <ExperienceSectionBuilder />)
 		.with("education", () => <EducationSectionBuilder />)
 		.with("projects", () => <ProjectsSectionBuilder />)

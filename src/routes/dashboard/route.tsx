@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { ReadCvLogoIcon, UserCircleIcon } from "@phosphor-icons/react";
+import { ReadCvLogoIcon } from "@phosphor-icons/react";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserDropdownMenu } from "@/components/user/dropdown-menu";
@@ -22,32 +22,26 @@ function RouteComponent() {
 		<div className="flex min-h-screen flex-col bg-gray-50">
 			{/* Header */}
 			<header className="border-gray-200 border-b bg-white shadow-sm">
-				<div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+				<div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
 					{/* Left: Logo and Title */}
-						<div className="flex items-center gap-3">
-						<img src="/src/dialogs/resume/zoe-talking.png" alt="Zoe AI" className="h-10 w-8 rounded-full" />
-						<h1 className="font-bold text-gray-900 text-xl">Zoe Resume Builder</h1>
+					<div className="flex items-center gap-2 sm:gap-3">
+						<img
+							src="/src/dialogs/resume/zoe-talking.png"
+							alt="Zoe AI"
+							className="h-8 w-6 rounded-full sm:h-10 sm:w-8"
+						/>
+						<h1 className="font-bold text-base text-gray-900 sm:text-lg md:text-xl">Zoe Resume Builder</h1>
 					</div>
-
 
 					{/* Center: Navigation */}
 					<nav className="flex items-center gap-2">
 						<Link
 							to="/dashboard/resumes"
 							activeProps={{ className: "bg-emerald-50 text-emerald-700" }}
-							className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-gray-700 transition-all hover:bg-gray-100"
+							className="flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-gray-700 text-sm transition-all hover:bg-gray-100 sm:px-4"
 						>
 							<ReadCvLogoIcon className="size-5" />
 							<span>{i18n._(t`Resumes`)}</span>
-						</Link>
-
-						<Link
-							to="/dashboard/settings/profile"
-							activeProps={{ className: "bg-emerald-50 text-emerald-700" }}
-							className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-gray-700 transition-all hover:bg-gray-100"
-						>
-							<UserCircleIcon className="size-5" />
-							<span>{i18n._(t`Profile`)}</span>
 						</Link>
 					</nav>
 
