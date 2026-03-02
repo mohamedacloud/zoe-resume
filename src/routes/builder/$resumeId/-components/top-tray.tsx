@@ -21,7 +21,6 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -103,47 +102,32 @@ export function BuilderTopTray() {
 				<Trans>Templates</Trans>
 			</Button>
 
-			{/* Download split button */}
-			<div className="flex">
-				{/* Main PDF download button */}
-				<Button
-					size="sm"
-					variant="default"
-					onClick={onDownloadPDF}
-					disabled={isPrinting}
-					className="rounded-r-none bg-emerald-600 text-white hover:bg-emerald-700"
-				>
-					{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
-					<Trans>Download PDF</Trans>
-				</Button>
+			{/* Consolidated Download button */}
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						size="sm"
+						variant="default"
+						disabled={isPrinting}
+						className="bg-emerald-600 text-white hover:bg-emerald-700"
+					>
+						{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
+						<Trans>Download</Trans>
+						<CaretDownIcon className="ms-1 size-3.5 opacity-50" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end" className="min-w-[140px]">
+					<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
+						<FilePdfIcon className="size-4 text-red-500" />
+						<Trans>Download PDF</Trans>
+					</DropdownMenuItem>
 
-				{/* Dropdown chevron */}
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							size="sm"
-							variant="default"
-							className="rounded-l-none border-emerald-500 border-l bg-emerald-600 px-2 text-white hover:bg-emerald-700"
-							aria-label="More download options"
-						>
-							<CaretDownIcon className="size-3.5" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="min-w-[180px]">
-						<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
-							<FilePdfIcon className="size-4 text-red-500" />
-							<Trans>Download PDF</Trans>
-						</DropdownMenuItem>
-
-						<DropdownMenuSeparator />
-
-						<DropdownMenuItem onClick={onDownloadDocx}>
-							<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
-							<Trans>Download Word (.docx)</Trans>
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
+					<DropdownMenuItem onClick={onDownloadDocx}>
+						<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
+						<Trans>Download Word</Trans>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		</div>
 	);
 }
