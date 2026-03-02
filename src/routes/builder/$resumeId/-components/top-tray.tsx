@@ -205,36 +205,40 @@ function TypographyPopoverContent() {
 
 	return (
 		<div className="space-y-4">
-			<div className="space-y-2">
-				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
-					<Trans>Font Family</Trans>
-				</p>
-				<FontFamilyCombobox
-					value={typography.body.fontFamily}
-					onValueChange={(value) => {
-						if (value === null) return;
-						const nextWeight = getNextWeight(value);
-						updateBody({
-							fontFamily: value,
-							fontWeights: nextWeight ? [nextWeight] : typography.body.fontWeights,
-						});
-					}}
-				/>
-			</div>
+			<div className="grid grid-cols-2 gap-3">
+				<div className="min-w-0 space-y-2">
+					<p className="font-semibold text-muted-foreground text-xs tracking-wide">
+						<Trans>Font Family</Trans>
+					</p>
+					<FontFamilyCombobox
+						buttonProps={{ className: "w-full" }}
+						value={typography.body.fontFamily}
+						onValueChange={(value) => {
+							if (value === null) return;
+							const nextWeight = getNextWeight(value);
+							updateBody({
+								fontFamily: value,
+								fontWeights: nextWeight ? [nextWeight] : typography.body.fontWeights,
+							});
+						}}
+					/>
+				</div>
 
-			<div className="space-y-2">
-				<p className="font-semibold text-muted-foreground text-xs tracking-wide">
-					<Trans>Font Weight</Trans>
-				</p>
-				<FontWeightCombobox
-					fontFamily={typography.body.fontFamily}
-					value={typography.body.fontWeights}
-					onValueChange={(value) =>
-						updateBody({
-							fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[],
-						})
-					}
-				/>
+				<div className="min-w-0 space-y-2">
+					<p className="font-semibold text-muted-foreground text-xs tracking-wide">
+						<Trans>Font Weight</Trans>
+					</p>
+					<FontWeightCombobox
+						buttonProps={{ className: "w-full" }}
+						fontFamily={typography.body.fontFamily}
+						value={typography.body.fontWeights}
+						onValueChange={(value: string[]) =>
+							updateBody({
+								fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[],
+							})
+						}
+					/>
+				</div>
 			</div>
 
 			<div className="grid grid-cols-2 gap-3">

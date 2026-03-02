@@ -97,7 +97,7 @@ function Combobox<TValue extends string | number = string>({
 					aria-disabled={disabled}
 					tapScale={1}
 					className={cn(
-						"font-normal active:scale-100",
+						"min-w-0 font-normal active:scale-100",
 						typeof buttonChildren === "function" ? "" : "justify-between",
 						disabled && "pointer-events-none opacity-60",
 						buttonClassName,
@@ -108,7 +108,7 @@ function Combobox<TValue extends string | number = string>({
 						buttonChildren(selectedValue, selectedOption)
 					) : (
 						<>
-							{selectedLabel ?? placeholder}
+							<span className="flex-1 truncate text-left">{selectedLabel ?? placeholder}</span>
 							<CaretUpDownIcon className="ms-2 shrink-0 opacity-50" />
 						</>
 					)}
