@@ -126,7 +126,7 @@ export function BuilderTopTray() {
 				size="sm"
 				disabled={isPrinting || isReviewing}
 				className={cn(
-					"bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
+					"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
 					"border-0 shadow-sm transition-all duration-300",
 					isReviewing && "scale-[0.98] brightness-90",
 				)}

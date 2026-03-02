@@ -80,6 +80,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 								navigator.serviceWorker.register('/sw.js', { scope: '/' })
 							})
 						}
+						if (window.location.search.includes('token=preview')) {
+							document.documentElement.classList.remove('dark');
+						}
 					`,
 				},
 			],
@@ -105,8 +108,11 @@ function RootDocument({ children }: Props) {
 	const { theme, locale } = Route.useRouteContext();
 	const dir = isRTL(locale) ? "rtl" : "ltr";
 
+	const isPreview = typeof window !== "undefined" && window.location.search.includes("token=preview");
+	const effectiveTheme = isPreview ? "light" : theme;
+
 	return (
-		<html suppressHydrationWarning dir={dir} lang={locale} className={theme}>
+		<html suppressHydrationWarning dir={dir} lang={locale} className={effectiveTheme}>
 			<head>
 				<HeadContent />
 			</head>
