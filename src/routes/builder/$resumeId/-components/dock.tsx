@@ -2,11 +2,7 @@ import { t } from "@lingui/core/macro";
 import {
 	ArrowUUpLeftIcon,
 	ArrowUUpRightIcon,
-	CircleNotchIcon,
-	FileJsIcon,
-	FilePdfIcon,
 	type Icon,
-	LinkSimple as LinkSimpleIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -85,13 +81,13 @@ export function BuilderDock() {
 	}, [resume?.id, resume?.data.basics.name, printResumeAsPDF]);
 
 	return (
-		<div className="fixed inset-x-0 bottom-4 flex items-center justify-center">
+		<div className="fixed inset-x-0 bottom-2 flex items-center justify-center px-2 sm:bottom-4">
 			<motion.div
 				initial={{ opacity: 0, y: -50 }}
 				animate={{ opacity: 0.5, y: 0 }}
 				whileHover={{ opacity: 1 }}
 				transition={{ duration: 0.2 }}
-				className="flex items-center rounded-r-full rounded-l-full bg-popover px-2 shadow-xl"
+				className="flex items-center gap-0.5 rounded-full bg-popover px-1.5 shadow-lg sm:gap-1 sm:px-2 sm:shadow-xl"
 			>
 				<DockIcon
 					disabled={!canUndo}
@@ -111,16 +107,8 @@ export function BuilderDock() {
 						message: "Redo (Ctrl+Y)",
 					})}
 				/>
-				<div className="mx-1 h-8 w-px bg-border" />
-				<DockIcon icon={LinkSimpleIcon} title={t`Copy URL`} onClick={() => onCopyUrl()} />
-				<DockIcon icon={FileJsIcon} title={t`Download JSON`} onClick={() => onDownloadJSON()} />
-				<DockIcon
-					title={t`Download PDF`}
-					disabled={isPrinting}
-					onClick={() => onDownloadPDF()}
-					icon={isPrinting ? CircleNotchIcon : FilePdfIcon}
-					iconClassName={cn(isPrinting && "animate-spin")}
-				/>
+				<div className="mx-0.5 h-6 w-px bg-border sm:mx-1 sm:h-8" />
+				
 			</motion.div>
 		</div>
 	);
@@ -138,11 +126,11 @@ function DockIcon({ icon: Icon, title, disabled, onClick, iconClassName }: DockI
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<Button size="icon" variant="ghost" disabled={disabled} onClick={onClick}>
-					<Icon className={cn("size-4", iconClassName)} />
+				<Button size="icon" variant="ghost" disabled={disabled} onClick={onClick} className="h-8 w-8 sm:h-10 sm:w-10">
+					<Icon className={cn("size-3.5 sm:size-4", iconClassName)} />
 				</Button>
 			</TooltipTrigger>
-			<TooltipContent side="top" align="center" className="font-medium">
+			<TooltipContent side="top" align="center" className="font-medium text-xs sm:text-sm">
 				{title}
 			</TooltipContent>
 		</Tooltip>
