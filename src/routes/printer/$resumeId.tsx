@@ -76,6 +76,13 @@ function RouteComponent() {
 		}
 	}, [isReady]);
 
+	// Signal to parent window (dashboard card) that the resume is ready
+	useEffect(() => {
+		if (isReady && (token === "preview" || searchToken === "preview")) {
+			window.parent.postMessage({ type: "RESUME_READY", resumeId: resume?.id }, "*");
+		}
+	}, [isReady, token, searchToken, resume?.id]);
+
 	if (!isReady) {
 		if (token === "preview" || searchToken === "preview") {
 			return <div className="fixed inset-0 bg-white" />;
