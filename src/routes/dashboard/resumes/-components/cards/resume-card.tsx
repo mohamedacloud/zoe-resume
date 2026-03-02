@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef } from "react";
-import { useResizeObserver } from "usehooks-ts";
 import { match, P } from "ts-pattern";
+import { useResizeObserver } from "usehooks-ts";
 import { orpc, type RouterOutput } from "@/integrations/orpc/client";
 import { cn } from "@/utils/style";
 import { ResumeDropdownMenu } from "../menus/dropdown-menu";
@@ -34,7 +34,9 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 
 	const scale = useMemo(() => {
 		if (containerWidth === 0) return 0;
-		return containerWidth / 794;
+		// Adjust scale for mobile view to ensure full width
+		const isMobile = containerWidth < 640; // Tailwind's sm breakpoint
+		return isMobile ? containerWidth / 794 : containerWidth / 794;
 	}, [containerWidth]);
 
 	return (
@@ -57,7 +59,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 						.otherwise(() => {
 							return (
 								<div ref={containerRef} className="relative size-full overflow-hidden bg-white">
-									<div className="absolute top-0 right-0 left-0 bottom-22 flex justify-center overflow-hidden">
+									<div className="absolute top-0 right-0 bottom-22 left-0 flex justify-center overflow-hidden">
 										<div
 											style={{
 												width: "794px",
