@@ -21,6 +21,7 @@ type ResumeStoreState = {
 	summaryAIRoundsUsed: number;
 	experienceAIRoundsUsed: Record<string, number>;
 	projectAIRoundsUsed: Record<string, number>;
+	isReviewing: boolean;
 };
 
 type ResumeStoreActions = {
@@ -33,6 +34,8 @@ type ResumeStoreActions = {
 
 	incrementProjectRounds: (id: string) => void;
 	resetProjectRounds: (id: string) => void;
+
+	setReviewing: (value: boolean) => void;
 };
 
 type ResumeStore = ResumeStoreState & ResumeStoreActions;
@@ -60,6 +63,7 @@ export const useResumeStore = create<ResumeStore>()(
 				summaryAIRoundsUsed: 0,
 				experienceAIRoundsUsed: {},
 				projectAIRoundsUsed: {},
+				isReviewing: false,
 
 				// --- ACTIONS ---
 				initialize: (resume) => {
@@ -138,6 +142,12 @@ export const useResumeStore = create<ResumeStore>()(
 				resetProjectRounds: (id) => {
 					set((state) => {
 						state.projectAIRoundsUsed[id] = 0;
+					});
+				},
+
+				setReviewing: (value) => {
+					set((state) => {
+						state.isReviewing = value;
 					});
 				},
 			})),
