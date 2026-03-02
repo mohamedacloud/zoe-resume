@@ -152,7 +152,7 @@ function ProjectForm() {
 		typeof description === "string" && description.trim().split(/\s+/).filter(Boolean).length >= 5;
 	// Use the AI usage hook
 	const projectId = form.getValues("id");
-	const isAIUpdatingRef = useRef(false);
+	const aiUpdateCountRef = useRef(0); // Count expected AI updates
 	const roundsUsed = useResumeStore((state) => state.projectAIRoundsUsed?.[projectId] ?? 0);
 
 	const incrementRoundsUsed = useResumeStore((state) => state.incrementProjectRounds);
@@ -160,15 +160,13 @@ function ProjectForm() {
 	const resetRounds = useResumeStore((state) => state.resetProjectRounds);
 
 	const maxRounds = 2;
-	const handleAIGenerated = (content: string) => {
-		form.setValue("description", content, { shouldDirty: true });
-	};
 
 	const previousDescriptionRef = useRef(description);
 
 	useEffect(() => {
-		if (isAIUpdatingRef.current) {
-			isAIUpdatingRef.current = false;
+		// If we're expecting AI updates, skip reset and decrement counter
+		if (aiUpdateCountRef.current > 0) {
+			aiUpdateCountRef.current -= 1;
 			previousDescriptionRef.current = description;
 			return;
 		}
@@ -267,7 +265,8 @@ function ProjectForm() {
 									highlights: "",
 								}}
 								onGenerated={(content) => {
-									isAIUpdatingRef.current = true;
+									// Expect 2 content updates: plain text + RichInput wrapping in <p> tags
+									aiUpdateCountRef.current = 2;
 									form.setValue("description", content, { shouldDirty: true });
 									incrementRoundsUsed(projectId);
 								}}
