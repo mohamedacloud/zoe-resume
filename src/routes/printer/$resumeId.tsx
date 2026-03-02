@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, redirect } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { useEffect } from "react";
 import { z } from "zod";
@@ -16,32 +16,46 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/printer/$resumeId")({
 	component: RouteComponent,
 	validateSearch: zodValidator(searchSchema),
+	head: ({ loaderData }) => {
+		if (loaderData?.token === "preview") {
+			return {
+				styles: [
+					{
+						children:
+							"html, body { background-color: white !important; color-scheme: light !important; } .dark { background-color: white !important; }",
+					},
+				],
+			};
+		}
+	},
 	beforeLoad: async ({ params, search }) => {
 		if (env.VITE_FLAG_DEBUG_PRINTER) return;
 
 		// Allow preview token for dashboard cards
-		if (search.token === "preview") return;
+		if (search?.token === "preview") return;
 
 		try {
 			// Verify the token and ensure it matches the resume ID
-			const tokenResumeId = verifyPrinterToken(search.token);
+			const tokenResumeId = verifyPrinterToken(search?.token || "");
 			if (tokenResumeId !== params.resumeId) throw new Error();
 		} catch {
 			// Invalid or missing token - throw error to be caught by error handler
 			throw redirect({ to: "/", search: {}, throw: true });
 		}
 	},
-	loader: async ({ params }) => {
+	loader: async ({ params, search }) => {
 		const client = getORPCClient();
 		const resume = await client.resume.getByIdForPrinter({ id: params.resumeId });
 
-		return { resume };
+		return { resume, token: search?.token };
 	},
 });
 
-function RouteComponent() {
-	const { resume } = Route.useLoaderData();
+const routeApi = getRouteApi("/printer/$resumeId");
 
+function RouteComponent() {
+	const { resume, token } = routeApi.useLoaderData();
+	const { token: searchToken } = routeApi.useSearch();
 
 	const isReady = useResumeStore((state) => state.isReady);
 	const initialize = useResumeStore((state) => state.initialize);
@@ -49,7 +63,8 @@ function RouteComponent() {
 	useEffect(() => {
 		if (!resume) return;
 		initialize(resume);
-		return () => initialize(null);
+		// Note: We don't clear on unmount (initialize(null)) to avoid interference
+		// between multiple preview iframes sharing the same persisted store.
 	}, [resume, initialize]);
 
 	// Signal to Puppeteer that the page is fully loaded and ready for PDF generation
@@ -61,8 +76,12 @@ function RouteComponent() {
 		}
 	}, [isReady]);
 
-	if (!isReady) return <LoadingScreen />;
+	if (!isReady) {
+		if (token === "preview" || searchToken === "preview") {
+			return <div className="fixed inset-0 bg-white" />;
+		}
+		return <LoadingScreen />;
+	}
 
 	return <ResumePreview pageClassName="print:w-full!" />;
 }
-
