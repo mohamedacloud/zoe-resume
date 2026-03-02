@@ -5,6 +5,7 @@ import {
 	CircleNotchIcon,
 	DownloadSimpleIcon,
 	FilePdfIcon,
+	MagnifyingGlassIcon,
 	MicrosoftWordLogoIcon,
 	PaletteIcon,
 	SwapIcon,
@@ -39,6 +40,25 @@ export function BuilderTopTray() {
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
 		orpc.printer.printResumeAsPDF.mutationOptions(),
 	);
+
+	const isReviewing = useResumeStore((state) => state.isReviewing);
+	const setReviewing = useResumeStore((state) => state.setReviewing);
+
+	const onFinalReview = async () => {
+		setReviewing(true);
+		const toastId = toast.loading(t`AI is reviewing your resume...`, {
+			description: t`Looking for improvements in layout, spacing, and content.`,
+		});
+
+		// Mock AI review process
+		setTimeout(() => {
+			setReviewing(false);
+			toast.success(t`Review complete!`, {
+				id: toastId,
+				description: t`Zoe has finished reviewing your resume. Check the suggestions for improvements.`,
+			});
+		}, 5000);
+	};
 
 	const onDownloadPDF = async () => {
 		if (!resume?.id) return;
@@ -100,6 +120,18 @@ export function BuilderTopTray() {
 			<Button size="sm" variant="outline" onClick={() => openDialog("resume.template.gallery", undefined)}>
 				<SwapIcon />
 				<Trans>Templates</Trans>
+			</Button>
+
+			{/* Final Review button */}
+			<Button
+				size="sm"
+				variant={isReviewing ? "secondary" : "outline"}
+				disabled={isPrinting || isReviewing}
+				className={cn("transition-all duration-300", isReviewing && "border-blue-200 bg-blue-50 text-blue-600")}
+				onClick={onFinalReview}
+			>
+				{isReviewing ? <CircleNotchIcon className="animate-spin" /> : <MagnifyingGlassIcon />}
+				<Trans>Final Review</Trans>
 			</Button>
 
 			{/* Consolidated Download button */}

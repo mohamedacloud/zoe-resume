@@ -67,7 +67,7 @@ export const ResumePreview = ({ showPageNumbers = false, pageClassName, classNam
 
 	useWebfonts(metadata.typography);
 	const style = useCSSVariables({ picture, metadata });
-	
+
 	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements);
 
 	const iconProps = useMemo<ExtendedIconProps>(() => {
@@ -148,6 +148,7 @@ function PageContainer({
 }: PageContainerProps) {
 	const pageRef = useRef<HTMLDivElement>(null);
 	const metadata = useResumeStore((state) => state.resume.data.metadata);
+	const isReviewing = useResumeStore((state) => state.isReviewing);
 
 	const pageNumber = useMemo(() => pageIndex + 1, [pageIndex]);
 	const TemplateComponent = useMemo(() => getTemplateComponent(metadata.template), [metadata.template]);
@@ -165,6 +166,7 @@ function PageContainer({
 			)}
 
 			<div ref={pageRef} className={cn(`page page-${pageIndex}`, styles.page, pageClassName)}>
+				{isReviewing && <div className={styles.scanner} />}
 				<ResumePageContext.Provider value={{ pageIndex, itemDistribution }}>
 					<TemplateComponent pageIndex={pageIndex} pageLayout={pageLayout} />
 				</ResumePageContext.Provider>
