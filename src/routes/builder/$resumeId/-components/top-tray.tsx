@@ -257,7 +257,7 @@ function TypographyPopoverContent() {
 								updateBody({ fontSize: Number(value) });
 							}}
 						/>
-						<InputGroupAddon>
+						<InputGroupAddon align="inline-end">
 							<InputGroupText>
 								<Trans>px</Trans>
 							</InputGroupText>
@@ -284,7 +284,7 @@ function TypographyPopoverContent() {
 								updateBody({ lineHeight: Number(value) });
 							}}
 						/>
-						<InputGroupAddon>
+						<InputGroupAddon align="inline-end">
 							<InputGroupText>
 								<Trans>em</Trans>
 							</InputGroupText>
