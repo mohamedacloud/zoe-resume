@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlight Test</title>
+    <style>
+        body {
+            padding: 40px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f3f4f6;
+        }
+
+        .section-container {
+            max-width: 400px;
+            padding: 20px;
+            margin: 20px 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .section-content {
+            color: #6b7280;
+        }
+
+        /* This is the highlight CSS from your app */
+        .review-highlight {
+            position: relative !important;
+            z-index: 10 !important;
+            background-color: rgba(245, 158, 11, 0.05) !important;
+            border: 2px solid #f59e0b !important;
+            border-radius: 0.375rem !important;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3) !important;
+            transition: all 0.3s ease !important;
+            animation: review-pulse 2s ease-in-out !important;
+        }
+
+        @keyframes review-pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+                border-color: #f59e0b;
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.4);
+                border-color: #fb923c;
+            }
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 14px;
+            color: white;
+            cursor: pointer;
+            background: #3b82f6;
+            border: none;
+            border-radius: 6px;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        .instructions {
+            padding: 20px;
+            margin-bottom: 30px;
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>🎯 Highlight Test Page</h2>
+        <p><strong>This page tests if the highlight CSS is working correctly.</strong></p>
+        <ol>
+            <li>Click "Highlight Basics" button</li>
+            <li>Watch the "Basics" section below</li>
+            <li>You should see:
+                <ul>
+                    <li>✅ Orange border appears</li>
+                    <li>✅ Pulsing glow effect</li>
+                    <li>✅ Light orange background</li>
+                    <li>✅ Effect lasts 2 seconds</li>
+                </ul>
+            </li>
+        </ol>
+        <p><strong>If you see the orange effect, the CSS is working!</strong></p>
+    </div>
+
+    <div>
+        <button onclick="testHighlight('basics')">Highlight Basics</button>
+        <button onclick="testHighlight('summary')">Highlight Summary</button>
+        <button onclick="testHighlight('experience')">Highlight Experience</button>
+        <button onclick="removeAll()">Remove All Highlights</button>
+    </div>
+
+    <div id="sidebar-basics" class="section-container">
+        <div class="section-title">👤 Basics</div>
+        <div class="section-content">
+            <p>Name: John Doe</p>
+            <p>Email: john@example.com</p>
+            <p>Phone: +1 234 567 8900</p>
+        </div>
+    </div>
+
+    <div id="sidebar-summary" class="section-container">
+        <div class="section-title">📝 Summary</div>
+        <div class="section-content">
+            <p>Experienced software developer with a passion for creating innovative solutions...</p>
+        </div>
+    </div>
+
+    <div id="sidebar-experience" class="section-container">
+        <div class="section-title">💼 Experience</div>
+        <div class="section-content">
+            <p><strong>Senior Developer</strong> - Tech Company (2020-2024)</p>
+            <p>Led development of key features...</p>
+        </div>
+    </div>
+
+    <script>
+        function testHighlight(sectionId) {
+            const section = document.getElementById(`sidebar-${sectionId}`);
+            if (!section) {
+                alert(`❌ Section not found: ${sectionId}`);
+                return;
+            }
+
+            // Remove existing highlight
+            section.classList.remove('review-highlight');
+            
+            // Force reflow
+            void section.offsetWidth;
+            
+            // Add highlight
+            section.classList.add('review-highlight');
+            
+            console.log(`✅ Highlighted: ${sectionId}`);
+            
+            // Remove after 2 seconds
+            setTimeout(() => {
+                section.classList.remove('review-highlight');
+                console.log(`✨ Removed highlight from: ${sectionId}`);
+            }, 2000);
+        }
+
+        function removeAll() {
+            document.querySelectorAll('.review-highlight').forEach(el => {
+                el.classList.remove('review-highlight');
+            });
+            console.log('🧹 Removed all highlights');
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('🎨 Page loaded. Click "Highlight Basics" to test the effect.');
+            console.log('👀 Watch the "Basics" section below for an orange border and glow.');
+        });
+    </script>
+</body>
+</html>

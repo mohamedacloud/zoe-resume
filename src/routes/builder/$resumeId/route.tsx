@@ -76,6 +76,9 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	const setLeftSidebar = useBuilderSidebarStore((state) => state.setLeftSidebar);
 	const isLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.isLeftSidebarCollapsed);
 	const setLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.setLeftSidebarCollapsed);
+	
+	// ✅ Get review drawer state to hide left sidebar when drawer is open
+	const showReviewDrawer = useResumeStore((state) => state.showReviewDrawer);
 
 	const { maxSidebarSize } = useBuilderSidebar((state) => ({
 		maxSidebarSize: state.maxSidebarSize,
@@ -112,8 +115,8 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 						<Outlet />
 					</div>
 
-					{/* Left Sidebar Drawer - only visible when toggled */}
-					{!isLeftSidebarCollapsed && (
+					{/* Left Sidebar Drawer - only visible when toggled AND review drawer is closed */}
+					{!isLeftSidebarCollapsed && !showReviewDrawer && (
 						<>
 							{/* Backdrop */}
 							<div
@@ -140,19 +143,24 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 			<BuilderHeader />
 
 			<ResizableGroup orientation="horizontal" className="flex-1" onLayoutChange={onLayoutChange}>
-				<ResizablePanel
-					collapsible
-					id="left"
-					panelRef={leftSidebarRef}
-					maxSize={maxSidebarSize}
-					minSize={0}
-					collapsedSize={0}
-					defaultSize={leftSidebarSize}
-					className="z-20 h-[calc(100svh-3.5rem)]"
-				>
-					<BuilderSidebarLeft />
-				</ResizablePanel>
-				<ResizableSeparator withHandle className="z-20 border-s" />
+				{/* ✅ Only show left sidebar panel if review drawer is NOT open */}
+				{!showReviewDrawer && (
+					<>
+						<ResizablePanel
+							collapsible
+							id="left"
+							panelRef={leftSidebarRef}
+							maxSize={maxSidebarSize}
+							minSize={0}
+							collapsedSize={0}
+							defaultSize={leftSidebarSize}
+							className="z-20 h-[calc(100svh-3.5rem)]"
+						>
+							<BuilderSidebarLeft />
+						</ResizablePanel>
+						<ResizableSeparator withHandle className="z-20 border-s" />
+					</>
+				)}
 				<ResizablePanel id="artboard" defaultSize={artboardSize} className="h-[calc(100svh-3.5rem)]">
 					<Outlet />
 				</ResizablePanel>

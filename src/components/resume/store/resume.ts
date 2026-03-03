@@ -105,6 +105,24 @@ export const useResumeStore = create<ResumeStore>()(
 							state.experienceAIRoundsUsed = {};
 							state.projectAIRoundsUsed = {};
 						}
+
+						// ✅ Load persisted review state for this specific resume
+						if (typeof window !== "undefined") {
+							const savedReviewData = localStorage.getItem(`resume-review-${resume.id}`);
+							if (savedReviewData) {
+								try {
+									const parsed = JSON.parse(savedReviewData);
+									state.reviewResult = parsed.reviewResult || null;
+									state.showReviewDrawer = parsed.showReviewDrawer || false;
+								} catch (e) {
+									console.error("Failed to load saved review data:", e);
+								}
+							} else {
+								// No saved data for this resume
+								state.reviewResult = null;
+								state.showReviewDrawer = false;
+							}
+						}
 					});
 				},
 				updateResumeData: (fn) => {
@@ -174,12 +192,28 @@ export const useResumeStore = create<ResumeStore>()(
 				setReviewResult: (result) => {
 					set((state) => {
 						state.reviewResult = result;
+						// ✅ Persist review result per resume
+						if (typeof window !== "undefined" && state.resume?.id) {
+							const dataToSave = {
+								reviewResult: result,
+								showReviewDrawer: state.showReviewDrawer,
+							};
+							localStorage.setItem(`resume-review-${state.resume.id}`, JSON.stringify(dataToSave));
+						}
 					});
 				},
 
 				setShowReviewDrawer: (show) => {
 					set((state) => {
 						state.showReviewDrawer = show;
+						// ✅ Persist drawer state per resume
+						if (typeof window !== "undefined" && state.resume?.id) {
+							const dataToSave = {
+								reviewResult: state.reviewResult,
+								showReviewDrawer: show,
+							};
+							localStorage.setItem(`resume-review-${state.resume.id}`, JSON.stringify(dataToSave));
+						}
 					});
 				},
 			})),
