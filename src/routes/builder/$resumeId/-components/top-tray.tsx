@@ -51,6 +51,8 @@ export function BuilderTopTray() {
 	const setReviewResult = useResumeStore((state) => state.setReviewResult);
 	const setShowReviewDrawer = useResumeStore((state) => state.setShowReviewDrawer);
 	const reviewResult = useResumeStore((state) => state.reviewResult);
+	const reviewAttempts = useResumeStore((state) => state.reviewAttempts);
+	const incrementReviewAttempts = useResumeStore((state) => state.incrementReviewAttempts);
 
 	const [reviewStartTime, setReviewStartTime] = useState<number>(0);
 	const fallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,6 +77,15 @@ export function BuilderTopTray() {
 			toast.error(t`AI is not configured. Please set VITE_AI_API_KEY and VITE_AI_MODEL in your .env file.`);
 			return;
 		}
+
+		// Check if limit is reached
+		if (reviewAttempts >= 2) {
+			toast.error(t`Review limit reached. You have already used both attempts.`);
+			return;
+		}
+
+		// Increment attempts before starting review
+		incrementReviewAttempts();
 
 		setReviewing(true);
 		setReviewStartTime(Date.now());
@@ -227,31 +238,53 @@ export function BuilderTopTray() {
 				</span>
 			</Button>
 
-			{/* Final Review Button */}
-			<Button
-				size="sm"
-				variant="outline"
-				disabled={isPrinting || isReviewing}
-				className={cn(
-					"flex items-center justify-center gap-1.5 px-2 sm:h-9 sm:w-auto sm:gap-2 sm:px-3",
-					"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
-					"border-0 shadow-sm transition-all duration-300",
-					isReviewing && "scale-[0.98] brightness-90",
+			{/* Final Review Button with Warning */}
+			<div className="flex flex-col items-end gap-1">
+				<Button
+					size="sm"
+					variant="outline"
+					disabled={isPrinting || isReviewing || reviewAttempts >= 2}
+					className={cn(
+						"flex items-center justify-center gap-1.5 px-2 sm:h-9 sm:w-auto sm:gap-2 sm:px-3",
+						"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
+						"border-0 shadow-sm transition-all duration-300",
+						isReviewing && "scale-[0.98] brightness-90",
+						reviewAttempts >= 2 && "cursor-not-allowed opacity-50",
+					)}
+					onClick={onFinalReview}
+					aria-label="Final Review"
+				>
+					{isReviewing ? (
+						<CircleNotchIcon className="animate-spin" />
+					) : (
+						<motion.div whileHover={{ scale: 1.1 }}>
+							<AnimatedEyes />
+						</motion.div>
+					)}{" "}
+					<span className="hidden sm:inline">
+						<Trans>Final Review</Trans>
+					</span>
+				</Button>
+				{/* Warning Message */}
+				{reviewAttempts === 1 && (
+					<motion.p
+						initial={{ opacity: 0, y: -5 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="font-medium text-red-600 text-xs dark:text-red-400"
+					>
+						⚠️ <Trans>One attempt left only!</Trans>
+					</motion.p>
 				)}
-				onClick={onFinalReview}
-				aria-label="Final Review"
-			>
-				{isReviewing ? (
-					<CircleNotchIcon className="animate-spin" />
-				) : (
-					<motion.div whileHover={{ scale: 1.1 }}>
-						<AnimatedEyes />
-					</motion.div>
-				)}{" "}
-				<span className="hidden sm:inline">
-					<Trans>Final Review</Trans>
-				</span>
-			</Button>
+				{reviewAttempts >= 2 && (
+					<motion.p
+						initial={{ opacity: 0, y: -5 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="font-medium text-red-600 text-xs dark:text-red-400"
+					>
+						🚫 <Trans>Review limit reached</Trans>
+					</motion.p>
+				)}
+			</div>
 
 			{/* View Last Review Button - Only shows if review result exists */}
 			{reviewResult && !isReviewing && (
