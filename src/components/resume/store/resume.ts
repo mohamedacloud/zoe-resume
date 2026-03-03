@@ -15,6 +15,20 @@ import type { ResumeData } from "@/schema/resume/data";
 
 type Resume = Pick<RouterOutput["resume"]["getByIdForPrinter"], "id" | "name" | "slug" | "tags" | "data" | "isLocked">;
 
+export type FinalReviewResult = {
+	overall_score: number;
+	critical: string[];
+	important: string[];
+	suggestions: string[];
+	strengths: string[];
+	detailed_checks: {
+		photo_verdict: string;
+		link_status: string;
+		grammar_tense: string;
+	};
+	final_verdict: "READY" | "NEEDS_MINOR_FIXES" | "NEEDS_MAJOR_WORK";
+};
+
 type ResumeStoreState = {
 	resume: Resume;
 	isReady: boolean;
@@ -22,6 +36,8 @@ type ResumeStoreState = {
 	experienceAIRoundsUsed: Record<string, number>;
 	projectAIRoundsUsed: Record<string, number>;
 	isReviewing: boolean;
+	reviewResult: FinalReviewResult | null;
+	showReviewDrawer: boolean;
 };
 
 type ResumeStoreActions = {
@@ -36,6 +52,8 @@ type ResumeStoreActions = {
 	resetProjectRounds: (id: string) => void;
 
 	setReviewing: (value: boolean) => void;
+	setReviewResult: (result: FinalReviewResult | null) => void;
+	setShowReviewDrawer: (show: boolean) => void;
 };
 
 type ResumeStore = ResumeStoreState & ResumeStoreActions;
@@ -64,6 +82,8 @@ export const useResumeStore = create<ResumeStore>()(
 				experienceAIRoundsUsed: {},
 				projectAIRoundsUsed: {},
 				isReviewing: false,
+				reviewResult: null,
+				showReviewDrawer: false,
 
 				// --- ACTIONS ---
 				initialize: (resume) => {
@@ -148,6 +168,18 @@ export const useResumeStore = create<ResumeStore>()(
 				setReviewing: (value) => {
 					set((state) => {
 						state.isReviewing = value;
+					});
+				},
+
+				setReviewResult: (result) => {
+					set((state) => {
+						state.reviewResult = result;
+					});
+				},
+
+				setShowReviewDrawer: (show) => {
+					set((state) => {
+						state.showReviewDrawer = show;
 					});
 				},
 			})),
