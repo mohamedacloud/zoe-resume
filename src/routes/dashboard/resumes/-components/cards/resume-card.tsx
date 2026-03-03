@@ -87,7 +87,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 
 									<div
 										className={cn(
-											"absolute top-0 right-0 bottom-22 left-0 flex justify-center overflow-hidden transition-opacity duration-500",
+											"absolute inset-0 flex items-start justify-center overflow-hidden transition-opacity duration-500",
 											!isIframeReady && "opacity-0",
 										)}
 									>

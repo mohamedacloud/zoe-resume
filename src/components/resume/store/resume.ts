@@ -15,6 +15,20 @@ import type { ResumeData } from "@/schema/resume/data";
 
 type Resume = Pick<RouterOutput["resume"]["getByIdForPrinter"], "id" | "name" | "slug" | "tags" | "data" | "isLocked">;
 
+export type FinalReviewResult = {
+	overall_score: number;
+	critical: string[];
+	important: string[];
+	suggestions: string[];
+	strengths: string[];
+	detailed_checks: {
+		photo_verdict: string;
+		link_status: string;
+		grammar_tense: string;
+	};
+	final_verdict: "READY" | "NEEDS_MINOR_FIXES" | "NEEDS_MAJOR_WORK";
+};
+
 type ResumeStoreState = {
 	resume: Resume;
 	isReady: boolean;
@@ -22,6 +36,9 @@ type ResumeStoreState = {
 	experienceAIRoundsUsed: Record<string, number>;
 	projectAIRoundsUsed: Record<string, number>;
 	isReviewing: boolean;
+	reviewResult: FinalReviewResult | null;
+	showReviewDrawer: boolean;
+	reviewAttempts: number;
 };
 
 type ResumeStoreActions = {
@@ -36,6 +53,9 @@ type ResumeStoreActions = {
 	resetProjectRounds: (id: string) => void;
 
 	setReviewing: (value: boolean) => void;
+	setReviewResult: (result: FinalReviewResult | null) => void;
+	setShowReviewDrawer: (show: boolean) => void;
+	incrementReviewAttempts: () => void;
 };
 
 type ResumeStore = ResumeStoreState & ResumeStoreActions;
@@ -64,6 +84,9 @@ export const useResumeStore = create<ResumeStore>()(
 				experienceAIRoundsUsed: {},
 				projectAIRoundsUsed: {},
 				isReviewing: false,
+				reviewResult: null,
+				showReviewDrawer: false,
+				reviewAttempts: 0,
 
 				// --- ACTIONS ---
 				initialize: (resume) => {
@@ -85,6 +108,37 @@ export const useResumeStore = create<ResumeStore>()(
 							state.experienceAIRoundsUsed = {};
 							state.projectAIRoundsUsed = {};
 						}
+
+						// ✅ Load persisted review state for this specific resume
+						if (typeof window !== "undefined") {
+						const savedReviewData = localStorage.getItem(`resume-review-${resume.id}`);
+						if (savedReviewData) {
+							try {
+								const parsed = JSON.parse(savedReviewData);
+								state.reviewResult = parsed.reviewResult || null;
+								state.showReviewDrawer = parsed.showReviewDrawer || false;
+							} catch (e) {
+								console.error("Failed to load saved review data:", e);
+							}
+						} else {
+							// No saved data for this resume
+							state.reviewResult = null;
+							state.showReviewDrawer = false;
+						}
+
+						// ✅ Load review attempts for this specific resume
+						const savedAttempts = localStorage.getItem(`resume-review-attempts-${resume.id}`);
+						if (savedAttempts) {
+							try {
+								state.reviewAttempts = JSON.parse(savedAttempts);
+							} catch (e) {
+								console.error("Failed to load review attempts:", e);
+								state.reviewAttempts = 0;
+							}
+						} else {
+							state.reviewAttempts = 0;
+						}
+					}
 					});
 				},
 				updateResumeData: (fn) => {
@@ -148,6 +202,48 @@ export const useResumeStore = create<ResumeStore>()(
 				setReviewing: (value) => {
 					set((state) => {
 						state.isReviewing = value;
+					});
+				},
+
+				setReviewResult: (result) => {
+					set((state) => {
+						state.reviewResult = result;
+						// ✅ Persist review result per resume
+						if (typeof window !== "undefined" && state.resume?.id) {
+							const dataToSave = {
+								reviewResult: result,
+								showReviewDrawer: state.showReviewDrawer,
+							};
+							localStorage.setItem(`resume-review-${state.resume.id}`, JSON.stringify(dataToSave));
+						}
+					});
+				},
+
+				setShowReviewDrawer: (show) => {
+					set((state) => {
+						state.showReviewDrawer = show;
+						// ✅ Persist drawer state per resume
+						if (typeof window !== "undefined" && state.resume?.id) {
+							const dataToSave = {
+								reviewResult: state.reviewResult,
+								showReviewDrawer: show,
+							};
+							localStorage.setItem(`resume-review-${state.resume.id}`, JSON.stringify(dataToSave));
+						}
+					});
+				},
+				incrementReviewAttempts: () => {
+					set((state) => {
+						if (state.reviewAttempts < 2) {
+							state.reviewAttempts += 1;
+							// ✅ Persist attempts per resume
+							if (typeof window !== "undefined" && state.resume?.id) {
+								localStorage.setItem(
+									`resume-review-attempts-${state.resume.id}`,
+									JSON.stringify(state.reviewAttempts),
+								);
+							}
+						}
 					});
 				},
 			})),

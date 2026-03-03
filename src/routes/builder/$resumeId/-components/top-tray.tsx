@@ -1,18 +1,19 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	CaretDownIcon,
 	CircleNotchIcon,
 	DownloadSimpleIcon,
 	FilePdfIcon,
-	MagnifyingGlassIcon,
 	MicrosoftWordLogoIcon,
 	PaletteIcon,
+	ShieldWarningIcon,
 	SwapIcon,
 	TextTIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ColorPicker } from "@/components/input/color-picker";
 import { useResumeStore } from "@/components/resume/store/resume";
@@ -27,10 +28,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { ReviewDrawer } from "@/components/ui/review-drawer";
 import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
 import { downloadFromUrl, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
+import { AnimatedEyes, DeadEyes } from "./animated-eyes";
 
 export function BuilderTopTray() {
 	const openDialog = useDialogStore((state) => state.openDialog);
@@ -41,23 +44,110 @@ export function BuilderTopTray() {
 		orpc.printer.printResumeAsPDF.mutationOptions(),
 	);
 
+	const { mutateAsync: runFinalReview } = useMutation(orpc.ai.finalReview.mutationOptions());
+
 	const isReviewing = useResumeStore((state) => state.isReviewing);
 	const setReviewing = useResumeStore((state) => state.setReviewing);
+	const setReviewResult = useResumeStore((state) => state.setReviewResult);
+	const setShowReviewDrawer = useResumeStore((state) => state.setShowReviewDrawer);
+	const reviewResult = useResumeStore((state) => state.reviewResult);
+	const reviewAttempts = useResumeStore((state) => state.reviewAttempts);
+	const incrementReviewAttempts = useResumeStore((state) => state.incrementReviewAttempts);
+
+	const [reviewStartTime, setReviewStartTime] = useState<number>(0);
+	const fallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+	const provider = import.meta.env.VITE_AI_PROVIDER || "gemini";
+	const model = import.meta.env.VITE_AI_MODEL || "gemini-2.0-flash-exp";
+	const apiKey = import.meta.env.VITE_AI_API_KEY || "";
+	const baseURL = import.meta.env.VITE_AI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
+
+	const isConfigured = !!apiKey && !!model;
+
+	useEffect(() => {
+		return () => {
+			if (fallbackTimeoutRef.current) {
+				clearTimeout(fallbackTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	const onFinalReview = async () => {
+		if (!resume || !isConfigured) {
+			toast.error(t`AI is not configured. Please set VITE_AI_API_KEY and VITE_AI_MODEL in your .env file.`);
+			return;
+		}
+
+		// Check if limit is reached
+		if (reviewAttempts >= 2) {
+			toast.error(t`Review limit reached. You have already used both attempts.`);
+			return;
+		}
+
+		// Increment attempts before starting review
+		incrementReviewAttempts();
+
 		setReviewing(true);
+		setReviewStartTime(Date.now());
+
 		const toastId = toast.loading(t`AI is reviewing your resume...`, {
 			description: t`Looking for improvements in layout, spacing, and content.`,
 		});
 
-		// Mock AI review process
-		setTimeout(() => {
+		// Show fallback message if API takes too long
+		fallbackTimeoutRef.current = setTimeout(() => {
+			if (isReviewing) {
+				toast.loading(t`Still analyzing your resume...`, {
+					id: toastId,
+					description: t`This is taking a bit longer than expected, please wait...`,
+				});
+			}
+		}, 6000);
+
+		try {
+			const result = await runFinalReview({
+				provider,
+				model,
+				apiKey,
+				baseURL,
+				resume: resume.data as Record<string, unknown>,
+				photo: {
+					url: resume.data.picture?.url,
+					visible: !resume.data.picture?.hidden,
+				},
+			});
+
+			// Ensure minimum 1.2 seconds loading time for UX
+			const elapsedTime = Date.now() - reviewStartTime;
+			const remainingTime = Math.max(0, 1200 - elapsedTime);
+
+			await new Promise((resolve) => setTimeout(resolve, remainingTime));
+
+			if (fallbackTimeoutRef.current) {
+				clearTimeout(fallbackTimeoutRef.current);
+			}
+
 			setReviewing(false);
+			setReviewResult(result);
+			setShowReviewDrawer(true);
+
 			toast.success(t`Review complete!`, {
 				id: toastId,
-				description: t`Zoe has finished reviewing your resume. Check the suggestions for improvements.`,
+				description: t`Score: ${result.overall_score}/100 - ${result.final_verdict === "READY" ? "Ready to export!" : "Check suggestions for improvements"}`,
 			});
-		}, 5000);
+		} catch (error) {
+			if (fallbackTimeoutRef.current) {
+				clearTimeout(fallbackTimeoutRef.current);
+			}
+
+			setReviewing(false);
+			console.error("Final Review Error:", error);
+
+			toast.error(t`Review failed. Please try again.`, {
+				id: toastId,
+				description: t`There was an error analyzing your resume. Please check your AI configuration.`,
+			});
+		}
 	};
 
 	const onDownloadPDF = async () => {
@@ -81,8 +171,24 @@ export function BuilderTopTray() {
 		toast.error(t`Word download is not yet implemented on the backend.`);
 	};
 
+	// useEffect(() => {
+	// 	if (reviewAttempts < 2) return;
+
+	// 	const now = new Date();
+	// 	const tomorrow = new Date();
+	// 	tomorrow.setHours(24, 0, 0, 0);
+
+	// 	const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+	// 	const timer = setTimeout(() => {
+	// 		useResumeStore.getState().setReviewAttempts(0);
+	// 	}, msUntilMidnight);
+
+	// 	return () => clearTimeout(timer);
+	// }, [reviewAttempts]);
+
 	return (
-		<div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+		<div className="flex flex-wrap items-center justify-end gap-1.5 overflow-visible sm:gap-2">
 			{/* Colors Button */}
 			<Popover>
 				<PopoverTrigger asChild>
@@ -148,19 +254,74 @@ export function BuilderTopTray() {
 				</span>
 			</Button>
 
-			<Button
-				size="sm"
-				disabled={isPrinting || isReviewing}
-				className={cn(
-					"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
-					"border-0 shadow-sm transition-all duration-300",
-					isReviewing && "scale-[0.98] brightness-90",
+			{/* Final Review Button with Warning */}
+			<div className="relative flex flex-col items-center">
+				<Button
+					size="sm"
+					variant="outline"
+					disabled={isPrinting || isReviewing || reviewAttempts >= 2}
+					className={cn(
+						"flex items-center justify-center gap-1.5 px-2 sm:h-9 sm:w-auto sm:gap-2 sm:px-3",
+						"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
+						"border-0 shadow-sm transition-all duration-300",
+						isReviewing && "scale-[0.98] brightness-90",
+						reviewAttempts >= 2 &&
+							"cursor-not-allowed bg-gray-400 from-gray-400 to-gray-400 text-white hover:bg-gray-400",
+					)}
+					onClick={onFinalReview}
+					aria-label="Final Review"
+				>
+					{isReviewing ? (
+						<CircleNotchIcon className="animate-spin" />
+					) : reviewAttempts >= 2 ? (
+						<DeadEyes />
+					) : (
+						<motion.div whileHover={{ scale: 1.1 }}>
+							<AnimatedEyes />
+						</motion.div>
+					)}{" "}
+					<span className="hidden sm:inline">
+						<Trans>Final Review</Trans>
+					</span>
+				</Button>
+				{/* Warning Message */}
+				{reviewAttempts === 1 && (
+					<motion.div
+						initial={{ opacity: 0, y: 5 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="absolute top-full left-1/2 mt-1 -translate-x-1/2 whitespace-nowrap font-medium text-red-600 text-xs dark:text-red-400"
+					>
+						⚠️ <Trans>One attempt left only!</Trans>
+					</motion.div>
 				)}
-				onClick={onFinalReview}
-			>
-				{isReviewing ? <CircleNotchIcon className="animate-spin" /> : <MagnifyingGlassIcon className="text-white" />}
-				<Trans>Final Review</Trans>
-			</Button>
+
+				{reviewAttempts >= 2 && (
+					<motion.div
+						initial={{ opacity: 0, y: 5 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="absolute top-full left-1/2 mt-1 -translate-x-1/2 whitespace-nowrap font-medium text-red-600 text-xs dark:text-red-400"
+					>
+						🚫 <Trans>Review limit reached. Resets at 12 AM.</Trans>
+					</motion.div>
+				)}
+			</div>
+
+			{/* View Last Review Button - Only shows if review result exists */}
+			{reviewResult && !isReviewing && (
+				<Button
+					size="sm"
+					variant="outline"
+					onClick={() => setShowReviewDrawer(true)}
+					className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3"
+					aria-label="View Last Review"
+					title="View your last review results"
+				>
+					<ShieldWarningIcon className="h-4 w-4" />
+					<span className="hidden sm:inline">
+						<Trans>View Review</Trans>
+					</span>
+				</Button>
+			)}
 
 			{/* Consolidated Download button */}
 			<DropdownMenu>
@@ -169,14 +330,16 @@ export function BuilderTopTray() {
 						size="sm"
 						variant="default"
 						disabled={isPrinting}
-						className="bg-emerald-600 text-white hover:bg-emerald-700"
+						className="flex items-center justify-center gap-1.5 bg-emerald-600 px-2 text-white hover:bg-emerald-700 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+						aria-label="Download"
 					>
 						{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
-						<Trans>Download</Trans>
-						<CaretDownIcon className="ms-1 size-3.5 opacity-50" />
+						<span className="hidden sm:inline">
+							<Trans>Download</Trans>
+						</span>
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className="min-w-[140px]">
+				<DropdownMenuContent align="end" className="min-w-35">
 					<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
 						<FilePdfIcon className="size-4 text-red-500" />
 						<Trans>Download PDF</Trans>
@@ -188,6 +351,9 @@ export function BuilderTopTray() {
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
+
+			{/* Review Drawer */}
+			{reviewResult && <ReviewDrawer result={reviewResult} />}
 		</div>
 	);
 }
@@ -310,13 +476,10 @@ function TypographyPopoverContent() {
 							step={0.1}
 							value={typography.body.fontSize}
 							onChange={(e) => {
-								const value = e.target.value;
-								if (value === "") {
-									return;
-								}
-								updateBody({ fontSize: Number(value) });
+								const parsed = Number(e.target.value);
+								if (Number.isNaN(parsed)) return;
+								updateBody({ fontSize: parsed });
 							}}
-							className="text-xs sm:text-sm"
 						/>
 						<InputGroupAddon align="inline-end">
 							<InputGroupText className="text-xs sm:text-sm">
@@ -335,16 +498,13 @@ function TypographyPopoverContent() {
 							type="number"
 							min={1}
 							max={3}
-							step={0.1}
-							value={typography.body.lineHeight}
+							step={0.01}
+							value={typography.body.lineHeight ?? 1.4}
 							onChange={(e) => {
-								const value = e.target.value;
-								if (value === "") {
-									return;
-								}
-								updateBody({ lineHeight: Number(value) });
+								const parsed = Number(e.target.value);
+								if (Number.isNaN(parsed)) return;
+								updateBody({ lineHeight: parsed });
 							}}
-							className="text-xs sm:text-sm"
 						/>
 						<InputGroupAddon align="inline-end">
 							<InputGroupText className="text-xs sm:text-sm">

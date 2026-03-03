@@ -46,6 +46,35 @@ export const aiRouter = {
 			}
 		}),
 
+	finalReview: publicProcedure
+		.input(
+			z.object({
+				...aiCredentialsSchema.shape,
+				resume: z.record(z.string(), z.unknown()),
+				photo: z
+					.object({
+						url: z.string().optional(),
+						visible: z.boolean().optional(),
+					})
+					.optional(),
+			}),
+		)
+		.handler(async ({ input }) => {
+			try {
+				return await aiService.finalReview(input);
+			} catch (error) {
+				if (error instanceof AISDKError) {
+					throw new ORPCError("BAD_GATEWAY", { message: error.message });
+				}
+
+				if (error instanceof ZodError) {
+					throw new Error(formatZodError(error));
+				}
+
+				throw error;
+			}
+		}),
+
 	parsePdf: publicProcedure
 		.input(
 			z.object({
