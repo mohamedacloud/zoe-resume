@@ -25,8 +25,6 @@ export function CreateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
 
-	const maxRounds = 2;
-
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -94,8 +92,6 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
 
-	const maxRounds = 2;
-
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -160,13 +156,12 @@ export function UpdateExperienceDialog({ data }: DialogProps<"resume.sections.ex
 
 function ExperienceForm() {
 	const form = useFormContext<FormValues>();
-	const resumeData = useResumeStore((state) => state.resume.data);
 	const experienceId = form.getValues("id");
 	// Watch the "description" field (was incorrectly watching "content")
 	const description = useWatch({ control: form.control, name: "description" });
 	const previousDescriptionRef = useRef(description); // Track previous description
 
-	const isAIUpdatingRef = useRef(false);
+	const aiUpdateCountRef = useRef(0); // Count expected AI updates
 	const roundsUsed = useResumeStore((state) => state.experienceAIRoundsUsed?.[experienceId] ?? 0);
 	const incrementRoundsUsed = useResumeStore((state) => state.incrementExperienceRounds);
 
@@ -174,9 +169,9 @@ function ExperienceForm() {
 	const maxRounds = 2;
 
 	useEffect(() => {
-		if (isAIUpdatingRef.current) {
-			// Skip reset when AI updates description
-			isAIUpdatingRef.current = false;
+		// If we're expecting AI updates, skip reset and decrement counter
+		if (aiUpdateCountRef.current > 0) {
+			aiUpdateCountRef.current -= 1;
 			previousDescriptionRef.current = description;
 			return;
 		}
@@ -197,7 +192,8 @@ function ExperienceForm() {
 
 	const handleAIGenerated = (aiExperience: string) => {
 		if (aiExperience && aiExperience.length > 10) {
-			isAIUpdatingRef.current = true;
+			// Expect 2 content updates: plain text + RichInput wrapping in <p> tags
+			aiUpdateCountRef.current = 2;
 
 			form.setValue("description", aiExperience, {
 				shouldDirty: true,

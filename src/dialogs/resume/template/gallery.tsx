@@ -1,19 +1,22 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { SlideshowIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, SlideshowIcon } from "@phosphor-icons/react";
 import { type RefObject, useRef } from "react";
 import { CometCard } from "@/components/animation/comet-card";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type DialogProps, useDialogStore } from "@/dialogs/store";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Template } from "@/schema/templates";
 import { cn } from "@/utils/style";
 import { type TemplateMetadata, templates } from "./data";
 
 export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">) {
+	const isMobile = useIsMobile();
 	const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
 	const closeDialog = useDialogStore((state) => state.closeDialog);
@@ -22,7 +25,7 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 
 	function onSelectTemplate(template: Template) {
 		const templateMetadata = templates[template];
-		
+
 		updateResumeData((draft) => {
 			draft.metadata.template = template;
 			// Apply template default colors and typography
@@ -34,16 +37,15 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 
 			// Reorganize sections based on template's sidebar position
 			const sidebarPosition = templateMetadata.sidebarPosition;
-			
+
 			// Define which sections typically go in sidebar vs main
 			const sidebarSections = ["skills", "certifications", "awards", "languages", "interests", "publications"];
-			const mainSections = ["profiles", "summary", "education", "experience", "projects", "volunteer", "references"];
-			
+
 			// Get all current sections
-			const allSections = [...new Set([
-				...draft.metadata.layout.pages.flatMap(page => [...page.main, ...page.sidebar])
-			])];
-			
+			const allSections = [
+				...new Set([...draft.metadata.layout.pages.flatMap((page) => [...page.main, ...page.sidebar])]),
+			];
+
 			// Reorganize based on sidebar position
 			draft.metadata.layout.pages.forEach((page) => {
 				if (sidebarPosition === "none") {
@@ -54,8 +56,8 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 				} else {
 					// Has sidebar (left or right) - organize sections appropriately
 					page.fullWidth = false;
-					page.sidebar = allSections.filter(section => sidebarSections.includes(section));
-					page.main = allSections.filter(section => !sidebarSections.includes(section));
+					page.sidebar = allSections.filter((section) => sidebarSections.includes(section));
+					page.main = allSections.filter((section) => !sidebarSections.includes(section));
 				}
 			});
 		});
@@ -64,13 +66,20 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 	}
 
 	return (
-		<DialogContent className="lg:max-w-5xl">
+		<DialogContent className="max-w-[95vw] p-4 sm:p-6 md:max-w-3xl lg:max-w-5xl">
 			<DialogHeader className="gap-2">
-				<DialogTitle className="flex items-center gap-3 text-xl">
-					<SlideshowIcon size={20} />
-					<Trans>Template Gallery</Trans>
-				</DialogTitle>
-				<DialogDescription className="leading-relaxed">
+				<div className="flex items-center gap-2">
+					{isMobile && (
+						<Button size="icon" variant="ghost" onClick={closeDialog} className="h-8 w-8 shrink-0">
+							<ArrowLeftIcon className="h-5 w-5" />
+						</Button>
+					)}
+					<DialogTitle className="flex items-center gap-2 text-base sm:gap-3 sm:text-xl">
+						<SlideshowIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+						<Trans>Template Gallery</Trans>
+					</DialogTitle>
+				</div>
+				<DialogDescription className="text-xs leading-relaxed sm:text-sm">
 					<Trans>
 						Here's a range of resume templates for different professions and personalities. Whether you prefer modern or
 						classic, bold or simple, there is a design to match you. Look through the options below and choose a
@@ -79,8 +88,8 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 				</DialogDescription>
 			</DialogHeader>
 
-			<ScrollArea ref={scrollAreaRef} className="max-h-[80svh] pb-8">
-				<div className="grid grid-cols-2 gap-6 p-4 md:grid-cols-3 lg:grid-cols-4">
+			<ScrollArea ref={scrollAreaRef} className="max-h-[60svh] pb-4 sm:max-h-[70svh] sm:pb-8">
+				<div className="grid grid-cols-1 gap-3 p-2 sm:grid-cols-2 sm:gap-4 sm:p-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
 					{Object.entries(templates).map(([template, metadata]) => (
 						<TemplateCard
 							key={template}

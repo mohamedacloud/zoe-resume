@@ -33,21 +33,21 @@ export function SectionBase({ type, className, ...props }: Props) {
 			id={`sidebar-${type}`}
 			value={collapsed ? "" : type}
 			onValueChange={() => toggleCollapsed(type)}
-			className={cn("space-y-4", isHidden && "opacity-50")}
+			className={cn("space-y-3 sm:space-y-4", isHidden && "opacity-50")}
 		>
-			<AccordionItem value={type} className="group/accordion space-y-4">
-				<div className="flex items-center">
-					<DragHandle className="mr-2" />
+			<AccordionItem value={type} className="group/accordion space-y-3 sm:space-y-4">
+				<div className="flex items-center gap-1 sm:gap-2">
+					<DragHandle className="mr-1 sm:mr-2" />
 
-					<AccordionTrigger asChild className="me-2 items-center justify-center">
-						<Button size="icon" variant="ghost">
-							<CaretRightIcon className="transition-transform group-data-[state=open]/accordion:rotate-90" />
+					<AccordionTrigger asChild className="me-1 items-center justify-center sm:me-2">
+						<Button size="icon" variant="ghost" className="h-8 w-8 sm:h-10 sm:w-10">
+							<CaretRightIcon className="h-4 w-4 transition-transform group-data-[state=open]/accordion:rotate-90 sm:h-5 sm:w-5" />
 						</Button>
 					</AccordionTrigger>
 
-					<div className="flex flex-1 items-center gap-x-4">
+					<div className="flex flex-1 items-center gap-x-2 sm:gap-x-4">
 						{getSectionIcon(type)}
-						<h2 className="line-clamp-1 font-bold text-2xl tracking-tight">
+						<h2 className="line-clamp-1 font-bold text-lg tracking-tight sm:text-xl md:text-2xl">
 							{("title" in section && section.title) || getSectionTitle(type)}
 						</h2>
 					</div>

@@ -83,15 +83,15 @@ function RouteComponent() {
 	return (
 		<div className="space-y-6">
 			{/* Stats Cards */}
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
 				{/* Total Resumes */}
-				<div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+				<div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
 					<div className="mb-3 flex items-start justify-between">
 						<div>
-							<p className="mb-2 text-gray-600 text-sm">
+							<p className="mb-2 text-gray-600 text-xs sm:text-sm">
 								<Trans>Total Resumes</Trans>
 							</p>
-							<p className="font-bold text-2xl text-emerald-600">{resumes?.length ?? 0}</p>
+							<p className="font-bold text-emerald-600 text-xl sm:text-2xl">{resumes?.length ?? 0}</p>
 						</div>
 						<div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50">
 							<svg className="size-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,13 +107,13 @@ function RouteComponent() {
 				</div>
 
 				{/* Last Update */}
-				<div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+				<div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
 					<div className="mb-3 flex items-start justify-between">
 						<div>
-							<p className="mb-2 text-gray-600 text-sm">
+							<p className="mb-2 text-gray-600 text-xs sm:text-sm">
 								<Trans>Last Update</Trans>
 							</p>
-							<p className="font-semibold text-base text-emerald-600">{lastUpdateText}</p>
+							<p className="font-semibold text-emerald-600 text-sm sm:text-base">{lastUpdateText}</p>
 						</div>
 						<div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50">
 							<svg className="size-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

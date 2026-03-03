@@ -68,7 +68,6 @@ export const ResumeMeasurer = ({ onMeasure }: Props) => {
 			}
 		});
 
-		console.log("Measurements:", measurements);
 		onMeasure(measurements);
 	}, [measurementRef, onMeasure, metadata, sections, customSections]); // Re-measure when data changes
 

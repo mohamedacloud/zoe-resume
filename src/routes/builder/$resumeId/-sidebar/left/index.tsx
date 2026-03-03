@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { match } from "ts-pattern";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -15,7 +14,6 @@ import { ExperienceSectionBuilder } from "./sections/experience";
 import { InterestsSectionBuilder } from "./sections/interests";
 import { LanguagesSectionBuilder } from "./sections/languages";
 import { PictureSectionBuilder } from "./sections/picture";
-import { ProfilesSectionBuilder } from "./sections/profiles";
 import { ProjectsSectionBuilder } from "./sections/projects";
 import { PublicationsSectionBuilder } from "./sections/publications";
 import { ReferencesSectionBuilder } from "./sections/references";
@@ -24,24 +22,43 @@ import { SummarySectionBuilder } from "./sections/summary";
 import { VolunteerSectionBuilder } from "./sections/volunteer";
 
 function getSectionComponent(type: LeftSidebarSection) {
-	return match(type)
-		.with("picture", () => <PictureSectionBuilder />)
-		.with("basics", () => <BasicsSectionBuilder />)
-		.with("summary", () => <SummarySectionBuilder />)
-		.with("profiles", () => <ProfilesSectionBuilder />)
-		.with("experience", () => <ExperienceSectionBuilder />)
-		.with("education", () => <EducationSectionBuilder />)
-		.with("projects", () => <ProjectsSectionBuilder />)
-		.with("skills", () => <SkillsSectionBuilder />)
-		.with("languages", () => <LanguagesSectionBuilder />)
-		.with("interests", () => <InterestsSectionBuilder />)
-		.with("awards", () => <AwardsSectionBuilder />)
-		.with("certifications", () => <CertificationsSectionBuilder />)
-		.with("publications", () => <PublicationsSectionBuilder />)
-		.with("volunteer", () => <VolunteerSectionBuilder />)
-		.with("references", () => <ReferencesSectionBuilder />)
-		.with("custom", () => <CustomSectionBuilder />)
-		.exhaustive();
+	switch (type) {
+		case "picture":
+			return <PictureSectionBuilder />;
+		case "basics":
+			return <BasicsSectionBuilder />;
+		case "summary":
+			return <SummarySectionBuilder />;
+		case "experience":
+			return <ExperienceSectionBuilder />;
+		case "education":
+			return <EducationSectionBuilder />;
+		case "projects":
+			return <ProjectsSectionBuilder />;
+		case "skills":
+			return <SkillsSectionBuilder />;
+		case "languages":
+			return <LanguagesSectionBuilder />;
+		case "interests":
+			return <InterestsSectionBuilder />;
+		case "awards":
+			return <AwardsSectionBuilder />;
+		case "certifications":
+			return <CertificationsSectionBuilder />;
+		case "publications":
+			return <PublicationsSectionBuilder />;
+		case "volunteer":
+			return <VolunteerSectionBuilder />;
+		case "references":
+			return <ReferencesSectionBuilder />;
+		case "custom":
+			return <CustomSectionBuilder />;
+		default: {
+			// Ensure compile-time exhaustiveness; if a new case is added to LeftSidebarSection,
+			// TypeScript will report an error here.
+			return null;
+		}
+	}
 }
 
 export function BuilderSidebarLeft() {
@@ -106,7 +123,7 @@ export function BuilderSidebarLeft() {
 
 	return (
 		<ScrollArea ref={scrollAreaRef} className="@container h-[calc(100svh-3.5rem)] bg-gray-50">
-			<div className="space-y-4 p-4">
+			<div className="space-y-3 p-3 sm:space-y-4 sm:p-4">
 				{/* Fixed sections (picture and basics) - not draggable, always at top */}
 				{fixedSections.map((section) => (
 					<Fragment key={section}>
@@ -120,13 +137,13 @@ export function BuilderSidebarLeft() {
 					items={sectionOrder}
 					onReorder={handleSectionReorder}
 					keyExtractor={(section) => section}
-					className="space-y-4"
+					className="space-y-3 sm:space-y-4"
 					renderItem={(section) => (
-						<SortableItem key={section} id={section} className="space-y-4">
-							<Fragment>
+						<SortableItem key={section} id={section} className="space-y-3 sm:space-y-4">
+							
 								{getSectionComponent(section)}
 								<Separator />
-							</Fragment>
+							
 						</SortableItem>
 					)}
 				/>

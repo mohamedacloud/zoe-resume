@@ -74,6 +74,8 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	const leftSidebarRef = usePanelRef();
 
 	const setLeftSidebar = useBuilderSidebarStore((state) => state.setLeftSidebar);
+	const isLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.isLeftSidebarCollapsed);
+	const setLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.setLeftSidebarCollapsed);
 
 	const { maxSidebarSize } = useBuilderSidebar((state) => ({
 		maxSidebarSize: state.maxSidebarSize,
@@ -89,8 +91,49 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 		setLeftSidebar(leftSidebarRef);
 	}, [leftSidebarRef, setLeftSidebar]);
 
-	const leftSidebarSize = isMobile ? 0 : initialLayout.left;
-	const artboardSize = isMobile ? 100 : initialLayout.artboard;
+	// On mobile, ensure sidebar is collapsed by default on initial load
+	useEffect(() => {
+		if (isMobile) {
+			setLeftSidebarCollapsed(true);
+		}
+	}, [isMobile, setLeftSidebarCollapsed]);
+
+	const leftSidebarSize = initialLayout.left || 30;
+	const artboardSize = initialLayout.artboard || 70;
+
+	if (isMobile) {
+		return (
+			<div className="flex h-svh flex-col" {...props}>
+				<BuilderHeader />
+
+				{/* Mobile Layout - Main content always visible */}
+				<div className="relative flex-1 overflow-hidden">
+					<div className="h-full overflow-auto">
+						<Outlet />
+					</div>
+
+					{/* Left Sidebar Drawer - only visible when toggled */}
+					{!isLeftSidebarCollapsed && (
+						<>
+							{/* Backdrop */}
+							<div
+								className="fixed inset-0 top-14 z-40 bg-black/50 transition-opacity"
+								onClick={() => setLeftSidebarCollapsed(true)}
+								onKeyDown={(e) => e.key === "Escape" && setLeftSidebarCollapsed(true)}
+								role="button"
+								tabIndex={0}
+								aria-label="Close sidebar"
+							/>
+							{/* Drawer with slide animation */}
+							<div className="fixed inset-y-0 top-14 left-0 z-50 w-[85vw] max-w-sm transform bg-white shadow-xl transition-transform duration-300 ease-in-out">
+								<BuilderSidebarLeft />
+							</div>
+						</>
+					)}
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex h-svh flex-col" {...props}>
@@ -104,7 +147,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 					maxSize={maxSidebarSize}
 					minSize={0}
 					collapsedSize={0}
-					defaultSize={leftSidebarSize || 30}
+					defaultSize={leftSidebarSize}
 					className="z-20 h-[calc(100svh-3.5rem)]"
 				>
 					<BuilderSidebarLeft />

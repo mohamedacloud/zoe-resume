@@ -16,17 +16,17 @@ export function BaseCard({ title, description, tags, className, children, ...pro
 			<div
 				{...props}
 				className={cn(
-					"group relative flex aspect-page size-full cursor-pointer overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-sm transition-all hover:border-emerald-300 hover:shadow-xl",
+					"group relative flex aspect-page size-full cursor-pointer overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-emerald-300 hover:shadow-xl active:scale-[0.98] sm:active:scale-100",
 					className,
 				)}
 			>
 				{children}
 
-				<div className="absolute inset-x-0 bottom-0 w-full border-gray-200 border-t bg-linear-to-t from-white via-white to-transparent p-4">
-					<h3 className="mb-1.5 truncate font-semibold text-gray-900 text-lg">{title}</h3>
-					<p className="truncate text-gray-600 text-sm">{description}</p>
+				<div className="absolute inset-x-0 bottom-0 w-full border-gray-200 border-t bg-gradient-to-t from-white via-white to-transparent p-3 sm:p-4">
+					<h3 className="mb-1 truncate font-semibold text-base text-gray-900 sm:mb-1.5 sm:text-lg">{title}</h3>
+					<p className="truncate text-gray-600 text-xs sm:text-sm">{description}</p>
 
-					<div className={cn("mt-3 hidden flex-wrap items-center gap-1.5", tags && tags.length > 0 && "flex")}>
+					<div className={cn("mt-2 hidden flex-wrap items-center gap-1.5 sm:mt-3", tags && tags.length > 0 && "flex")}>
 						{tags?.map((tag) => (
 							<Badge
 								key={tag}

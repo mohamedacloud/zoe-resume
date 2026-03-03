@@ -34,7 +34,9 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 
 	const scale = useMemo(() => {
 		if (containerWidth === 0) return 0;
-		return containerWidth / 794;
+		// Adjust scale for mobile view to ensure full width
+		const isMobile = containerWidth < 640; // Tailwind's sm breakpoint
+		return isMobile ? containerWidth / 794 : containerWidth / 794;
 	}, [containerWidth]);
 
 	const [isIframeReady, setIsIframeReady] = useState(false);

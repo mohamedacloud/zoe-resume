@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trans } from "@lingui/react/macro";
 import { PencilSimpleLineIcon, PlusIcon } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import type z from "zod";
 import { RichInput } from "@/components/input/rich-input";
@@ -23,20 +23,10 @@ type FormValues = z.infer<typeof formSchema>;
 export function CreateSummaryItemDialog({ data }: DialogProps<"resume.sections.summary.create">) {
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
-
-	const [roundsUsed, setRoundsUsed] = useState(0);
+	const roundsUsed = useResumeStore((state) => state.summaryAIRoundsUsed);
+	const incrementRoundsUsed = useResumeStore((state) => state.incrementSummaryRounds);
+	const resetRounds = useResumeStore((state) => state.resetSummaryRounds);
 	const maxRounds = 2;
-
-	const incrementRoundsUsed = useCallback(() => {
-		setRoundsUsed((prev) => {
-			const newRounds = prev + 1;
-			return newRounds <= maxRounds ? newRounds : prev; // Ensure it doesn't exceed maxRounds
-		});
-	}, []); // Removed maxRounds from dependencies
-
-	const resetRounds = useCallback(() => {
-		setRoundsUsed(0);
-	}, []);
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -91,20 +81,10 @@ export function CreateSummaryItemDialog({ data }: DialogProps<"resume.sections.s
 export function UpdateSummaryItemDialog({ data }: DialogProps<"resume.sections.summary.update">) {
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 	const updateResumeStore = useResumeStore((state) => state.updateResumeData);
-
-	const [roundsUsed, setRoundsUsed] = useState(0);
+	const roundsUsed = useResumeStore((state) => state.summaryAIRoundsUsed);
+	const incrementRoundsUsed = useResumeStore((state) => state.incrementSummaryRounds);
+	const resetRounds = useResumeStore((state) => state.resetSummaryRounds);
 	const maxRounds = 2;
-
-	const incrementRoundsUsed = useCallback(() => {
-		setRoundsUsed((prev) => {
-			const newRounds = prev + 1;
-			return newRounds <= maxRounds ? newRounds : prev; // Ensure it doesn't exceed maxRounds
-		});
-	}, []); // Removed maxRounds from dependencies
-
-	const resetRounds = useCallback(() => {
-		setRoundsUsed(0);
-	}, []);
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -169,7 +149,7 @@ export function UpdateSummaryItemDialog({ data }: DialogProps<"resume.sections.s
 }
 
 function SummaryItemForm({
-	aiUsage,
+	aiUsage: _aiUsage,
 }: {
 	aiUsage: {
 		roundsUsed: number;
@@ -185,17 +165,17 @@ function SummaryItemForm({
 	const previousContentRef = useRef(content); // Track previous content
 
 	// const { roundsUsed, maxRounds, incrementRoundsUsed, resetRounds } = aiUsage;
-	const isAIUpdatingRef = useRef(false);
+	const aiUpdateCountRef = useRef(0); // Count expected AI updates
 	const roundsUsed = useResumeStore((state) => state.summaryAIRoundsUsed);
 	const incrementRoundsUsed = useResumeStore((state) => state.incrementSummaryRounds);
 	const resetRounds = useResumeStore((state) => state.resetSummaryRounds);
 
 	const maxRounds = 2;
-	// Reset rounds when content changes
+	// Reset rounds when content changes (but not when AI updates)
 	useEffect(() => {
-		if (isAIUpdatingRef.current) {
-			// Skip reset when AI updates content
-			isAIUpdatingRef.current = false;
+		// If we're expecting AI updates, skip reset and decrement counter
+		if (aiUpdateCountRef.current > 0) {
+			aiUpdateCountRef.current -= 1;
 			previousContentRef.current = content;
 			return;
 		}
@@ -214,7 +194,8 @@ function SummaryItemForm({
 
 	const handleAIGenerated = (aiSummary: string) => {
 		if (aiSummary && aiSummary.length > 10) {
-			isAIUpdatingRef.current = true;
+			// Expect 2 content updates: plain text + RichInput wrapping in <p> tags
+			aiUpdateCountRef.current = 2;
 
 			form.setValue("content", aiSummary, {
 				shouldDirty: true,

@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { ResumePreview } from "@/components/resume/preview";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/utils/style";
 import { BuilderDock } from "./-components/dock";
 import { useBuilderSidebarStore } from "./-store/sidebar";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/builder/$resumeId/")({
 
 function RouteComponent() {
 	const isLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.isLeftSidebarCollapsed);
+	const isMobile = useIsMobile();
 
 	useHotkeys(
 		["ctrl+s", "meta+s"],
@@ -31,17 +33,21 @@ function RouteComponent() {
 			{/* Fixed Resume Preview with Scroll */}
 			<div
 				className={cn(
-					"flex min-h-full items-start justify-center p-8 transition-[padding] duration-300 ease-in-out",
-					isLeftSidebarCollapsed ? "pt-12 pb-[60vh]" : "pb-8",
+					"flex min-h-full items-start justify-center p-2 transition-[padding] duration-300 ease-in-out sm:p-4 md:p-6 lg:p-8",
+					isLeftSidebarCollapsed ? "pt-4 pb-[60vh] sm:pt-8 md:pt-12" : "pb-8",
 				)}
 			>
 				<ResumePreview
 					showPageNumbers
 					className={cn(
-						"flex origin-top flex-col items-center gap-6 transition-transform duration-300 ease-in-out",
-						isLeftSidebarCollapsed ? "scale-150" : "scale-100",
+						"flex origin-top flex-col items-center gap-3 transition-transform duration-300 ease-in-out sm:gap-4 md:gap-6",
+						// Mobile (< 768px): always scale to 0.65
+						// Desktop (>= 768px): scale based on sidebar state
+						"scale-[0.65]",
+						!isMobile && isLeftSidebarCollapsed && "md:scale-150",
+						!isMobile && !isLeftSidebarCollapsed && "md:scale-100",
 					)}
-					pageClassName="shadow-xl rounded-md overflow-hidden"
+					pageClassName="overflow-hidden rounded-sm shadow-lg sm:rounded-md sm:shadow-xl"
 				/>
 			</div>
 
