@@ -4,7 +4,7 @@ import { CircleNotchIcon, LockSimpleIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { match, P } from "ts-pattern";
 import { useResizeObserver } from "usehooks-ts";
 import { orpc, type RouterOutput } from "@/integrations/orpc/client";
@@ -39,6 +39,19 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 		return isMobile ? containerWidth / 794 : containerWidth / 794;
 	}, [containerWidth]);
 
+	const [isIframeReady, setIsIframeReady] = useState(false);
+
+	useEffect(() => {
+		const handleMessage = (event: MessageEvent) => {
+			if (event.data?.type === "RESUME_READY" && event.data?.resumeId === resume.id) {
+				setIsIframeReady(true);
+			}
+		};
+
+		window.addEventListener("message", handleMessage);
+		return () => window.removeEventListener("message", handleMessage);
+	}, [resume.id]);
+
 	return (
 		<div className="relative">
 			<Link to="/builder/$resumeId" params={{ resumeId: resume.id }} className="cursor-default">
@@ -59,7 +72,25 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 						.otherwise(() => {
 							return (
 								<div ref={containerRef} className="relative size-full overflow-hidden bg-white">
-									<div className="absolute top-0 right-0 bottom-22 left-0 flex justify-center overflow-hidden">
+									<AnimatePresence>
+										{!isIframeReady && (
+											<motion.div
+												key="loader"
+												initial={{ opacity: 1 }}
+												exit={{ opacity: 0 }}
+												className="absolute inset-0 z-10 flex items-center justify-center bg-white"
+											>
+												<CircleNotchIcon weight="thin" className="size-12 animate-spin" />
+											</motion.div>
+										)}
+									</AnimatePresence>
+
+									<div
+										className={cn(
+											"absolute top-0 right-0 bottom-22 left-0 flex justify-center overflow-hidden transition-opacity duration-500",
+											!isIframeReady && "opacity-0",
+										)}
+									>
 										<div
 											style={{
 												width: "794px",

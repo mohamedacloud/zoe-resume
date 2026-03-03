@@ -125,16 +125,6 @@ function MultipleCombobox<TValue extends string | number = string>({
 		[onOpenChange],
 	);
 
-	const buttonContent =
-		typeof buttonChildren === "function" ? (
-			buttonChildren(selectedValues, selectedOptions)
-		) : (
-			<>
-				<span className="truncate">{selectionCount > 0 ? `${selectionCount} selected` : placeholder}</span>
-				<CaretUpDownIcon aria-hidden className="ms-2 shrink-0 opacity-50" />
-			</>
-		);
-
 	return (
 		<Popover open={open} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
@@ -143,10 +133,19 @@ function MultipleCombobox<TValue extends string | number = string>({
 					variant="outline"
 					aria-expanded={open}
 					aria-label="Multi-select Combobox"
-					className={cn("justify-between gap-2 font-normal active:scale-100", buttonClassName)}
+					className={cn("min-w-0 justify-between gap-2 font-normal active:scale-100", buttonClassName)}
 					{...buttonRest}
 				>
-					{buttonContent}
+					{typeof buttonChildren === "function" ? (
+						buttonChildren(selectedValues, selectedOptions)
+					) : (
+						<>
+							<span className="flex-1 truncate text-left">
+								{selectionCount > 0 ? `${selectionCount} selected` : placeholder}
+							</span>
+							<CaretUpDownIcon aria-hidden className="ms-2 shrink-0 opacity-50" />
+						</>
+					)}
 				</Button>
 			</PopoverTrigger>
 

@@ -5,6 +5,7 @@ import {
 	CircleNotchIcon,
 	DownloadSimpleIcon,
 	FilePdfIcon,
+	MagnifyingGlassIcon,
 	MicrosoftWordLogoIcon,
 	PaletteIcon,
 	SwapIcon,
@@ -21,7 +22,6 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,25 @@ export function BuilderTopTray() {
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
 		orpc.printer.printResumeAsPDF.mutationOptions(),
 	);
+
+	const isReviewing = useResumeStore((state) => state.isReviewing);
+	const setReviewing = useResumeStore((state) => state.setReviewing);
+
+	const onFinalReview = async () => {
+		setReviewing(true);
+		const toastId = toast.loading(t`AI is reviewing your resume...`, {
+			description: t`Looking for improvements in layout, spacing, and content.`,
+		});
+
+		// Mock AI review process
+		setTimeout(() => {
+			setReviewing(false);
+			toast.success(t`Review complete!`, {
+				id: toastId,
+				description: t`Zoe has finished reviewing your resume. Check the suggestions for improvements.`,
+			});
+		}, 5000);
+	};
 
 	const onDownloadPDF = async () => {
 		if (!resume?.id) return;
@@ -129,54 +148,46 @@ export function BuilderTopTray() {
 				</span>
 			</Button>
 
-			{/* Download split button */}
-			<div className="flex">
-				{/* Main PDF download button */}
-				<Button
-					size="sm"
-					variant="default"
-					onClick={onDownloadPDF}
-					disabled={isPrinting}
-					className="h-8 gap-1.5 rounded-r-none bg-emerald-600 px-2 text-white hover:bg-emerald-700 sm:h-9 sm:gap-2 sm:px-3"
-					aria-label="Download PDF"
-				>
-					{isPrinting ? (
-						<CircleNotchIcon className={cn("h-4 w-4 animate-spin")} />
-					) : (
-						<DownloadSimpleIcon className="h-4 w-4" />
-					)}
-					<span className="hidden sm:inline">
+			<Button
+				size="sm"
+				disabled={isPrinting || isReviewing}
+				className={cn(
+					"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
+					"border-0 shadow-sm transition-all duration-300",
+					isReviewing && "scale-[0.98] brightness-90",
+				)}
+				onClick={onFinalReview}
+			>
+				{isReviewing ? <CircleNotchIcon className="animate-spin" /> : <MagnifyingGlassIcon className="text-white" />}
+				<Trans>Final Review</Trans>
+			</Button>
+
+			{/* Consolidated Download button */}
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						size="sm"
+						variant="default"
+						disabled={isPrinting}
+						className="bg-emerald-600 text-white hover:bg-emerald-700"
+					>
+						{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
 						<Trans>Download</Trans>
-					</span>
-				</Button>
+						<CaretDownIcon className="ms-1 size-3.5 opacity-50" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end" className="min-w-[140px]">
+					<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
+						<FilePdfIcon className="size-4 text-red-500" />
+						<Trans>Download PDF</Trans>
+					</DropdownMenuItem>
 
-				{/* Dropdown chevron */}
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							size="sm"
-							variant="default"
-							className="h-8 rounded-l-none border-emerald-500 border-l bg-emerald-600 px-1.5 text-white hover:bg-emerald-700 sm:h-9 sm:px-2"
-							aria-label="More download options"
-						>
-							<CaretDownIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="min-w-40">
-						<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
-							<FilePdfIcon className="size-4 text-red-500" />
-							<Trans>Download PDF</Trans>
-						</DropdownMenuItem>
-
-						<DropdownMenuSeparator />
-
-						<DropdownMenuItem onClick={onDownloadDocx}>
-							<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
-							<Trans>Download Word (.docx)</Trans>
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
+					<DropdownMenuItem onClick={onDownloadDocx}>
+						<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
+						<Trans>Download Word</Trans>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		</div>
 	);
 }
@@ -249,37 +260,41 @@ function TypographyPopoverContent() {
 	};
 
 	return (
-		<div className="space-y-3 sm:space-y-4">
-			<div className="space-y-1.5 sm:space-y-2">
-				<p className="font-semibold text-[10px] text-muted-foreground tracking-wide sm:text-xs">
-					<Trans>Font Family</Trans>
-				</p>
-				<FontFamilyCombobox
-					value={typography.body.fontFamily}
-					onValueChange={(value) => {
-						if (value === null) return;
-						const nextWeight = getNextWeight(value);
-						updateBody({
-							fontFamily: value,
-							fontWeights: nextWeight ? [nextWeight] : typography.body.fontWeights,
-						});
-					}}
-				/>
-			</div>
+		<div className="space-y-4">
+			<div className="grid grid-cols-2 gap-3">
+				<div className="min-w-0 space-y-2">
+					<p className="font-semibold text-muted-foreground text-xs tracking-wide">
+						<Trans>Font Family</Trans>
+					</p>
+					<FontFamilyCombobox
+						buttonProps={{ className: "w-full" }}
+						value={typography.body.fontFamily}
+						onValueChange={(value) => {
+							if (value === null) return;
+							const nextWeight = getNextWeight(value);
+							updateBody({
+								fontFamily: value,
+								fontWeights: nextWeight ? [nextWeight] : typography.body.fontWeights,
+							});
+						}}
+					/>
+				</div>
 
-			<div className="space-y-1.5 sm:space-y-2">
-				<p className="font-semibold text-[10px] text-muted-foreground tracking-wide sm:text-xs">
-					<Trans>Font Weight</Trans>
-				</p>
-				<FontWeightCombobox
-					fontFamily={typography.body.fontFamily}
-					value={typography.body.fontWeights}
-					onValueChange={(value) =>
-						updateBody({
-							fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[],
-						})
-					}
-				/>
+				<div className="min-w-0 space-y-2">
+					<p className="font-semibold text-muted-foreground text-xs tracking-wide">
+						<Trans>Font Weight</Trans>
+					</p>
+					<FontWeightCombobox
+						buttonProps={{ className: "w-full" }}
+						fontFamily={typography.body.fontFamily}
+						value={typography.body.fontWeights}
+						onValueChange={(value: string[]) =>
+							updateBody({
+								fontWeights: value as ("100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900")[],
+							})
+						}
+					/>
+				</div>
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
