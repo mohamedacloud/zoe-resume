@@ -22,8 +22,8 @@ export function AnimatedEyes() {
 						animate={{ y: ["-100%", "0%", "-100%"] }}
 						transition={{
 							repeat: Infinity,
-							duration: 0.25,
-							repeatDelay: 3,
+							duration: 0.50,
+							repeatDelay: 6,
 							ease: "easeInOut",
 						}}
 					/>
