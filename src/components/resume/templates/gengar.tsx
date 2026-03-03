@@ -120,7 +120,7 @@ function Header() {
 					className="basics-items flex flex-col gap-y-1 *:flex *:items-center *:gap-x-1.5"
 					style={{ "--page-primary-color": "var(--page-background-color)" } as React.CSSProperties}
 				>
-					<div className="basics-item-email">
+					<div className="basics-item-email break-anywhere min-w-0">
 						<PageIcon icon="envelope" />
 						<InlineEditableText
 							as="a"

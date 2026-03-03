@@ -318,7 +318,7 @@ function TypographyPopoverContent() {
 							}}
 							className="text-xs sm:text-sm"
 						/>
-						<InputGroupAddon>
+						<InputGroupAddon align="inline-end">
 							<InputGroupText className="text-xs sm:text-sm">
 								<Trans>px</Trans>
 							</InputGroupText>
@@ -346,7 +346,7 @@ function TypographyPopoverContent() {
 							}}
 							className="text-xs sm:text-sm"
 						/>
-						<InputGroupAddon>
+						<InputGroupAddon align="inline-end">
 							<InputGroupText className="text-xs sm:text-sm">
 								<Trans>em</Trans>
 							</InputGroupText>

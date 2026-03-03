@@ -140,7 +140,7 @@ function Header() {
 				</div>
 
 				<div className="basics-items flex flex-wrap justify-center gap-x-3 gap-y-1 *:flex *:items-center *:gap-x-1.5">
-					<div className="basics-item-email">
+					<div className="basics-item-email break-anywhere min-w-0">
 						<EnvelopeIcon />
 						<InlineEditableText
 							as="a"
