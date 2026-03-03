@@ -56,8 +56,14 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 
 		const text = item.description;
 
-		// Case 1: If it looks like HTML (contains <p>, <ul>, or <li>), render it as HTML
-		if (text.includes("<p>") || text.includes("<ul>") || text.includes("<li>")) {
+		// Case 1: If it looks like HTML (contains <p>, <ul>, <li>, <strong>, or <b>), render it as HTML
+		if (
+			text.includes("<p>") ||
+			text.includes("<ul>") ||
+			text.includes("<li>") ||
+			text.includes("<strong>") ||
+			text.includes("<b>")
+		) {
 			return (
 				<div
 					className="section-item-description"
