@@ -52,7 +52,7 @@ export function InlineEditableText({
 					debouncedOnChange((event.currentTarget as HTMLElement).textContent ?? "");
 				}}
 				className={cn(
-					"inline-block min-w-[4ch] cursor-text rounded-sm outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
+					"break-anywhere inline-block min-w-[4ch] max-w-full cursor-text rounded-sm outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
 					className,
 				)}
 				{...props}

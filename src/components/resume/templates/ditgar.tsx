@@ -133,7 +133,7 @@ function Header() {
 					/>
 				</div>
 
-				<div className="basics-item-email flex items-center gap-x-1.5">
+				<div className="basics-item-email break-anywhere flex min-w-0 items-center gap-x-1.5">
 					<PageIcon icon="envelope" className="ph-bold" />
 					<InlineEditableText
 						as="a"

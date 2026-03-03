@@ -117,7 +117,7 @@ function Header() {
 				</div>
 
 				<div className="basics-items flex flex-wrap gap-x-2 gap-y-0.5 *:flex *:items-center *:gap-x-1.5 *:border-(--page-primary-color) *:border-e *:py-0.5 *:pe-2 *:last:border-e-0">
-					<div className="basics-item-email">
+					<div className="basics-item-email break-anywhere min-w-0">
 						<EnvelopeIcon />
 						<InlineEditableText
 							as="a"
