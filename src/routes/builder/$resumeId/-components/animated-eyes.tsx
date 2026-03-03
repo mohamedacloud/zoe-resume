@@ -22,7 +22,7 @@ export function AnimatedEyes() {
 						animate={{ y: ["-100%", "0%", "-100%"] }}
 						transition={{
 							repeat: Infinity,
-							duration: 0.50,
+							duration: 0.5,
 							repeatDelay: 6,
 							ease: "easeInOut",
 						}}
@@ -30,5 +30,42 @@ export function AnimatedEyes() {
 				</div>
 			))}
 		</div>
+	);
+}
+
+export function DeadEyes() {
+	return (
+		<motion.div
+			initial={{ rotate: 0 }}
+			animate={{ rotate: [-3, 3, -3] }}
+			transition={{
+				repeat: Infinity,
+				duration: 2,
+				ease: "easeInOut",
+			}}
+			className="flex items-center gap-1"
+		>
+			<div className="relative flex h-5 w-8 items-center justify-center rounded-full bg-gray-200">
+				{/* Eyes */}
+				<div className="absolute top-1 left-1 font-bold text-[8px] text-gray-600">×</div>
+				<div className="absolute top-1 right-1 font-bold text-[8px] text-gray-600">×</div>
+
+				{/* Mouth */}
+				<div className="absolute bottom-0 flex items-end justify-center">
+					<div className="h-2 w-3 rounded-b-full bg-gray-700" />
+				</div>
+
+				{/* Tongue */}
+				<motion.div
+					className="absolute bottom-[-3px] h-2 w-2 rounded-full bg-pink-400"
+					animate={{ y: [0, 1.5, 0] }}
+					transition={{
+						repeat: Infinity,
+						duration: 1,
+						ease: "easeInOut",
+					}}
+				/>
+			</div>
+		</motion.div>
 	);
 }

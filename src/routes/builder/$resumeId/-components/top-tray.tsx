@@ -33,7 +33,7 @@ import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
 import { downloadFromUrl, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
-import { AnimatedEyes } from "./animated-eyes";
+import { AnimatedEyes, DeadEyes } from "./animated-eyes";
 
 export function BuilderTopTray() {
 	const openDialog = useDialogStore((state) => state.openDialog);
@@ -171,8 +171,24 @@ export function BuilderTopTray() {
 		toast.error(t`Word download is not yet implemented on the backend.`);
 	};
 
+	// useEffect(() => {
+	// 	if (reviewAttempts < 2) return;
+
+	// 	const now = new Date();
+	// 	const tomorrow = new Date();
+	// 	tomorrow.setHours(24, 0, 0, 0);
+
+	// 	const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+	// 	const timer = setTimeout(() => {
+	// 		useResumeStore.getState().setReviewAttempts(0);
+	// 	}, msUntilMidnight);
+
+	// 	return () => clearTimeout(timer);
+	// }, [reviewAttempts]);
+
 	return (
-		<div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+		<div className="flex flex-wrap items-center justify-end gap-1.5 overflow-visible sm:gap-2">
 			{/* Colors Button */}
 			<Popover>
 				<PopoverTrigger asChild>
@@ -239,7 +255,7 @@ export function BuilderTopTray() {
 			</Button>
 
 			{/* Final Review Button with Warning */}
-			<div className="flex flex-col items-end gap-1">
+			<div className="relative flex flex-col items-center">
 				<Button
 					size="sm"
 					variant="outline"
@@ -249,13 +265,16 @@ export function BuilderTopTray() {
 						"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
 						"border-0 shadow-sm transition-all duration-300",
 						isReviewing && "scale-[0.98] brightness-90",
-						reviewAttempts >= 2 && "cursor-not-allowed opacity-50",
+						reviewAttempts >= 2 &&
+							"cursor-not-allowed bg-gray-400 from-gray-400 to-gray-400 text-white hover:bg-gray-400",
 					)}
 					onClick={onFinalReview}
 					aria-label="Final Review"
 				>
 					{isReviewing ? (
 						<CircleNotchIcon className="animate-spin" />
+					) : reviewAttempts >= 2 ? (
+						<DeadEyes />
 					) : (
 						<motion.div whileHover={{ scale: 1.1 }}>
 							<AnimatedEyes />
@@ -267,22 +286,23 @@ export function BuilderTopTray() {
 				</Button>
 				{/* Warning Message */}
 				{reviewAttempts === 1 && (
-					<motion.p
-						initial={{ opacity: 0, y: -5 }}
+					<motion.div
+						initial={{ opacity: 0, y: 5 }}
 						animate={{ opacity: 1, y: 0 }}
-						className="font-medium text-red-600 text-xs dark:text-red-400"
+						className="absolute top-full left-1/2 mt-1 -translate-x-1/2 whitespace-nowrap font-medium text-red-600 text-xs dark:text-red-400"
 					>
 						⚠️ <Trans>One attempt left only!</Trans>
-					</motion.p>
+					</motion.div>
 				)}
+
 				{reviewAttempts >= 2 && (
-					<motion.p
-						initial={{ opacity: 0, y: -5 }}
+					<motion.div
+						initial={{ opacity: 0, y: 5 }}
 						animate={{ opacity: 1, y: 0 }}
-						className="font-medium text-red-600 text-xs dark:text-red-400"
+						className="absolute top-full left-1/2 mt-1 -translate-x-1/2 whitespace-nowrap font-medium text-red-600 text-xs dark:text-red-400"
 					>
-						🚫 <Trans>Review limit reached</Trans>
-					</motion.p>
+						🚫 <Trans>Review limit reached. Resets at 12 AM.</Trans>
+					</motion.div>
 				)}
 			</div>
 
@@ -309,7 +329,7 @@ export function BuilderTopTray() {
 					<Button
 						size="sm"
 						variant="default"
-						disabled={isPrinting || (reviewResult?.critical && reviewResult.critical.length > 0)}
+						disabled={isPrinting}
 						className="flex items-center justify-center gap-1.5 bg-emerald-600 px-2 text-white hover:bg-emerald-700 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
 						aria-label="Download"
 					>

@@ -178,7 +178,9 @@ function parseSectionKey(sectionKey: string): string | null {
 export function useReviewOutdatedTracker() {
 	const resume = useResumeStore((state) => state.resume);
 	const reviewResult = useResumeStore((state) => state.reviewResult);
-	const setReviewOutdated = useResumeStore((state) => state.setReviewOutdated);
+	const setReviewOutdated: (outdated: boolean) => void = useResumeStore(
+		(state) => ((state as any).setReviewOutdated ?? (() => {}))
+	);
 	const previousResumeRef = useRef(resume?.data);
 
 	useEffect(() => {
