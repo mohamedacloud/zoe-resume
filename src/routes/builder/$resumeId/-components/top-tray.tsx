@@ -1,11 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	CaretDownIcon,
 	CircleNotchIcon,
 	DownloadSimpleIcon,
 	FilePdfIcon,
-	MagnifyingGlassIcon,
 	MicrosoftWordLogoIcon,
 	PaletteIcon,
 	SwapIcon,
@@ -13,6 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { ColorPicker } from "@/components/input/color-picker";
 import { useResumeStore } from "@/components/resume/store/resume";
@@ -31,7 +30,7 @@ import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
 import { downloadFromUrl, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
-
+import { AnimatedEyes } from "./animated-eyes";
 export function BuilderTopTray() {
 	const openDialog = useDialogStore((state) => state.openDialog);
 	const params = useParams({ from: "/builder/$resumeId" });
@@ -150,16 +149,27 @@ export function BuilderTopTray() {
 
 			<Button
 				size="sm"
+				variant="outline"
 				disabled={isPrinting || isReviewing}
 				className={cn(
+					"flex items-center justify-center gap-1.5 px-2 sm:h-9 sm:w-auto sm:gap-2 sm:px-3",
 					"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
 					"border-0 shadow-sm transition-all duration-300",
 					isReviewing && "scale-[0.98] brightness-90",
 				)}
 				onClick={onFinalReview}
+				aria-label="Final Review"
 			>
-				{isReviewing ? <CircleNotchIcon className="animate-spin" /> : <MagnifyingGlassIcon className="text-white" />}
-				<Trans>Final Review</Trans>
+				{isReviewing ? (
+					<CircleNotchIcon className="animate-spin" />
+				) : (
+					<motion.div whileHover={{ scale: 1.1 }}>
+						<AnimatedEyes />
+					</motion.div>
+				)}{" "}
+				<span className="hidden sm:inline">
+					<Trans>Final Review</Trans>
+				</span>
 			</Button>
 
 			{/* Consolidated Download button */}
@@ -169,11 +179,13 @@ export function BuilderTopTray() {
 						size="sm"
 						variant="default"
 						disabled={isPrinting}
-						className="bg-emerald-600 text-white hover:bg-emerald-700"
+						className="flex items-center justify-center gap-1.5 bg-emerald-600 px-2 text-white hover:bg-emerald-700 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+						aria-label="Download"
 					>
 						{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
-						<Trans>Download</Trans>
-						<CaretDownIcon className="ms-1 size-3.5 opacity-50" />
+						<span className="hidden sm:inline">
+							<Trans>Download</Trans>
+						</span>
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="min-w-[140px]">
@@ -310,18 +322,13 @@ function TypographyPopoverContent() {
 							step={0.1}
 							value={typography.body.fontSize}
 							onChange={(e) => {
-								const value = e.target.value;
-								if (value === "") {
-									return;
-								}
-								updateBody({ fontSize: Number(value) });
+								const parsed = Number(e.target.value);
+								if (Number.isNaN(parsed)) return;
+								updateBody({ fontSize: parsed });
 							}}
-							className="text-xs sm:text-sm"
 						/>
 						<InputGroupAddon>
-							<InputGroupText className="text-xs sm:text-sm">
-								<Trans>px</Trans>
-							</InputGroupText>
+							<InputGroupText>px</InputGroupText>
 						</InputGroupAddon>
 					</InputGroup>
 				</div>
@@ -335,21 +342,16 @@ function TypographyPopoverContent() {
 							type="number"
 							min={1}
 							max={3}
-							step={0.1}
-							value={typography.body.lineHeight}
+							step={0.01}
+							value={typography.body.lineHeight ?? 1.4}
 							onChange={(e) => {
-								const value = e.target.value;
-								if (value === "") {
-									return;
-								}
-								updateBody({ lineHeight: Number(value) });
+								const parsed = Number(e.target.value);
+								if (Number.isNaN(parsed)) return;
+								updateBody({ lineHeight: parsed });
 							}}
-							className="text-xs sm:text-sm"
 						/>
 						<InputGroupAddon>
-							<InputGroupText className="text-xs sm:text-sm">
-								<Trans>em</Trans>
-							</InputGroupText>
+							<InputGroupText>em</InputGroupText>
 						</InputGroupAddon>
 					</InputGroup>
 				</div>
