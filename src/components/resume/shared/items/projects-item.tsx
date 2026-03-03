@@ -38,71 +38,33 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 		}
 	};
 
-	const handleDescriptionChange = (e: React.FocusEvent<HTMLDivElement>) => {
-		const newValue = e.currentTarget.innerHTML || "";
-		if (newValue !== item.description) {
-			updateResumeData((draft) => {
-				const project = draft.sections.projects.items.find((p) => p.id === item.id);
-				if (project) project.description = newValue;
-			});
-		}
-	};
-
 	const renderDescription = () => {
 		if (!item.description) return null;
 
 		const text = item.description;
 
-		// Case 1: Check if it contains HTML list markup
-		if (text.includes("<ul>") || text.includes("<ol>") || text.includes("<li>")) {
-			// Render as HTML lists
-			const listContent = text
-				.replace(/\n\s*<ul>/g, "<ul>")
-				.replace(/<\/ul>\s*\n/g, "</ul>")
-				.split(/<ul>|<\/ul>/)
-				.filter((line) => line.trim() !== "")
-				.map((line, index) => (
-					<ul key={index} className="list-disc pl-5">
-						{line
-							.split(/<li>|<\/li>/)
-							.filter((item) => item.trim() !== "")
-							.map((item, idx) => (
-								<li key={idx}>{item.replace(/<[^>]*>/g, "")}</li>
-							))}
-					</ul>
-				));
-
-			return <div className="section-item-description">{listContent}</div>;
-		}
-
-		// Case 2: Check if it contains paragraph tags (with possible inline formatting)
-		if (text.includes("<p>")) {
-			// Extract paragraphs and preserve inline formatting
-			const paragraphs = text.split(/<p>|<\/p>/).filter((p) => p.trim() !== "");
-
+		// Case 1: If it looks like HTML (contains <p>, <ul>, <li>, <strong>, or <b>), render it as HTML
+		if (
+			text.includes("<p>") ||
+			text.includes("<ul>") ||
+			text.includes("<li>") ||
+			text.includes("<strong>") ||
+			text.includes("<b>")
+		) {
 			return (
-				<div className="section-item-description">
-					{paragraphs.map((paragraph, index) => {
-						// Handle inline formatting like <strong>, <em>, etc.
-						const formattedText = paragraph
-							.replace(/<strong>(.*?)<\/strong>/g, "<strong>$1</strong>")
-							.replace(/<em>(.*?)<\/em>/g, "<em>$1</em>")
-							.replace(/<b>(.*?)<\/b>/g, "<b>$1</b>")
-							.replace(/<i>(.*?)<\/i>/g, "<i>$1</i>");
-
-						// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-						return <p key={index} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{ __html: formattedText }} />;
-					})}
-				</div>
+				<div
+					className="section-item-description"
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: This content is managed by Tiptap and sanitized before display
+					dangerouslySetInnerHTML={{ __html: text }}
+				/>
 			);
 		}
 
-		// Case 3: Check for bullet point markers in plain text
+		// Case 2: Check for bullet point markers in plain text (fallback)
 		const lines = text.split("\n").filter((line) => line.trim() !== "");
 		const hasBulletMarkers = lines.some((line) => line.trim().match(/^[*\-•]\s+/));
 
 		if (hasBulletMarkers) {
-			// Convert markdown-style bullet points to HTML lists
 			const listItems = lines.map((line) => line.replace(/^[*\-•]\s+/, "").trim());
 
 			return (
@@ -114,7 +76,7 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 			);
 		}
 
-		// Case 4: Plain text with line breaks
+		// Case 3: Plain text with line breaks
 		return (
 			<div className="section-item-description whitespace-pre-wrap">
 				{lines.map((paragraph, index) => (

@@ -13,7 +13,16 @@ export const useCSSVariables = ({ picture, metadata }: UseCssVariablesProps) => 
 		const highestBodyFontWeight = Math.max(...metadata.typography.body.fontWeights.map(Number));
 		const highestHeadingFontWeight = Math.max(...metadata.typography.heading.fontWeights.map(Number));
 
-		return { lowestBodyFontWeight, lowestHeadingFontWeight, highestBodyFontWeight, highestHeadingFontWeight };
+		// Fallback to 700 if only one font weight is loaded (to allow browser faux-bolding)
+		const bodyFontWeightBold = highestBodyFontWeight === lowestBodyFontWeight ? 700 : highestBodyFontWeight;
+		const headingFontWeightBold = highestHeadingFontWeight === lowestHeadingFontWeight ? 700 : highestHeadingFontWeight;
+
+		return {
+			lowestBodyFontWeight,
+			lowestHeadingFontWeight,
+			highestBodyFontWeight: bodyFontWeightBold,
+			highestHeadingFontWeight: headingFontWeightBold,
+		};
 	}, [metadata.typography.body.fontWeights, metadata.typography.heading.fontWeights]);
 
 	return {

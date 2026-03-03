@@ -14,6 +14,7 @@ import { ExperienceSectionBuilder } from "./sections/experience";
 import { InterestsSectionBuilder } from "./sections/interests";
 import { LanguagesSectionBuilder } from "./sections/languages";
 import { PictureSectionBuilder } from "./sections/picture";
+import { ProfilesSectionBuilder } from "./sections/profiles";
 import { ProjectsSectionBuilder } from "./sections/projects";
 import { PublicationsSectionBuilder } from "./sections/publications";
 import { ReferencesSectionBuilder } from "./sections/references";
@@ -27,6 +28,8 @@ function getSectionComponent(type: LeftSidebarSection) {
 			return <PictureSectionBuilder />;
 		case "basics":
 			return <BasicsSectionBuilder />;
+		case "profiles":
+			return <ProfilesSectionBuilder />;
 		case "summary":
 			return <SummarySectionBuilder />;
 		case "experience":
@@ -140,10 +143,8 @@ export function BuilderSidebarLeft() {
 					className="space-y-3 sm:space-y-4"
 					renderItem={(section) => (
 						<SortableItem key={section} id={section} className="space-y-3 sm:space-y-4">
-							
-								{getSectionComponent(section)}
-								<Separator />
-							
+							{getSectionComponent(section)}
+							<Separator />
 						</SortableItem>
 					)}
 				/>
