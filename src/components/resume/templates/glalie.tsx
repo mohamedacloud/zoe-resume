@@ -117,7 +117,7 @@ function Header() {
 					style={{ "--box-radius": "calc(var(--picture-border-radius) / 4)" } as React.CSSProperties}
 					className="basics-items flex w-full flex-col gap-y-1 rounded-(--box-radius) border border-(--page-primary-color) p-3 *:flex *:items-center *:gap-x-1.5"
 				>
-					<div className="basics-item-email">
+					<div className="basics-item-email break-anywhere min-w-0">
 						<EnvelopeIcon />
 						<InlineEditableText
 							as="a"
