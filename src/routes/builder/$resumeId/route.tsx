@@ -76,7 +76,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	const setLeftSidebar = useBuilderSidebarStore((state) => state.setLeftSidebar);
 	const isLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.isLeftSidebarCollapsed);
 	const setLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.setLeftSidebarCollapsed);
-	
+
 	// ✅ Get review drawer state to hide left sidebar when drawer is open
 	const showReviewDrawer = useResumeStore((state) => state.showReviewDrawer);
 
@@ -89,10 +89,11 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	}, 200);
 
 	useEffect(() => {
-		if (!leftSidebarRef) return;
+		if (!leftSidebarRef?.current) return;
 
 		setLeftSidebar(leftSidebarRef);
-	}, [leftSidebarRef, setLeftSidebar]);
+		setLeftSidebarCollapsed(leftSidebarRef.current.isCollapsed());
+	}, [leftSidebarRef, setLeftSidebar, setLeftSidebarCollapsed]);
 
 	// On mobile, ensure sidebar is collapsed by default on initial load
 	useEffect(() => {
@@ -154,6 +155,8 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 							minSize={0}
 							collapsedSize={0}
 							defaultSize={leftSidebarSize}
+							onCollapse={() => setLeftSidebarCollapsed(true)}
+							onExpand={() => setLeftSidebarCollapsed(false)}
 							className="z-20 h-[calc(100svh-3.5rem)]"
 						>
 							<BuilderSidebarLeft />
