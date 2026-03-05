@@ -18,6 +18,16 @@ import { toast } from "sonner";
 import { ColorPicker } from "@/components/input/color-picker";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { FontFamilyCombobox, FontWeightCombobox, getNextWeight } from "@/components/typography/combobox";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -29,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { ReviewDrawer } from "@/components/ui/review-drawer";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
 import { downloadFromUrl, generateFilename } from "@/utils/file";
@@ -61,8 +72,9 @@ export function BuilderTopTray() {
 	const model = import.meta.env.VITE_AI_MODEL || "gemini-2.0-flash-exp";
 	const apiKey = import.meta.env.VITE_AI_API_KEY || "";
 	const baseURL = import.meta.env.VITE_AI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta";
-
+	const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 	const isConfigured = !!apiKey && !!model;
+	const [showLastAttemptConfirm, setShowLastAttemptConfirm] = useState(false);
 
 	useEffect(() => {
 		return () => {
@@ -78,9 +90,16 @@ export function BuilderTopTray() {
 			return;
 		}
 
-		// Check if limit is reached
 		if (reviewAttempts >= 2) {
-			toast.error(t`Review limit reached. You have already used both attempts.`);
+			if (isMobile) {
+				toast.error("🚫 Review limit reached. Resets at 12 AM.");
+			}
+			return;
+		}
+
+		// If this is the LAST attempt (second click)
+		if (reviewAttempts === 1 && isMobile && !showLastAttemptConfirm) {
+			setShowLastAttemptConfirm(true);
 			return;
 		}
 
@@ -188,173 +207,198 @@ export function BuilderTopTray() {
 	// }, [reviewAttempts]);
 
 	return (
-		<div className="flex flex-wrap items-center justify-end gap-1.5 overflow-visible sm:gap-2">
-			{/* Colors Button */}
-			<Popover>
-				<PopoverTrigger asChild>
-					<Button size="sm" variant="outline" className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3" aria-label="Colors">
-						<PaletteIcon className="h-4 w-4" />
-						<span className="hidden sm:inline">
-							<Trans>Colors</Trans>
-						</span>
-					</Button>
-				</PopoverTrigger>
-				<PopoverContent
-					className="w-[90vw] max-w-[min(400px,95vw)] p-3 sm:w-100 sm:p-4"
-					onOpenAutoFocus={(e) => e.preventDefault()}
-					side="bottom"
-					align="center"
-					sideOffset={8}
-				>
-					<PopoverHeader>
-						<PopoverTitle className="text-sm sm:text-base">
-							<Trans>Resume Colours</Trans>
-						</PopoverTitle>
-					</PopoverHeader>
-					<ColorsPopoverContent />
-				</PopoverContent>
-			</Popover>
+		<>
+			<div className="flex flex-wrap items-center justify-end gap-1.5 overflow-visible sm:gap-2">
+				{/* Colors Button */}
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button
+							size="sm"
+							variant="outline"
+							className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3"
+							aria-label="Colors"
+						>
+							<PaletteIcon className="h-4 w-4" />
+							<span className="hidden sm:inline">
+								<Trans>Colors</Trans>
+							</span>
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent
+						className="w-[90vw] max-w-[min(400px,95vw)] p-3 sm:w-100 sm:p-4"
+						onOpenAutoFocus={(e) => e.preventDefault()}
+						side="bottom"
+						align="center"
+						sideOffset={8}
+					>
+						<PopoverHeader>
+							<PopoverTitle className="text-sm sm:text-base">
+								<Trans>Resume Colours</Trans>
+							</PopoverTitle>
+						</PopoverHeader>
+						<ColorsPopoverContent />
+					</PopoverContent>
+				</Popover>
 
-			{/* Fonts Button */}
-			<Popover>
-				<PopoverTrigger asChild>
-					<Button size="sm" variant="outline" className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3" aria-label="Fonts">
-						<TextTIcon className="h-4 w-4" />
-						<span className="hidden sm:inline">
-							<Trans>Fonts</Trans>
-						</span>
-					</Button>
-				</PopoverTrigger>
-				<PopoverContent
-					className="w-[90vw] max-w-[min(300px,95vw)] p-3 sm:mr-2 sm:w-100 sm:p-4"
-					side="bottom"
-					align="center"
-					sideOffset={8}
-				>
-					<PopoverHeader>
-						<PopoverTitle className="text-sm sm:text-base">
-							<Trans>Typography Settings</Trans>
-						</PopoverTitle>
-					</PopoverHeader>
-					<TypographyPopoverContent />
-				</PopoverContent>
-			</Popover>
+				{/* Fonts Button */}
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button size="sm" variant="outline" className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3" aria-label="Fonts">
+							<TextTIcon className="h-4 w-4" />
+							<span className="hidden sm:inline">
+								<Trans>Fonts</Trans>
+							</span>
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent
+						className="w-[90vw] max-w-[min(300px,95vw)] p-3 sm:mr-2 sm:w-100 sm:p-4"
+						side="bottom"
+						align="center"
+						sideOffset={8}
+					>
+						<PopoverHeader>
+							<PopoverTitle className="text-sm sm:text-base">
+								<Trans>Typography Settings</Trans>
+							</PopoverTitle>
+						</PopoverHeader>
+						<TypographyPopoverContent />
+					</PopoverContent>
+				</Popover>
 
-			{/* Templates Button */}
-			<Button
-				size="sm"
-				variant="outline"
-				onClick={() => openDialog("resume.template.gallery", undefined)}
-				className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3"
-				aria-label="Templates"
-			>
-				<SwapIcon className="h-4 w-4" />
-				<span className="hidden sm:inline">
-					<Trans>Templates</Trans>
-				</span>
-			</Button>
-
-			{/* Final Review Button with Warning */}
-			<div className="relative flex flex-col items-center">
+				{/* Templates Button */}
 				<Button
 					size="sm"
 					variant="outline"
-					disabled={isPrinting || isReviewing || reviewAttempts >= 2}
-					className={cn(
-						"flex items-center justify-center gap-1.5 px-2 sm:h-9 sm:w-auto sm:gap-2 sm:px-3",
-						"bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
-						"border-0 shadow-sm transition-all duration-300",
-						isReviewing && "scale-[0.98] brightness-90",
-						reviewAttempts >= 2 &&
-							"cursor-not-allowed bg-gray-400 from-gray-400 to-gray-400 text-white hover:bg-gray-400",
-					)}
-					onClick={onFinalReview}
-					aria-label="Final Review"
-				>
-					{isReviewing ? (
-						<CircleNotchIcon className="animate-spin" />
-					) : reviewAttempts >= 2 ? (
-						<DeadEyes />
-					) : (
-						<motion.div whileHover={{ scale: 1.1 }}>
-							<AnimatedEyes />
-						</motion.div>
-					)}{" "}
-					<span className="hidden sm:inline">
-						<Trans>Final Review</Trans>
-					</span>
-				</Button>
-				{/* Warning Message */}
-				{reviewAttempts === 1 && (
-					<motion.div
-						initial={{ opacity: 0, y: 5 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="absolute top-full left-1/2 mt-1 -translate-x-1/2 whitespace-nowrap font-medium text-red-600 text-xs dark:text-red-400"
-					>
-						⚠️ <Trans>One attempt left only!</Trans>
-					</motion.div>
-				)}
-
-				{reviewAttempts >= 2 && (
-					<motion.div
-						initial={{ opacity: 0, y: 5 }}
-						animate={{ opacity: 1, y: 0 }}
-						className="absolute top-full left-1/2 mt-1 -translate-x-1/2 whitespace-nowrap font-medium text-red-600 text-xs dark:text-red-400"
-					>
-						🚫 <Trans>Review limit reached. Resets at 12 AM.</Trans>
-					</motion.div>
-				)}
-			</div>
-
-			{/* View Last Review Button - Only shows if review result exists */}
-			{reviewResult && !isReviewing && (
-				<Button
-					size="sm"
-					variant="outline"
-					onClick={() => setShowReviewDrawer(true)}
+					onClick={() => openDialog("resume.template.gallery", undefined)}
 					className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3"
-					aria-label="View Last Review"
-					title="View your last review results"
+					aria-label="Templates"
 				>
-					<ShieldWarningIcon className="h-4 w-4" />
+					<SwapIcon className="h-4 w-4" />
 					<span className="hidden sm:inline">
-						<Trans>View Review</Trans>
+						<Trans>Templates</Trans>
 					</span>
 				</Button>
-			)}
 
-			{/* Consolidated Download button */}
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
+				{/* Final Review Button with Warning */}
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<div>
+							<Button
+								size="sm"
+								variant="outline"
+								className={cn(
+									"flex items-center justify-center gap-1.5 px-2 sm:h-9 sm:w-auto sm:gap-2 sm:px-3",
+									"border-0 shadow-sm transition-all duration-300",
+									"!bg-gradient-to-r !from-indigo-600 !to-purple-600 !text-white",
+									"hover:!from-indigo-700 hover:!to-purple-700",
+
+									isReviewing && "scale-[0.98] brightness-90",
+
+									reviewAttempts >= 2 && "!bg-gray-400 !text-white hover:!bg-gray-400 cursor-not-allowed",
+								)}
+								onClick={onFinalReview}
+							>
+								{isReviewing ? (
+									<CircleNotchIcon className="animate-spin" />
+								) : reviewAttempts >= 2 ? (
+									<DeadEyes />
+								) : (
+									<motion.div whileHover={{ scale: 1.1 }}>
+										<AnimatedEyes />
+									</motion.div>
+								)}
+								<span className="hidden sm:inline">
+									<Trans>Final Review</Trans>
+								</span>
+							</Button>
+						</div>
+					</TooltipTrigger>
+
+					{reviewAttempts === 1 && (
+						<TooltipContent>
+							⚠️ <Trans>One attempt left only!</Trans>
+						</TooltipContent>
+					)}
+
+					{reviewAttempts >= 2 && (
+						<TooltipContent>
+							🚫 <Trans>Review limit reached. Resets at 12 AM.</Trans>
+						</TooltipContent>
+					)}
+				</Tooltip>
+
+				{/* View Last Review Button - Only shows if review result exists */}
+				{reviewResult && !isReviewing && (
 					<Button
 						size="sm"
-						variant="default"
-						disabled={isPrinting}
-						className="flex items-center justify-center gap-1.5 bg-emerald-600 px-2 text-white hover:bg-emerald-700 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
-						aria-label="Download"
+						variant="outline"
+						onClick={() => setShowReviewDrawer(true)}
+						className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3"
+						aria-label="View Last Review"
+						title="View your last review results"
 					>
-						{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
+						<ShieldWarningIcon className="h-4 w-4" />
 						<span className="hidden sm:inline">
-							<Trans>Download</Trans>
+							<Trans>View Review</Trans>
 						</span>
 					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className="min-w-35">
-					<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
-						<FilePdfIcon className="size-4 text-red-500" />
-						<Trans>Download PDF</Trans>
-					</DropdownMenuItem>
+				)}
 
-					<DropdownMenuItem onClick={onDownloadDocx}>
-						<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
-						<Trans>Download Word</Trans>
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+				{/* Consolidated Download button */}
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							size="sm"
+							variant="default"
+							disabled={isPrinting}
+							className="flex items-center justify-center gap-1.5 bg-emerald-600 px-2 text-white hover:bg-emerald-700 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+							aria-label="Download"
+						>
+							{isPrinting ? <CircleNotchIcon className={cn("animate-spin")} /> : <DownloadSimpleIcon />}
+							<span className="hidden sm:inline">
+								<Trans>Download</Trans>
+							</span>
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end" className="min-w-35">
+						<DropdownMenuItem onClick={onDownloadPDF} disabled={isPrinting}>
+							<FilePdfIcon className="size-4 text-red-500" />
+							<Trans>Download PDF</Trans>
+						</DropdownMenuItem>
 
-			{/* Review Drawer */}
-			{reviewResult && <ReviewDrawer result={reviewResult} />}
-		</div>
+						<DropdownMenuItem onClick={onDownloadDocx}>
+							<MicrosoftWordLogoIcon className="size-4 text-blue-600" />
+							<Trans>Download Word</Trans>
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+
+				{/* Review Drawer */}
+				{reviewResult && <ReviewDrawer result={reviewResult} />}
+			</div>
+			<AlertDialog open={showLastAttemptConfirm} onOpenChange={setShowLastAttemptConfirm}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>⚠️ Only 1 attempt left</AlertDialogTitle>
+						<AlertDialogDescription>
+							This is your final review attempt for today. Do you want to continue?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+
+					<AlertDialogFooter>
+						<AlertDialogCancel>No</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={() => {
+								setShowLastAttemptConfirm(false);
+								onFinalReview(); // Call again but now it will pass
+							}}
+						>
+							Yes, Continue
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	);
 }
 
