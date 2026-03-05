@@ -5,7 +5,7 @@ import { getCookie, setCookie } from "@tanstack/react-start/server";
 import type React from "react";
 import { useEffect } from "react";
 import { type Layout, usePanelRef } from "react-resizable-panels";
-import { useDebounceCallback } from "usehooks-ts";
+import { useDebounceCallback, useWindowSize } from "usehooks-ts";
 import z from "zod";
 import { LoadingScreen } from "@/components/layout/loading-screen";
 import { useCSSVariables } from "@/components/resume/hooks/use-css-variables";
@@ -76,7 +76,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	const setLeftSidebar = useBuilderSidebarStore((state) => state.setLeftSidebar);
 	const isLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.isLeftSidebarCollapsed);
 	const setLeftSidebarCollapsed = useBuilderSidebarStore((state) => state.setLeftSidebarCollapsed);
-	
+
 	// ✅ Get review drawer state to hide left sidebar when drawer is open
 	const showReviewDrawer = useResumeStore((state) => state.showReviewDrawer);
 
@@ -89,10 +89,24 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	}, 200);
 
 	useEffect(() => {
-		if (!leftSidebarRef) return;
+		if (!leftSidebarRef?.current) return;
 
 		setLeftSidebar(leftSidebarRef);
-	}, [leftSidebarRef, setLeftSidebar]);
+		setLeftSidebarCollapsed(leftSidebarRef.current.isCollapsed());
+	}, [leftSidebarRef, setLeftSidebar, setLeftSidebarCollapsed]);
+
+	const { width: windowWidth } = useWindowSize();
+	const isTablet = !!(!isMobile && windowWidth && windowWidth >= 768 && windowWidth < 1024);
+
+	// Force sidebar expansion to at least 42% on tablet detection
+	useEffect(() => {
+		if (isTablet && leftSidebarRef.current && leftSidebarRef.current.getSize() < 42) {
+			leftSidebarRef.current.resize(42);
+		}
+	}, [isTablet, leftSidebarRef]);
+
+	const leftSidebarSize = isTablet ? Math.max(initialLayout.left || 0, 42) : initialLayout.left || 30;
+	const artboardSize = initialLayout.artboard || 100 - leftSidebarSize;
 
 	// On mobile, ensure sidebar is collapsed by default on initial load
 	useEffect(() => {
@@ -100,9 +114,6 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 			setLeftSidebarCollapsed(true);
 		}
 	}, [isMobile, setLeftSidebarCollapsed]);
-
-	const leftSidebarSize = initialLayout.left || 30;
-	const artboardSize = initialLayout.artboard || 70;
 
 	if (isMobile) {
 		return (
@@ -154,6 +165,8 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 							minSize={0}
 							collapsedSize={0}
 							defaultSize={leftSidebarSize}
+							onCollapse={() => setLeftSidebarCollapsed(true)}
+							onExpand={() => setLeftSidebarCollapsed(false)}
 							className="z-20 h-[calc(100svh-3.5rem)]"
 						>
 							<BuilderSidebarLeft />

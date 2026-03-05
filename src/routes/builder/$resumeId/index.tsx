@@ -33,14 +33,14 @@ function RouteComponent() {
 			{/* Fixed Resume Preview with Scroll */}
 			<div
 				className={cn(
-					"flex min-h-full items-start justify-center p-2 transition-[padding] duration-300 ease-in-out sm:p-4 md:p-6 lg:p-8",
+					"flex min-h-full items-start justify-start p-2 transition-[padding] duration-300 ease-in-out md:p-6 lg:p-8 xl:justify-center",
 					isLeftSidebarCollapsed ? "pt-4 pb-[60vh] sm:pt-8 md:pt-12" : "pb-8",
 				)}
 			>
 				<ResumePreview
 					showPageNumbers
 					className={cn(
-						"flex origin-top flex-col items-center gap-3 transition-transform duration-300 ease-in-out sm:gap-4 md:gap-6",
+						"flex origin-top-left flex-col items-start gap-3 transition-transform duration-300 ease-in-out sm:gap-4 md:gap-6 xl:origin-top xl:items-center",
 						// Mobile (< 768px): always scale to 0.65
 						// Desktop (>= 768px): scale based on sidebar state
 						"scale-[0.65]",
