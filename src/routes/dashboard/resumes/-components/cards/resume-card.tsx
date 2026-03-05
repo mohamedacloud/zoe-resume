@@ -48,7 +48,11 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 		<div className="relative">
 			<Link to="/builder/$resumeId" params={{ resumeId: resume.id }} className="cursor-default">
 				<BaseCard title={resume.name} description={t`Last updated on ${updatedAt}`} tags={resume.tags}>
-					<div ref={containerRef} className="relative size-full overflow-hidden bg-white">
+					<div
+						ref={containerRef}
+						className="absolute inset-x-0 top-0 bottom-[80px] overflow-hidden bg-white sm:bottom-[88px]"
+						style={{ isolation: "isolate" }}
+					>
 						<AnimatePresence>
 							{!isIframeReady && (
 								<motion.div
@@ -73,7 +77,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 									width: "794px",
 									height: "1123px",
 									flexShrink: 0,
-									transform: `scale(${scale || 0.3})`,
+									transform: `scale(${scale || 0.3}) translateZ(0)`,
 									transformOrigin: "top center",
 									backgroundColor: "white",
 								}}
