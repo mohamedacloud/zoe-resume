@@ -190,22 +190,6 @@ export function BuilderTopTray() {
 		toast.error(t`Word download is not yet implemented on the backend.`);
 	};
 
-	// useEffect(() => {
-	// 	if (reviewAttempts < 2) return;
-
-	// 	const now = new Date();
-	// 	const tomorrow = new Date();
-	// 	tomorrow.setHours(24, 0, 0, 0);
-
-	// 	const msUntilMidnight = tomorrow.getTime() - now.getTime();
-
-	// 	const timer = setTimeout(() => {
-	// 		useResumeStore.getState().setReviewAttempts(0);
-	// 	}, msUntilMidnight);
-
-	// 	return () => clearTimeout(timer);
-	// }, [reviewAttempts]);
-
 	return (
 		<>
 			<div className="flex flex-wrap items-center justify-end gap-1.5 overflow-visible sm:gap-2">

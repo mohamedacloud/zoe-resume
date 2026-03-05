@@ -4,8 +4,6 @@ import {
 	ArrowUUpRightIcon,
 	type Icon,
 } from "@phosphor-icons/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTemporalStore } from "@/components/resume/store/resume";
