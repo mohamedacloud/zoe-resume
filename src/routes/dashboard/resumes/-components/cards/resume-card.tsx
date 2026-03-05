@@ -28,7 +28,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 
 	const scale = useMemo(() => {
 		if (containerWidth === 0) return 0;
-		return containerWidth / 794;
+		return Math.round((containerWidth / 794) * 1000) / 1000;
 	}, [containerWidth]);
 
 	const [isIframeReady, setIsIframeReady] = useState(false);
@@ -90,6 +90,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
 									className="pointer-events-none size-full border-0"
 									style={{
 										backgroundColor: "white",
+										imageRendering: "-webkit-optimize-contrast",
 									}}
 								/>
 							</div>
