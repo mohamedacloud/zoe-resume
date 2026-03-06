@@ -144,14 +144,61 @@ export function UpdateInterestDialog({ data }: DialogProps<"resume.sections.inte
 function InterestForm() {
 	const form = useFormContext<FormValues>();
 	const nameState = useFormState({ control: form.control, name: "name" });
-
 	const isNameInvalid = useMemo(() => {
 		return nameState.errors && Object.keys(nameState.errors).length > 0;
 	}, [nameState]);
 
+	// Pre-defined interests
+	const predefinedInterests = [
+		"Music",
+		"Travel",
+		"Photography",
+		"Reading",
+		"Writing",
+		"Cooking",
+		"Sports",
+		"Gaming",
+		"Art",
+		"Volunteering",
+		"Fitness",
+		"Technology",
+		"Movies",
+		"Gardening",
+		"Dancing",
+		"Crafts",
+		"Hiking",
+		"Yoga",
+		"Blogging",
+		"Chess",
+	];
+
+	// Add interest chip instantly
+	const handleAddInterestChip = (interest: string) => {
+		form.setValue("name", interest);
+		form.clearErrors("name");
+	};
+
 	return (
 		<>
+			{/* Pre-defined interest chips */}
+			<div className="col-span-full mb-2 flex flex-wrap gap-2">
+				{predefinedInterests.map((interest) => (
+					<button
+						type="button"
+						key={interest}
+						className={cn(
+							"cursor-pointer rounded-full border px-3 py-1 text-xs hover:bg-primary/10",
+							form.watch("name") === interest && "border-primary bg-primary text-white",
+						)}
+						onClick={() => handleAddInterestChip(interest)}
+					>
+						{interest}
+					</button>
+				))}
+			</div>
+
 			<div className={cn("col-span-full flex items-end", isNameInvalid && "items-center")}>
+				...
 				<FormField
 					control={form.control}
 					name={"icon"}
@@ -163,7 +210,6 @@ function InterestForm() {
 						</FormItem>
 					)}
 				/>
-
 				<FormField
 					control={form.control}
 					name="name"

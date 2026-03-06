@@ -150,14 +150,69 @@ export function UpdateSkillDialog({ data }: DialogProps<"resume.sections.skills.
 function SkillForm() {
 	const form = useFormContext<FormValues>();
 	const nameState = useFormState({ control: form.control, name: "name" });
-
 	const isNameInvalid = useMemo(() => {
 		return nameState.errors && Object.keys(nameState.errors).length > 0;
 	}, [nameState]);
 
+	// Pre-defined skills
+	const predefinedSkills = [
+		"JavaScript",
+		"TypeScript",
+		"React",
+		"Node.js",
+		"Python",
+		"CSS",
+		"HTML",
+		"SQL",
+		"Git",
+		"Docker",
+		"Java",
+		"C#",
+		"C++",
+		"Go",
+		"Ruby",
+		"PHP",
+		"Swift",
+		"Kotlin",
+		"AWS",
+		"Figma",
+	];
+
+	// Proficiency options
+	const proficiencyOptions = [
+		{ value: "Beginner", label: "Beginner" },
+		{ value: "Intermediate", label: "Intermediate" },
+		{ value: "Advanced", label: "Advanced" },
+		{ value: "Expert", label: "Expert" },
+	];
+
+	// Add skill chip instantly
+	const handleAddSkillChip = (skill: string) => {
+		form.setValue("name", skill);
+		form.clearErrors("name");
+	};
+
 	return (
 		<>
+			{/* Pre-defined skill chips */}
+			<div className="col-span-full mb-2 flex flex-wrap gap-2">
+				{predefinedSkills.map((skill) => (
+					<button
+						type="button"
+						key={skill}
+						className={cn(
+							"cursor-pointer rounded-full border px-3 py-1 text-xs hover:bg-primary/10",
+							form.watch("name") === skill && "border-primary bg-primary text-white",
+						)}
+						onClick={() => handleAddSkillChip(skill)}
+					>
+						{skill}
+					</button>
+				))}
+			</div>
+
 			<div className={cn("flex items-end", isNameInvalid && "items-center")}>
+				...
 				<FormField
 					control={form.control}
 					name={"icon"}
@@ -169,7 +224,6 @@ function SkillForm() {
 						</FormItem>
 					)}
 				/>
-
 				<FormField
 					control={form.control}
 					name="name"
@@ -187,6 +241,7 @@ function SkillForm() {
 				/>
 			</div>
 
+			{/* Proficiency dropdown */}
 			<FormField
 				control={form.control}
 				name="proficiency"
@@ -196,7 +251,18 @@ function SkillForm() {
 							<Trans>Proficiency</Trans>
 						</FormLabel>
 						<FormControl>
-							<Input {...field} />
+							<select
+								className="w-full rounded border px-2 py-1"
+								value={field.value || ""}
+								onChange={(e) => field.onChange(e.target.value)}
+							>
+								<option value="">Select proficiency</option>
+								{proficiencyOptions.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
 						</FormControl>
 						<FormMessage />
 					</FormItem>

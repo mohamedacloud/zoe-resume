@@ -15,6 +15,7 @@ import { useDialogStore } from "@/dialogs/store";
 import { useFormBlocker } from "@/hooks/use-form-blocker";
 import { languageItemSchema } from "@/schema/resume/data";
 import { generateId } from "@/utils/string";
+import { cn } from "@/utils/style";
 
 const formSchema = languageItemSchema;
 
@@ -142,8 +143,63 @@ export function UpdateLanguageDialog({ data }: DialogProps<"resume.sections.lang
 function LanguageForm() {
 	const form = useFormContext<FormValues>();
 
+	// Pre-defined languages
+	const predefinedLanguages = [
+		"English",
+		"Spanish",
+		"French",
+		"German",
+		"Mandarin",
+		"Hindi",
+		"Arabic",
+		"Portuguese",
+		"Russian",
+		"Japanese",
+		"Italian",
+		"Korean",
+		"Dutch",
+		"Turkish",
+		"Polish",
+		"Swedish",
+		"Greek",
+		"Czech",
+		"Hebrew",
+		"Thai",
+	];
+
+	// Fluency options
+	const fluencyOptions = [
+		{ value: "Basic", label: "Basic" },
+		{ value: "Conversational", label: "Conversational" },
+		{ value: "Fluent", label: "Fluent" },
+		{ value: "Native", label: "Native" },
+	];
+
+	// Add language chip instantly
+	const handleAddLanguageChip = (lang: string) => {
+		form.setValue("language", lang);
+		form.clearErrors("language");
+	};
+
 	return (
 		<>
+			{/* Pre-defined language chips */}
+			<div className="col-span-full mb-2 flex flex-wrap gap-2">
+				{predefinedLanguages.map((lang) => (
+					<button
+						type="button"
+						key={lang}
+						className={cn(
+							"cursor-pointer rounded-full border px-3 py-1 text-xs hover:bg-primary/10",
+							form.watch("language") === lang && "border-primary bg-primary text-white",
+						)}
+						onClick={() => handleAddLanguageChip(lang)}
+					>
+						{lang}
+					</button>
+				))}
+			</div>
+
 			<FormField
 				control={form.control}
 				name="language"
@@ -160,6 +216,7 @@ function LanguageForm() {
 				)}
 			/>
 
+			{/* Fluency dropdown */}
 			<FormField
 				control={form.control}
 				name="fluency"
@@ -169,7 +226,18 @@ function LanguageForm() {
 							<Trans>Fluency</Trans>
 						</FormLabel>
 						<FormControl>
-							<Input {...field} />
+							<select
+								className="w-full rounded border px-2 py-1"
+								value={field.value || ""}
+								onChange={(e) => field.onChange(e.target.value)}
+							>
+								<option value="">Select fluency</option>
+								{fluencyOptions.map((option) => (
+									<option key={option.value} value={option.value}>
+										{option.label}
+									</option>
+								))}
+							</select>
 						</FormControl>
 						<FormMessage />
 					</FormItem>

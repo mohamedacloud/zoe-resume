@@ -3,8 +3,6 @@ import { useLingui } from "@lingui/react";
 import {
 	LinkBreakIcon,
 	LinkIcon,
-	ListBullets,
-	ListNumbers,
 	TextBolderIcon,
 	TextItalicIcon,
 	TextUnderlineIcon,
@@ -353,30 +351,6 @@ function EditorToolbar({ editor, isFullscreen }: { editor: Editor; isFullscreen:
 				onPressedChange={state.toggleUnderline}
 			>
 				<TextUnderlineIcon className="size-3.5" />
-			</Toggle>
-
-			<Toggle
-				size={isFullscreen ? "lg" : "sm"}
-				tabIndex={-1}
-				className="rounded-none"
-				title={t`Bullet List`}
-				pressed={state.isBulletList}
-				disabled={!state.canBulletList}
-				onPressedChange={state.toggleBulletList}
-			>
-				<ListBullets className="size-3.5" />
-			</Toggle>
-
-			<Toggle
-				size={isFullscreen ? "lg" : "sm"}
-				tabIndex={-1}
-				className="rounded-none"
-				title={t`Ordered List`}
-				pressed={state.isOrderedList}
-				disabled={!state.canOrderedList}
-				onPressedChange={state.toggleOrderedList}
-			>
-				<ListNumbers className="size-3.5" />
 			</Toggle>
 
 			{state.isLink ? (
