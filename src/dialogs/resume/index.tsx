@@ -595,33 +595,25 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 
 			{/* Templates Grid */}
 			<div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-				{Object.entries(templates).map(([key, template]) => (
-					<TemplateCard
-						key={key}
-						template={template}
-						isSelected={selectedTemplate === key}
-						onSelect={() => setSelectedTemplate(key)}
-					/>
-				))}
-			</div>
+    {Object.entries(templates).map(([key, template]) => (
+        <TemplateCard
+            key={key}
+            template={template}
+            isSelected={selectedTemplate === key}
+            onSelect={() => setSelectedTemplate(key)}
+            onContinue={onTemplateSelected}
+            isPending={isPending}
+        />
+    ))}
+</div>
 
 			{/* Navigation Buttons */}
 			<DialogFooter className="flex items-center justify-between border-gray-200 border-t pt-6">
-				<Button style={{ backgroundColor: "grey" }} type="button" variant="outline" onClick={() => setCurrentStep(1)}>
-					<ArrowLeftIcon className="mr-2" />
-					Back
-				</Button>
-
-				<Button
-					type="button"
-					className="bg-emerald-600 hover:bg-emerald-700"
-					onClick={onTemplateSelected}
-					disabled={isPending}
-				>
-					Continue to Editor
-					<ArrowRightIcon className="ml-2" />
-				</Button>
-			</DialogFooter>
+    <Button style={{ backgroundColor: "grey" }} type="button" variant="outline" onClick={() => setCurrentStep(1)}>
+        <ArrowLeftIcon className="mr-2" />
+        Back
+    </Button>
+</DialogFooter>
 		</DialogContent>
 	);
 }
@@ -853,51 +845,68 @@ function ResumeForm() {
 
 // Template Card Component
 type TemplateCardProps = {
-	template: TemplateMetadata;
-	isSelected: boolean;
-	onSelect: () => void;
+    template: TemplateMetadata;
+    isSelected: boolean;
+    onSelect: () => void;
+    onContinue: () => void;
+    isPending: boolean;
 };
 
-function TemplateCard({ template, isSelected, onSelect }: TemplateCardProps) {
-	return (
-		<div
-			onClick={onSelect}
-			className={`group cursor-pointer transition-all ${isSelected ? "ring-2 ring-emerald-600 ring-offset-2" : ""}`}
-		>
-			<div className="overflow-hidden rounded-xl border-2 border-gray-200 bg-white transition-all hover:border-gray-300">
-				{/* Template Preview Image */}
-				<div className="relative aspect-[8.5/11] overflow-hidden bg-linear-to-br from-gray-100 to-gray-50">
-					<img src={template.imageUrl} alt={template.name} className="h-full w-full object-cover" />
+function TemplateCard({ template, isSelected, onSelect, onContinue, isPending }: TemplateCardProps) {
+    return (
+        <div
+            onClick={onSelect}
+            className={`group cursor-pointer transition-all ${isSelected ? "ring-2 ring-emerald-600 ring-offset-2" : ""}`}
+        >
+            <div className="overflow-hidden rounded-xl border-2 border-gray-200 bg-white transition-all hover:border-gray-300">
+                {/* Template Preview Image */}
+                <div className="relative aspect-[8.5/11] overflow-hidden bg-linear-to-br from-gray-100 to-gray-50">
+                    <img src={template.imageUrl} alt={template.name} className="h-full w-full object-cover" />
 
-					{/* Selected Checkmark */}
-					{isSelected && (
-						<div className="absolute inset-0 flex items-center justify-center bg-emerald-50/80">
-							<div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600">
-								<svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-								</svg>
-							</div>
-						</div>
-					)}
-				</div>
+                    {/* Selected Checkmark */}
+                    {isSelected && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-emerald-50/80">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600">
+                                <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </div>
+                    )}
+                </div>
 
-				{/* Template Info */}
-				<div className="bg-white p-4">
-					<div className="mb-1 flex items-start justify-between">
-						<h3 className="font-semibold text-emerald-900">{template.name}</h3>
-						<span className="rounded bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700 text-xs">
-							{template.sidebarPosition === "left"
-								? "Left Sidebar"
-								: template.sidebarPosition === "right"
-									? "Right Sidebar"
-									: "Single Column"}
-						</span>
-					</div>
-					<p className="text-gray-600 text-sm">
-						{typeof template.description === "object" ? template.name : template.description}
-					</p>
-				</div>
-			</div>
-		</div>
-	);
+                {/* Template Info */}
+                <div className="bg-white p-4">
+                    <div className="mb-1 flex items-start justify-between">
+                        <h3 className="font-semibold text-emerald-900">{template.name}</h3>
+                        <span className="rounded bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700 text-xs">
+                            {template.sidebarPosition === "left"
+                                ? "Left Sidebar"
+                                : template.sidebarPosition === "right"
+                                ? "Right Sidebar"
+                                : "Single Column"}
+                        </span>
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                        {typeof template.description === "object" ? template.name : template.description}
+                    </p>
+                    {/* Continue to Editor Button (only for selected template) */}
+                    {isSelected && (
+                        <Button
+                            type="button"
+                            className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
+                            onClick={e => {
+                                e.stopPropagation();
+                                onContinue();
+                            }}
+                            disabled={isPending}
+                        >
+                            Continue to Editor
+                            <ArrowRightIcon className="ml-2" />
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
