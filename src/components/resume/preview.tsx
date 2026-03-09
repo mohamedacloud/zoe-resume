@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { ArrowRightIcon, IconContext, type IconProps, WarningIcon } from "@phosphor-icons/react";
-import { useMemo, useRef, useState } from "react";
+import { forwardRef, useMemo, useRef, useState } from "react";
 import { match } from "ts-pattern";
 import type z from "zod";
 import type { pageLayoutSchema } from "@/schema/resume/data";
@@ -60,72 +60,74 @@ type Props = React.ComponentProps<"div"> & {
 	showPageNumbers?: boolean;
 };
 
-export const ResumePreview = ({ showPageNumbers = false, pageClassName, className, ...props }: Props) => {
-	const picture = useResumeStore((state) => state.resume.data.picture);
-	const metadata = useResumeStore((state) => state.resume.data.metadata);
-	const [measurements, setMeasurements] = useState<Record<string, number>>({});
+export const ResumePreview = forwardRef<HTMLDivElement, Props>(
+	({ showPageNumbers = false, pageClassName, className, ...props }, ref) => {
+		const picture = useResumeStore((state) => state.resume.data.picture);
+		const metadata = useResumeStore((state) => state.resume.data.metadata);
+		const [measurements, setMeasurements] = useState<Record<string, number>>({});
 
-	useWebfonts(metadata.typography);
-	const style = useCSSVariables({ picture, metadata });
+		useWebfonts(metadata.typography);
+		const style = useCSSVariables({ picture, metadata });
 
-	const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements);
+		const { pages, itemDistribution, isOverflowing } = useResumePagination(measurements);
 
-	const iconProps = useMemo<ExtendedIconProps>(() => {
-		return {
-			weight: "regular",
-			hidden: metadata.page.hideIcons,
-			color: "var(--page-primary-color)",
-			size: metadata.typography.body.fontSize * 1.5,
-		} satisfies ExtendedIconProps;
-	}, [metadata.typography.body.fontSize, metadata.page.hideIcons]);
+		const iconProps = useMemo<ExtendedIconProps>(() => {
+			return {
+				weight: "regular",
+				hidden: metadata.page.hideIcons,
+				color: "var(--page-primary-color)",
+				size: metadata.typography.body.fontSize * 1.5,
+			} satisfies ExtendedIconProps;
+		}, [metadata.typography.body.fontSize, metadata.page.hideIcons]);
 
-	const scopedCSS = useMemo(() => {
-		if (!metadata.css.enabled || !metadata.css.value.trim()) return null;
+		const scopedCSS = useMemo(() => {
+			if (!metadata.css.enabled || !metadata.css.value.trim()) return null;
 
-		const sanitizedCss = sanitizeCss(metadata.css.value);
+			const sanitizedCss = sanitizeCss(metadata.css.value);
 
-		const scoped = sanitizedCss
-			.split(CSS_RULE_SPLIT_PATTERN)
-			.map((rule) => {
-				const trimmed = rule.trim();
-				if (!trimmed || trimmed.startsWith("@")) return trimmed;
+			const scoped = sanitizedCss
+				.split(CSS_RULE_SPLIT_PATTERN)
+				.map((rule) => {
+					const trimmed = rule.trim();
+					if (!trimmed || trimmed.startsWith("@")) return trimmed;
 
-				return trimmed.replace(CSS_SELECTOR_PATTERN, (_match, selectors, brace) => {
-					const prefixed = selectors
-						.split(",")
-						.map((selector: string) => `.resume-preview-container ${selector.trim()} `)
-						.join(", ");
-					return `${prefixed}${brace}`;
-				});
-			})
-			.join("\n");
+					return trimmed.replace(CSS_SELECTOR_PATTERN, (_match, selectors, brace) => {
+						const prefixed = selectors
+							.split(",")
+							.map((selector: string) => `.resume-preview-container ${selector.trim()} `)
+							.join(", ");
+						return `${prefixed}${brace}`;
+					});
+				})
+				.join("\n");
 
-		return scoped;
-	}, [metadata.css.enabled, metadata.css.value]);
+			return scoped;
+		}, [metadata.css.enabled, metadata.css.value]);
 
-	return (
-		<IconContext.Provider value={iconProps}>
-			<ResumeMeasurer onMeasure={setMeasurements} />
-			{/** biome-ignore lint/security/noDangerouslySetInnerHtml: CSS is sanitized with sanitizeCss */}
-			{scopedCSS && <style dangerouslySetInnerHTML={{ __html: scopedCSS }} />}
+		return (
+			<IconContext.Provider value={iconProps}>
+				<ResumeMeasurer onMeasure={setMeasurements} />
+				{/** biome-ignore lint/security/noDangerouslySetInnerHtml: CSS is sanitized with sanitizeCss */}
+				{scopedCSS && <style dangerouslySetInnerHTML={{ __html: scopedCSS }} />}
 
-			<div style={style} className={cn("resume-preview-container", className)} {...props}>
-				{pages.map((pageLayout, pageIndex) => (
-					<PageContainer
-						key={pageIndex}
-						pageIndex={pageIndex}
-						pageLayout={pageLayout}
-						pageClassName={pageClassName}
-						showPageNumbers={showPageNumbers}
-						itemDistribution={itemDistribution}
-						isOverflowing={isOverflowing}
-						totalNumberOfPages={pages.length}
-					/>
-				))}
-			</div>
-		</IconContext.Provider>
-	);
-};
+				<div ref={ref} style={style} className={cn("resume-preview-container", className)} {...props}>
+					{pages.map((pageLayout, pageIndex) => (
+						<PageContainer
+							key={pageIndex}
+							pageIndex={pageIndex}
+							pageLayout={pageLayout}
+							pageClassName={pageClassName}
+							showPageNumbers={showPageNumbers}
+							itemDistribution={itemDistribution}
+							isOverflowing={isOverflowing}
+							totalNumberOfPages={pages.length}
+						/>
+					))}
+				</div>
+			</IconContext.Provider>
+		);
+	},
+);
 
 type PageContainerProps = {
 	pageIndex: number;
@@ -173,14 +175,14 @@ function PageContainer({
 			</div>
 
 			{metadata.page.format !== "free-form" && isOverflowing && pageIndex === 1 && (
-				<div className="absolute start-0 top-full mt-4 print:hidden">
+				<div className="mt-4 print:hidden">
 					<a
 						rel="noopener"
 						target="_blank"
 						className="group/link"
 						href="https://docs.rxresu.me/guides/fitting-content-on-a-page"
 					>
-						<Alert className="max-w-sm text-yellow-600">
+						<Alert className="max-w-[calc(var(--page-width)*0.65)] text-yellow-600 sm:max-w-sm">
 							<WarningIcon color="currentColor" />
 							<AlertTitle>
 								<Trans>

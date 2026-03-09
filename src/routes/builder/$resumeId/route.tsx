@@ -100,20 +100,26 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 
 	// Force sidebar expansion to at least 42% on tablet detection
 	useEffect(() => {
-		if (isTablet && leftSidebarRef.current && leftSidebarRef.current.getSize() < 42) {
+		if (isTablet && leftSidebarRef.current && leftSidebarRef.current.getSize().asPercentage < 42) {
 			leftSidebarRef.current.resize(42);
 		}
 	}, [isTablet, leftSidebarRef]);
 
-	const leftSidebarSize = isTablet ? Math.max(initialLayout.left || 0, 42) : initialLayout.left || 30;
-	const artboardSize = initialLayout.artboard || 100 - leftSidebarSize;
+	const leftSidebarSize = isTablet ? Math.max(initialLayout.left || 0, 42) : Math.max(initialLayout.left || 0, 30); // Ensure sidebar always has minimum 30% on desktop
+	const artboardSize = 100 - leftSidebarSize;
 
-	// On mobile, ensure sidebar is collapsed by default on initial load
+	// On mobile, ensure sidebar is collapsed. On desktop, fix size if it was reset by mobile session.
 	useEffect(() => {
 		if (isMobile) {
 			setLeftSidebarCollapsed(true);
+		} else if (leftSidebarRef.current) {
+			// When transitioning from mobile to desktop, force panel to correct size
+			const currentPct = leftSidebarRef.current.getSize().asPercentage;
+			if (currentPct <= 0) {
+				leftSidebarRef.current.resize(leftSidebarSize);
+			}
 		}
-	}, [isMobile, setLeftSidebarCollapsed]);
+	}, [isMobile, setLeftSidebarCollapsed, leftSidebarRef, leftSidebarSize]);
 
 	if (isMobile) {
 		return (
@@ -122,7 +128,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 
 				{/* Mobile Layout - Main content always visible */}
 				<div className="relative flex-1 overflow-hidden">
-					<div className="h-full overflow-auto">
+					<div className="h-full">
 						<Outlet />
 					</div>
 
@@ -165,8 +171,6 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 							minSize={0}
 							collapsedSize={0}
 							defaultSize={leftSidebarSize}
-							onCollapse={() => setLeftSidebarCollapsed(true)}
-							onExpand={() => setLeftSidebarCollapsed(false)}
 							className="z-20 h-[calc(100svh-3.5rem)]"
 						>
 							<BuilderSidebarLeft />
