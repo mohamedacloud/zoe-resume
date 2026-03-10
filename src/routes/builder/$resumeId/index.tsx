@@ -50,7 +50,10 @@ function RouteComponent() {
 	const scaledHeight = unscaledHeight * scale;
 
 	return (
-		<div className="relative h-full w-full overflow-y-auto bg-gray-100" style={{ backgroundColor: "#f0f0f0" }}>
+		<div
+			className="relative h-full w-full overflow-x-auto overflow-y-auto bg-gray-100"
+			style={{ backgroundColor: "#f0f0f0" }}
+		>
 			{/* Outer flex container: centres the wrapper horizontally */}
 			<div
 				className="flex min-h-full flex-col items-start p-2 transition-[padding] duration-300 ease-in-out md:p-6 lg:p-8"
@@ -68,9 +71,11 @@ function RouteComponent() {
 				<div
 					style={{
 						width: scaledWidth,
+						minWidth: scaledWidth,
 						height: scaledHeight || undefined,
 						margin: isMobile ? undefined : "0 auto",
 						overflow: "visible",
+						flexShrink: 0,
 					}}
 				>
 					<ResumePreview
@@ -81,6 +86,8 @@ function RouteComponent() {
 							transform: `scale(${scale})`,
 							transformOrigin: "top left",
 							width: RESUME_WIDTH,
+							minWidth: RESUME_WIDTH,
+							flexShrink: 0,
 						}}
 						pageClassName="overflow-hidden rounded-sm shadow-lg sm:rounded-md sm:shadow-xl"
 					/>

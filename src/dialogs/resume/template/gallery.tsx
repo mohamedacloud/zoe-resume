@@ -28,12 +28,6 @@ export function TemplateGalleryDialog(_: DialogProps<"resume.template.gallery">)
 
 		updateResumeData((draft) => {
 			draft.metadata.template = template;
-			// Apply template default colors and typography
-			draft.metadata.design.colors = { ...templateMetadata.defaults.design.colors };
-			draft.metadata.typography = {
-				body: { ...templateMetadata.defaults.typography.body },
-				heading: { ...templateMetadata.defaults.typography.heading },
-			};
 
 			// Reorganize sections based on template's sidebar position
 			const sidebarPosition = templateMetadata.sidebarPosition;

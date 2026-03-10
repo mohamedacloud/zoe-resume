@@ -50,7 +50,6 @@ function RouteComponent() {
 	const { resumeId } = Route.useParams();
 	const { data: resume } = useSuspenseQuery(orpc.resume.getById.queryOptions({ input: { id: resumeId } }));
 
-	const style = useCSSVariables(resume.data);
 	const isReady = useResumeStore((state) => state.isReady);
 	const initialize = useResumeStore((state) => state.initialize);
 
@@ -61,7 +60,7 @@ function RouteComponent() {
 
 	if (!isReady) return <LoadingScreen />;
 
-	return <BuilderLayout style={style} initialLayout={initialLayout} />;
+	return <BuilderLayout initialLayout={initialLayout} />;
 }
 
 type BuilderLayoutProps = React.ComponentProps<"div"> & {
@@ -69,6 +68,8 @@ type BuilderLayoutProps = React.ComponentProps<"div"> & {
 };
 
 function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
+	const resumeData = useResumeStore((state) => state.resume.data);
+	const style = useCSSVariables(resumeData);
 	const isMobile = useIsMobile();
 
 	const leftSidebarRef = usePanelRef();
@@ -156,7 +157,7 @@ function BuilderLayout({ initialLayout, ...props }: BuilderLayoutProps) {
 	}
 
 	return (
-		<div className="flex h-svh flex-col" {...props}>
+		<div className="flex h-svh flex-col" style={style} {...props}>
 			<BuilderHeader />
 
 			<ResizableGroup orientation="horizontal" className="flex-1" onLayoutChange={onLayoutChange}>

@@ -110,7 +110,12 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
 				{/** biome-ignore lint/security/noDangerouslySetInnerHtml: CSS is sanitized with sanitizeCss */}
 				{scopedCSS && <style dangerouslySetInnerHTML={{ __html: scopedCSS }} />}
 
-				<div ref={ref} style={style} className={cn("resume-preview-container", className)} {...props}>
+				<div
+					ref={ref}
+					{...props}
+					style={{ ...style, ...props.style }}
+					className={cn("resume-preview-container", className)}
+				>
 					{pages.map((pageLayout, pageIndex) => (
 						<PageContainer
 							key={pageIndex}
