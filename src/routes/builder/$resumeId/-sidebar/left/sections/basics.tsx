@@ -60,7 +60,13 @@ function BasicsSectionForm() {
 								<Trans>Name</Trans>
 							</FormLabel>
 							<FormControl>
-								<Input {...field} />
+								<Input
+									{...field}
+									onChange={(e) => {
+										const value = e.target.value.replace(/[0-9]/g, "");
+										field.onChange(value);
+									}}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -76,7 +82,13 @@ function BasicsSectionForm() {
 								<Trans>Headline</Trans>
 							</FormLabel>
 							<FormControl>
-								<Input {...field} />
+								<Input
+									{...field}
+									onChange={(e) => {
+										const value = e.target.value.replace(/[0-9]/g, "");
+										field.onChange(value);
+									}}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
