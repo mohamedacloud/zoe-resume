@@ -9,26 +9,6 @@ import { SortableSectionItem } from "../shared/sortable-section-item";
 export function EducationSectionBuilder() {
 	const section = useResumeStore((state) => state.resume.data.sections.education);
 	const updateResumeData = useResumeStore((state) => state.updateResumeData);
-	const handleAddEducation = () => {
-		const newEducation = {
-			id: crypto.randomUUID(),
-			hidden: false,
-			school: "",
-			degree: "",
-			area: "",
-			grade: "",
-			location: "",
-			period: "", // Ensure period is a string
-			website: { url: "", label: "" }, // Ensure website matches schema
-			description: "", // Ensure description is a string
-			currentlyStudyingHere: false, // Added missing property
-		};
-
-		updateResumeData((draft) => {
-			draft.sections.education.items.unshift(newEducation);
-		});
-	};
-
 	return (
 		<SectionBase type="education" className={cn("rounded-md border", section.items.length === 0 && "border-dashed")}>
 			{/* Education List */}
@@ -53,7 +33,7 @@ export function EducationSectionBuilder() {
 				/>
 			</div>
 
-			<SectionAddItemButton type="education" onClick={handleAddEducation}>
+			<SectionAddItemButton type="education">
 				<Trans>Add a new education</Trans>
 			</SectionAddItemButton>
 		</SectionBase>
