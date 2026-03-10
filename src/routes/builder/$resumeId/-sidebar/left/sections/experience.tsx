@@ -57,13 +57,6 @@ export function ExperienceSectionBuilder() {
 	return (
 		<SectionBase type="experience">
 			<div className="space-y-4">
-				{/* Add Button */}
-				<div className="flex items-start justify-between">
-					<SectionAddItemButton type="experience">
-						<Trans>Add a new experience</Trans>
-					</SectionAddItemButton>
-				</div>
-
 				{/* Experiences List */}
 				<SortableList
 					items={section.items}
@@ -79,7 +72,12 @@ export function ExperienceSectionBuilder() {
 							type="experience"
 							item={item}
 							title={item.position || "New Position"}
-							subtitle={[item.company, `${item.startDate || ""} - ${item.endDate || (item.currentlyWorkingHere ? "Present" : "")}`.trim()].filter(Boolean).join(" • ")}
+							subtitle={[
+								item.company,
+								`${item.startDate || ""} - ${item.endDate || (item.currentlyWorkingHere ? "Present" : "")}`.trim(),
+							]
+								.filter(Boolean)
+								.join(" • ")}
 						/>
 					)}
 				/>
@@ -101,6 +99,11 @@ export function ExperienceSectionBuilder() {
 						<p className="mb-6 text-gray-600">Click the "Add" button to add your first work experience</p>
 					</div>
 				)}
+
+				{/* Add Button */}
+				<SectionAddItemButton type="experience">
+					<Trans>Add a new experience</Trans>
+				</SectionAddItemButton>
 
 				{/* AI Generation Indicator */}
 				{generatingIds.size > 0 && (
