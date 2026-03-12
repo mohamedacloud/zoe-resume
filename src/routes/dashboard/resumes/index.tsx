@@ -58,7 +58,6 @@ function RouteComponent() {
 		return [...new Set(resumes.flatMap((r) => r.tags))];
 	}, [resumes]);
 
-	// Auto-open create resume dialog when user has no resumes (first time setup)
 	useEffect(() => {
 		if (resumes && resumes.length === 0) {
 			openDialog("resume.create", undefined);
@@ -100,7 +99,6 @@ function RouteComponent() {
 
 	return (
 		<div className="space-y-6">
-			{/* Stats Cards */}
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
 				{/* Total Resumes */}
 				<div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
