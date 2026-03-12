@@ -12,7 +12,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { MultipleCombobox } from "@/components/ui/multiple-combobox";
 import { Separator } from "@/components/ui/separator";
 import { useDialogStore } from "@/dialogs/store";
-import { orpc } from "@/integrations/orpc/client";
+import { api } from "@/utils/api";
 import { cn } from "@/utils/style";
 import { GridView } from "./-components/grid-view";
 
@@ -37,8 +37,26 @@ function RouteComponent() {
 	const navigate = useNavigate({ from: Route.fullPath });
 	const { openDialog } = useDialogStore();
 
-	const { data: allTags } = useQuery(orpc.resume.tags.list.queryOptions());
-	const { data: resumes } = useQuery(orpc.resume.list.queryOptions({ input: { tags, sort } }));
+	const { data: resumes } = useQuery({
+		queryKey: ["resumes", sort],
+		queryFn: () => api.fetchResumes(sort),
+	});
+
+	const { data: statistics } = useQuery({
+		queryKey: ["statistics"],
+		queryFn: () => api.fetchStatistics(),
+	});
+
+	const filteredResumes = useMemo(() => {
+		if (!resumes) return [];
+		if (!tags || tags.length === 0) return resumes;
+		return resumes.filter((r) => tags.every((tag) => r.tags.includes(tag)));
+	}, [resumes, tags]);
+
+	const allTags = useMemo(() => {
+		if (!resumes) return [];
+		return [...new Set(resumes.flatMap((r) => r.tags))];
+	}, [resumes]);
 
 	// Auto-open create resume dialog when user has no resumes (first time setup)
 	useEffect(() => {
@@ -91,7 +109,9 @@ function RouteComponent() {
 							<p className="mb-2 text-gray-600 text-xs sm:text-sm">
 								<Trans>Total Resumes</Trans>
 							</p>
-							<p className="font-bold text-emerald-600 text-xl sm:text-2xl">{resumes?.length ?? 0}</p>
+							<p className="font-bold text-emerald-600 text-xl sm:text-2xl">
+								{statistics?.totalResumes ?? resumes?.length ?? 0}
+							</p>
 						</div>
 						<div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50">
 							<svg className="size-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +158,7 @@ function RouteComponent() {
 							<p className="mb-2 text-gray-500 text-xs">
 								<Trans>This month</Trans>
 							</p>
-							<p className="font-bold text-2xl text-emerald-600">0</p>
+							<p className="font-bold text-2xl text-emerald-600">{statistics?.totalDownloads ?? 0}</p>
 						</div>
 						<div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50">
 							<svg className="size-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,7 +244,7 @@ function RouteComponent() {
 				/>
 			</div>
 
-			<GridView resumes={resumes ?? []} />
+			<GridView resumes={filteredResumes ?? []} />
 		</div>
 	);
 }

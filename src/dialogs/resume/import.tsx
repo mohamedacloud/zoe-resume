@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { DownloadSimpleIcon, FileIcon, UploadSimpleIcon } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -19,8 +19,10 @@ import type { AIProvider } from "@/integrations/ai/types";
 import { JSONResumeImporter } from "@/integrations/import/json-resume";
 import { ReactiveResumeJSONImporter } from "@/integrations/import/reactive-resume-json";
 import { ReactiveResumeV4JSONImporter } from "@/integrations/import/reactive-resume-v4-json";
-import { client, orpc } from "@/integrations/orpc/client";
+import { client } from "@/integrations/orpc/client";
 import type { ResumeData } from "@/schema/resume/data";
+import { api } from "@/utils/api";
+import { generateRandomName, slugify } from "@/utils/string";
 import { cn } from "@/utils/style";
 import { type DialogProps, useDialogStore } from "../store";
 
@@ -76,8 +78,14 @@ export function ImportResumeDialog(_: DialogProps<"resume.import">) {
 	const prevTypeRef = useRef<string>("");
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const queryClient = useQueryClient();
 
-	const { mutateAsync: importResume } = useMutation(orpc.resume.import.mutationOptions());
+	const { mutateAsync: createResume } = useMutation({
+		mutationFn: (data: { name: string; slug: string; data?: ResumeData }) => api.createResume(data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -176,7 +184,12 @@ export function ImportResumeDialog(_: DialogProps<"resume.import">) {
 
 			if (!data) throw new Error("No data was returned from the AI provider.");
 
-			await importResume({ data });
+			const name = data.basics.name || generateRandomName();
+			await createResume({
+				name,
+				slug: slugify(name),
+				data,
+			});
 			toast.success(t`Your resume has been imported successfully.`, { id: toastId, description: null });
 			closeDialog();
 		} catch (error: unknown) {

@@ -12,7 +12,7 @@ import { useCSSVariables } from "@/components/resume/hooks/use-css-variables";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { ResizableGroup, ResizablePanel, ResizableSeparator } from "@/components/ui/resizable";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { orpc } from "@/integrations/orpc/client";
+import { api } from "@/utils/api";
 import { BuilderHeader } from "./-components/header";
 import { BuilderSidebarLeft } from "./-sidebar/left";
 import { useBuilderSidebar, useBuilderSidebarStore } from "./-store/sidebar";
@@ -34,7 +34,10 @@ export const Route = createFileRoute("/builder/$resumeId")({
 	loader: async ({ params, context }) => {
 		const [layout, resume] = await Promise.all([
 			getBuilderLayoutServerFn(),
-			context.queryClient.ensureQueryData(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } })),
+			context.queryClient.ensureQueryData({
+				queryKey: ["resume", params.resumeId],
+				queryFn: () => api.fetchResume(params.resumeId),
+			}),
 		]);
 
 		return { layout, name: resume.name };
@@ -48,7 +51,10 @@ function RouteComponent() {
 	const { layout: initialLayout } = Route.useLoaderData();
 
 	const { resumeId } = Route.useParams();
-	const { data: resume } = useSuspenseQuery(orpc.resume.getById.queryOptions({ input: { id: resumeId } }));
+	const { data: resume } = useSuspenseQuery({
+		queryKey: ["resume", resumeId],
+		queryFn: () => api.fetchResume(resumeId),
+	});
 
 	const isReady = useResumeStore((state) => state.isReady);
 	const initialize = useResumeStore((state) => state.initialize);

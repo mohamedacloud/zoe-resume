@@ -24,8 +24,8 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
 import { useFormBlocker } from "@/hooks/use-form-blocker";
 import { authClient } from "@/integrations/auth/client";
-import { orpc, type RouterInput } from "@/integrations/orpc/client";
 import type { Template } from "@/schema/templates";
+import { api } from "@/utils/api";
 import { generateRandomName, slugify } from "@/utils/string";
 import { type DialogProps, useDialogStore } from "../store";
 import { type TemplateMetadata, templates } from "./template/data";
@@ -110,8 +110,20 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 	const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 	const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
-	const { mutate: createResume, isPending } = useMutation(orpc.resume.create.mutationOptions());
-	const { mutateAsync: updateResume } = useMutation(orpc.resume.update.mutationOptions());
+	const { mutate: createResume, isPending } = useMutation({
+		mutationFn: (data: { name: string; slug: string; tags: string[]; withSampleData?: boolean }) =>
+			api.createResume(data).then((res) => res.id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
+	const { mutateAsync: updateResume } = useMutation({
+		mutationFn: ({ id, data }: { id: string; data: import("@/schema/resume/data").ResumeData }) =>
+			api.updateResume(id, { data }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
 
 	const basicDetailsForm = useForm<BasicDetailsFormValues>({
 		resolver: zodResolver(basicDetailsSchema),
@@ -185,16 +197,14 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 			name: resumeName,
 			slug: slugify(resumeName),
 			tags: [],
-			withSampleData: false, // No sample data - only user's basic details
-		} satisfies RouterInput["resume"]["create"];
+			withSampleData: false,
+		};
 
 		createResume(resumeData, {
 			onSuccess: async (resumeId) => {
 				// After creating the resume, update it with the selected template and basic details
 				try {
-					const createdResume = await queryClient.fetchQuery(
-						orpc.resume.getById.queryOptions({ input: { id: resumeId } }),
-					);
+					const createdResume = await api.fetchResume(resumeId);
 
 					// Build profiles array for LinkedIn, GitHub, Website
 					const profiles = [];
@@ -257,10 +267,7 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 						},
 					};
 
-					await updateResume({
-						id: resumeId,
-						data: updatedData,
-					});
+					await updateResume({ id: resumeId, data: updatedData });
 
 					toast.success(t`Your resume has been created successfully.`, { id: toastId });
 					closeDialog();
@@ -276,30 +283,6 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 					return;
 				}
 
-				toast.error(error.message, { id: toastId });
-			},
-		});
-	};
-
-	const onCreateSampleResume = () => {
-		const randomName = generateRandomName();
-
-		const data = {
-			name: randomName,
-			slug: slugify(randomName),
-			tags: [],
-			withSampleData: true,
-		} satisfies RouterInput["resume"]["create"];
-
-		const toastId = toast.loading(t`Creating your resume...`);
-
-		createResume(data, {
-			onSuccess: (resumeId) => {
-				toast.success(t`Your resume has been created successfully.`, { id: toastId });
-				closeDialog();
-				navigate({ to: "/builder/$resumeId", params: { resumeId } });
-			},
-			onError: (error) => {
 				toast.error(error.message, { id: toastId });
 			},
 		});
@@ -639,7 +622,14 @@ export function CreateResumeDialog(_: DialogProps<"resume.create">) {
 export function UpdateResumeDialog({ data }: DialogProps<"resume.update">) {
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 
-	const { mutate: updateResume, isPending } = useMutation(orpc.resume.update.mutationOptions());
+	const queryClient = useQueryClient();
+	const { mutate: updateResume, isPending } = useMutation({
+		mutationFn: ({ id, name, slug, tags }: { id: string; name: string; slug: string; tags: string[] }) =>
+			api.updateResume(id, { name, slug, tags }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -710,7 +700,14 @@ export function DuplicateResumeDialog({ data }: DialogProps<"resume.duplicate">)
 	const navigate = useNavigate();
 	const closeDialog = useDialogStore((state) => state.closeDialog);
 
-	const { mutate: duplicateResume, isPending } = useMutation(orpc.resume.duplicate.mutationOptions());
+	const queryClient = useQueryClient();
+	const { mutate: duplicateResume, isPending } = useMutation({
+		mutationFn: ({ id, name, slug, tags }: { id: string; name: string; slug: string; tags: string[] }) =>
+			api.duplicateResume(id, { name, slug, tags }).then((res) => res.id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
@@ -735,12 +732,12 @@ export function DuplicateResumeDialog({ data }: DialogProps<"resume.duplicate">)
 		const toastId = toast.loading(t`Duplicating your resume...`);
 
 		duplicateResume(values, {
-			onSuccess: async (id) => {
+			onSuccess: async (resumeId) => {
 				toast.success(t`Your resume has been duplicated successfully.`, { id: toastId });
 				closeDialog();
 
 				if (data.shouldRedirect) {
-					navigate({ to: `/builder/$resumeId`, params: { resumeId: id } });
+					navigate({ to: `/builder/$resumeId`, params: { resumeId } });
 				}
 			},
 			onError: (error) => {

@@ -15,6 +15,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { usePrompt } from "@/hooks/use-prompt";
 import { authClient } from "@/integrations/auth/client";
 import { orpc } from "@/integrations/orpc/client";
+import { api } from "@/utils/api";
 import { SectionBase } from "../shared/section-base";
 
 export function SharingSectionBuilder() {
@@ -24,7 +25,13 @@ export function SharingSectionBuilder() {
 	const { data: session } = authClient.useSession();
 	const params = useParams({ from: "/builder/$resumeId" });
 
-	const { mutateAsync: updateResume } = useMutation(orpc.resume.update.mutationOptions());
+	const queryClient = useQueryClient();
+	const { mutateAsync: updateResume } = useMutation({
+		mutationFn: ({ id, isPublic }: { id: string; isPublic: boolean }) => api.updateResume(id, { isPublic }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
 	const { mutateAsync: setPassword } = useMutation(orpc.resume.setPassword.mutationOptions());
 	const { mutateAsync: removePassword } = useMutation(orpc.resume.removePassword.mutationOptions());
 	const { data: resume } = useSuspenseQuery(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } }));

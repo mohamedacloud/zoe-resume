@@ -1,11 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	CopySimpleIcon,
-	PencilSimpleLineIcon,
-	TrashSimpleIcon,
-} from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
+import { CopySimpleIcon, PencilSimpleLineIcon, TrashSimpleIcon } from "@phosphor-icons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toast } from "sonner";
 import {
@@ -17,7 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useDialogStore } from "@/dialogs/store";
 import { useConfirm } from "@/hooks/use-confirm";
-import { orpc, type RouterOutput } from "@/integrations/orpc/client";
+import type { RouterOutput } from "@/integrations/orpc/client";
+import { api } from "@/utils/api";
 
 type Props = Omit<React.ComponentProps<typeof DropdownMenuContent>, "children"> & {
 	resume: RouterOutput["resume"]["list"][number];
@@ -28,7 +25,13 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 	const confirm = useConfirm();
 	const { openDialog } = useDialogStore();
 
-	const { mutate: deleteResume } = useMutation(orpc.resume.delete.mutationOptions());
+	const queryClient = useQueryClient();
+	const { mutate: deleteResume } = useMutation({
+		mutationFn: (id: string) => api.deleteResume(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["resumes"] });
+		},
+	});
 
 	const handleUpdate = () => {
 		openDialog("resume.update", resume);
@@ -37,8 +40,6 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 	const handleDuplicate = () => {
 		openDialog("resume.duplicate", resume);
 	};
-
-
 
 	const handleDelete = async () => {
 		const confirmation = await confirm(t`Are you sure you want to delete this resume?`, {
@@ -49,17 +50,14 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 
 		const toastId = toast.loading(t`Deleting your resume...`);
 
-		deleteResume(
-			{ id: resume.id },
-			{
-				onSuccess: () => {
-					toast.success(t`Your resume has been deleted successfully.`, { id: toastId });
-				},
-				onError: (error) => {
-					toast.error(error.message, { id: toastId });
-				},
+		deleteResume(resume.id, {
+			onSuccess: () => {
+				toast.success(t`Your resume has been deleted successfully.`, { id: toastId });
 			},
-		);
+			onError: (error) => {
+				toast.error(error.message, { id: toastId });
+			},
+		});
 	};
 
 	return (
@@ -67,8 +65,7 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 			<DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
 
 			<DropdownMenuContent {...props}>
-
-				   <DropdownMenuSeparator />
+				<DropdownMenuSeparator />
 
 				<DropdownMenuItem disabled={resume.isLocked} onSelect={handleUpdate}>
 					<PencilSimpleLineIcon />
@@ -80,8 +77,7 @@ export function ResumeDropdownMenu({ resume, children, ...props }: Props) {
 					<Trans>Duplicate</Trans>
 				</DropdownMenuItem>
 
-
-				   <DropdownMenuSeparator />
+				<DropdownMenuSeparator />
 
 				<DropdownMenuItem variant="destructive" disabled={resume.isLocked} onSelect={handleDelete}>
 					<TrashSimpleIcon />

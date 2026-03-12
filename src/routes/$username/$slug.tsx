@@ -8,7 +8,7 @@ import { ResumePreview } from "@/components/resume/preview";
 import { useResumeStore } from "@/components/resume/store/resume";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { orpc } from "@/integrations/orpc/client";
+import { api } from "@/utils/api";
 import { downloadFromUrl } from "@/utils/file";
 import { cn } from "@/utils/style";
 
@@ -19,25 +19,35 @@ export const Route = createFileRoute("/$username/$slug")({
 			// Ignore .well-known requests
 			if (username === ".well-known") throw notFound();
 
-			const resume = await context.queryClient.ensureQueryData(
-				orpc.resume.getBySlug.queryOptions({ input: { username, slug } }),
-			);
+			const resumes = await context.queryClient.ensureQueryData({
+				queryKey: ["resumes"],
+				queryFn: () => api.fetchResumes(),
+			});
 
-		return { resume };
-	} catch {
-		throw notFound();
-	}
-},
-head: ({ loaderData }) => ({
-	meta: [{ title: loaderData ? `${loaderData.resume.name} - Zoe Resume Builder` : "Zoe Resume Builder" }],
-}),
-// Authentication and password-protected resumes are not supported in this build.
-});function RouteComponent() {
-	const { username, slug } = Route.useParams();
+			const resume = resumes.find((r) => r.slug === slug);
+			if (!resume) throw notFound();
+
+			return { resume };
+		} catch {
+			throw notFound();
+		}
+	},
+	head: ({ loaderData }) => ({
+		meta: [{ title: loaderData ? `${loaderData.resume.name} - Zoe Resume Builder` : "Zoe Resume Builder" }],
+	}),
+	// Authentication and password-protected resumes are not supported in this build.
+});
+function RouteComponent() {
+	const { slug } = Route.useParams();
 	const isReady = useResumeStore((state) => state.isReady);
 	const initialize = useResumeStore((state) => state.initialize);
 
-	const { data: resume } = useQuery(orpc.resume.getBySlug.queryOptions({ input: { username, slug } }));
+	const { data: resumes } = useQuery({
+		queryKey: ["resumes"],
+		queryFn: () => api.fetchResumes(),
+	});
+
+	const resume = resumes?.find((r) => r.slug === slug);
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
 		orpc.printer.printResumeAsPDF.mutationOptions(),
 	);

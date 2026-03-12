@@ -42,6 +42,7 @@ import { ReviewDrawer } from "@/components/ui/review-drawer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDialogStore } from "@/dialogs/store";
 import { orpc } from "@/integrations/orpc/client";
+import { api } from "@/utils/api";
 import { downloadFromUrl, generateFilename } from "@/utils/file";
 import { cn } from "@/utils/style";
 import { AnimatedEyes, DeadEyes } from "./animated-eyes";
@@ -49,7 +50,10 @@ import { AnimatedEyes, DeadEyes } from "./animated-eyes";
 export function BuilderTopTray() {
 	const openDialog = useDialogStore((state) => state.openDialog);
 	const params = useParams({ from: "/builder/$resumeId" });
-	const { data: resume } = useQuery(orpc.resume.getById.queryOptions({ input: { id: params.resumeId } }));
+	const { data: resume } = useQuery({
+		queryKey: ["resume", params.resumeId],
+		queryFn: () => api.fetchResume(params.resumeId),
+	});
 
 	const { mutateAsync: printResumeAsPDF, isPending: isPrinting } = useMutation(
 		orpc.printer.printResumeAsPDF.mutationOptions(),
