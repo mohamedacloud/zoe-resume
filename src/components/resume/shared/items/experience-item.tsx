@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { debounce } from "es-toolkit";
+import { useEffect, useMemo, useRef } from "react";
 import type z from "zod";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { experienceItemSchema } from "@/schema/resume/data";
+import { handleContentEditableLinkClick } from "@/utils/resume/event";
 import { cn } from "@/utils/style";
 import { PageLink } from "../page-link";
 
@@ -16,9 +18,29 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 	// Update description content when item.description changes
 	useEffect(() => {
 		if (descriptionRef.current && descriptionRef.current.innerHTML !== item.description) {
-			descriptionRef.current.innerHTML = item.description;
+			if (document.activeElement !== descriptionRef.current) {
+				descriptionRef.current.innerHTML = item.description;
+			}
 		}
 	}, [item.description]);
+
+	const debouncedUpdate = useMemo(
+		() =>
+			debounce((newValue: string) => {
+				updateResumeData((draft) => {
+					const exp = draft.sections.experience.items.find((exp) => exp.id === item.id);
+					if (exp) exp.description = newValue;
+				});
+			}, 100),
+		[updateResumeData, item.id],
+	);
+
+	const handleDescriptionChange = (e: React.FormEvent<HTMLDivElement>) => {
+		const newValue = e.currentTarget.innerHTML || "";
+		if (newValue !== item.description) {
+			debouncedUpdate(newValue);
+		}
+	};
 
 	const handleCompanyChange = (e: React.FocusEvent<HTMLSpanElement>) => {
 		const newValue = e.currentTarget.textContent || "";
@@ -144,7 +166,16 @@ export function ExperienceItem({ className, ...item }: ExperienceItemProps) {
 			</div>
 
 			{/* Description - Smart rendering based on content */}
-			{renderDescription()}
+			<div
+				ref={descriptionRef}
+				contentEditable
+				suppressContentEditableWarning
+				onInput={handleDescriptionChange}
+				onClick={handleContentEditableLinkClick}
+				className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+			>
+				{renderDescription()}
+			</div>
 
 			{/* Website */}
 			{item.website?.label && (

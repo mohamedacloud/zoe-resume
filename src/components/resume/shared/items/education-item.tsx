@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { SectionItem } from "@/schema/resume/data";
+import { handleContentEditableLinkClick } from "@/utils/resume/event";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
 import { PageLink } from "../page-link";
@@ -45,20 +46,6 @@ export function EducationItem({ className, ...item }: EducationItemProps) {
 			updateResumeData((draft) => {
 				const edu = draft.sections.education.items.find((e) => e.id === item.id);
 				if (edu) edu.area = newValue;
-			});
-		}
-	};
-
-	const handleLocationChange = (e: React.FocusEvent<HTMLSpanElement>) => {
-		const newValue = e.currentTarget.textContent || "";
-		if (newValue !== item.location) {
-			updateResumeData((draft) => {
-				if (draft.sections.education?.items) {
-					const edu = draft.sections.education.items.find((e) => e.id === item.id);
-					if (edu) {
-						edu.location = newValue;
-					}
-				}
 			});
 		}
 	};
@@ -134,6 +121,7 @@ export function EducationItem({ className, ...item }: EducationItemProps) {
 				contentEditable
 				suppressContentEditableWarning
 				onBlur={handleDescriptionChange}
+				onClick={handleContentEditableLinkClick}
 				className={cn(
 					"section-item-description education-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
 					!stripHtml(item.description) && "hidden",

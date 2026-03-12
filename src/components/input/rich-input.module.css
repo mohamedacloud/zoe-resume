@@ -118,11 +118,11 @@
 }
 
 .editor_content {
-	font-family: var(--page-body-font-family);
-	font-size: calc(var(--page-body-font-size) * 1pt);
-	font-weight: var(--page-body-font-weight);
-	line-height: var(--page-body-line-height);
-	color: var(--page-text-color);
+	font-family: var(--page-body-font-family, inherit);
+	font-size: calc(var(--page-body-font-size, 11) * 1pt);
+	font-weight: var(--page-body-font-weight, 400);
+	line-height: var(--page-body-line-height, 1.5);
+	color: var(--page-text-color, inherit);
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 
@@ -137,9 +137,9 @@
 	h4,
 	h5,
 	h6 {
-		font-family: var(--page-heading-font-family);
-		font-weight: var(--page-heading-font-weight);
-		line-height: var(--page-heading-line-height);
+		font-family: var(--page-heading-font-family, inherit);
+		font-weight: var(--page-heading-font-weight, 600);
+		line-height: var(--page-heading-line-height, 1.5);
 	}
 
 	h1 {
@@ -166,12 +166,14 @@
 		font-size: calc(var(--page-heading-font-size) * 0.75pt);
 	}
 
-	strong {
-		font-weight: var(--page-body-font-weight-bold);
+	strong,
+	b {
+		font-weight: var(--page-body-font-weight-bold, 700);
 	}
 
 	a {
-		font-weight: var(--page-body-font-weight-bold);
+		font-weight: var(--page-body-font-weight-bold, 700);
+		color: var(--page-primary-color, inherit);
 		text-decoration: underline;
 		text-underline-offset: 0.15rem;
 	}

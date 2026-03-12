@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { SectionItem } from "@/schema/resume/data";
+import { handleContentEditableLinkClick } from "@/utils/resume/event";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
 import { useResumeStore } from "../../store/resume";
@@ -83,6 +84,7 @@ export function VolunteerItem({ className, ...item }: VolunteerItemProps) {
 				contentEditable
 				suppressContentEditableWarning
 				onBlur={handleDescriptionChange}
+				onClick={handleContentEditableLinkClick}
 				className={cn(
 					"section-item-description volunteer-item-description cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500",
 					!stripHtml(item.description) && "hidden",

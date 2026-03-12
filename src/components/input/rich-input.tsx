@@ -1,12 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import {
-	LinkBreakIcon,
-	LinkIcon,
-	TextBolderIcon,
-	TextItalicIcon,
-	TextUnderlineIcon,
-} from "@phosphor-icons/react";
+import { LinkIcon, TextBolderIcon, TextItalicIcon, TextUnderlineIcon } from "@phosphor-icons/react";
 import Highlight from "@tiptap/extension-highlight";
 import { TableKit } from "@tiptap/extension-table";
 import TextAlign from "@tiptap/extension-text-align";
@@ -23,7 +17,6 @@ import { VisuallyHidden } from "radix-ui";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { usePrompt } from "@/hooks/use-prompt";
 import { isRTL } from "@/utils/locale";
@@ -257,24 +250,25 @@ function EditorToolbar({ editor, isFullscreen }: { editor: Editor; isFullscreen:
 
 				// Link
 				isLink: ctx.editor.isActive("link") ?? false,
-				setLink: async () => {
-					const url = await prompt(t`Please enter the URL you want to link to:`, {
-						defaultValue: "https://",
-					});
-
-					if (!url || url.trim() === "") {
+				toggleLink: async () => {
+					if (ctx.editor.isActive("link")) {
 						ctx.editor.chain().focus().unsetLink().run();
-						return;
-					}
-
-					if (!z.url({ protocol: /^https?$/ }).safeParse(url).success) {
-						toast.error(t`The URL you entered is not valid.`, {
-							description: t`Valid URLs must start with http:// or https://.`,
+					} else {
+						const url = await prompt(t`Please enter the URL:`, {
+							defaultValue: "https://",
 						});
-						return;
-					}
 
-					ctx.editor.chain().focus().setLink({ href: url, target: "_blank", rel: "noopener nofollow" }).run();
+						if (!url || url.trim() === "") return;
+
+						if (!z.url({ protocol: /^https?$/ }).safeParse(url).success) {
+							toast.error(t`The URL you entered is not valid.`, {
+								description: t`Valid URLs must start with http:// or https://.`,
+							});
+							return;
+						}
+
+						ctx.editor.chain().focus().setLink({ href: url, target: "_blank" }).run();
+					}
 				},
 				unsetLink: () => ctx.editor.chain().focus().unsetLink().run(),
 
@@ -320,7 +314,7 @@ function EditorToolbar({ editor, isFullscreen }: { editor: Editor; isFullscreen:
 			<Toggle
 				size={isFullscreen ? "lg" : "sm"}
 				tabIndex={-1}
-				className="rounded-none"
+				className="rounded-none data-[state=on]:bg-muted-foreground/20"
 				title={t`Bold`}
 				pressed={state.isBold}
 				disabled={!state.canBold}
@@ -332,7 +326,7 @@ function EditorToolbar({ editor, isFullscreen }: { editor: Editor; isFullscreen:
 			<Toggle
 				size={isFullscreen ? "lg" : "sm"}
 				tabIndex={-1}
-				className="rounded-none"
+				className="rounded-none data-[state=on]:bg-muted-foreground/20"
 				title={t`Italic`}
 				pressed={state.isItalic}
 				disabled={!state.canItalic}
@@ -344,7 +338,7 @@ function EditorToolbar({ editor, isFullscreen }: { editor: Editor; isFullscreen:
 			<Toggle
 				size={isFullscreen ? "lg" : "sm"}
 				tabIndex={-1}
-				className="rounded-none"
+				className="rounded-none data-[state=on]:bg-muted-foreground/20"
 				title={t`Underline`}
 				pressed={state.isUnderline}
 				disabled={!state.canUnderline}
@@ -353,27 +347,16 @@ function EditorToolbar({ editor, isFullscreen }: { editor: Editor; isFullscreen:
 				<TextUnderlineIcon className="size-3.5" />
 			</Toggle>
 
-			{state.isLink ? (
-				<Button
-					size={isFullscreen ? "lg" : "sm"}
-					tabIndex={-1}
-					variant="ghost"
-					className="rounded-none"
-					onClick={state.unsetLink}
-				>
-					<LinkBreakIcon className="size-3.5" />
-				</Button>
-			) : (
-				<Button
-					size={isFullscreen ? "lg" : "sm"}
-					tabIndex={-1}
-					variant="ghost"
-					className="rounded-none"
-					onClick={state.setLink}
-				>
-					<LinkIcon className="size-3.5" />
-				</Button>
-			)}
+			<Toggle
+				size={isFullscreen ? "lg" : "sm"}
+				tabIndex={-1}
+				className="rounded-none data-[state=on]:bg-muted-foreground/20"
+				title={t`Hyperlink`}
+				pressed={state.isLink}
+				onPressedChange={state.toggleLink}
+			>
+				<LinkIcon className="size-3.5" />
+			</Toggle>
 		</div>
 	);
 }
