@@ -2,6 +2,7 @@ import { debounce } from "es-toolkit";
 import { useEffect, useMemo, useRef } from "react";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { SectionItem } from "@/schema/resume/data";
+import { handleContentEditableLinkClick } from "@/utils/resume/event";
 import { cn } from "@/utils/style";
 import { PageLink } from "../page-link";
 
@@ -140,6 +141,7 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 				contentEditable
 				suppressContentEditableWarning
 				onInput={handleDescriptionChange}
+				onClick={handleContentEditableLinkClick}
 				className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
 			>
 				{renderDescription()}

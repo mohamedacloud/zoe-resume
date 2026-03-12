@@ -187,3 +187,8 @@
 	width: 100% !important;
 	max-width: 100% !important;
 }
+
+/* Force pointer cursor on links inside contentEditable containers (browsers override cursor for contentEditable descendants) */
+[contenteditable] a {
+	cursor: pointer !important;
+}

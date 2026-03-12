@@ -1,5 +1,6 @@
 import { debounce } from "es-toolkit";
 import { useEffect, useMemo, useRef } from "react";
+import { handleContentEditableLinkClick } from "@/utils/resume/event";
 import { getSectionTitle } from "@/utils/resume/section";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
@@ -58,6 +59,7 @@ export function PageSummary({ className }: PageSummaryProps) {
 					contentEditable
 					suppressContentEditableWarning
 					onInput={handleContentChange}
+					onClick={handleContentEditableLinkClick}
 					className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
 					style={{ columnCount: section.columns }}
 				/>

@@ -2,6 +2,7 @@ import { debounce } from "es-toolkit";
 import { useEffect, useMemo, useRef } from "react";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { SummaryItem as SummaryItemType } from "@/schema/resume/data";
+import { handleContentEditableLinkClick } from "@/utils/resume/event";
 import { stripHtml } from "@/utils/string";
 import { cn } from "@/utils/style";
 
@@ -51,6 +52,7 @@ export function SummaryItem({ className, ...item }: SummaryItemProps) {
 			contentEditable
 			suppressContentEditableWarning
 			onInput={handleContentChange}
+			onClick={handleContentEditableLinkClick}
 		/>
 	);
 }

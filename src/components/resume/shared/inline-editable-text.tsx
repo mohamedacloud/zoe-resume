@@ -46,7 +46,10 @@ export function InlineEditableText({
 				onFocus={() => setIsFocused(true)}
 				onBlur={() => setIsFocused(false)}
 				onClick={(event) => {
-					if (as === "a") event.preventDefault();
+					if (as === "a" && href) {
+						event.preventDefault();
+						window.open(href, "_blank", "noopener,noreferrer");
+					}
 				}}
 				onInput={(event) => {
 					debouncedOnChange((event.currentTarget as HTMLElement).textContent ?? "");
