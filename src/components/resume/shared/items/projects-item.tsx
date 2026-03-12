@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { debounce } from "es-toolkit";
+import { useEffect, useMemo, useRef } from "react";
 import { useResumeStore } from "@/components/resume/store/resume";
 import type { SectionItem } from "@/schema/resume/data";
 import { cn } from "@/utils/style";
@@ -14,9 +15,29 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 
 	useEffect(() => {
 		if (descriptionRef.current && descriptionRef.current.innerHTML !== item.description) {
-			descriptionRef.current.innerHTML = item.description;
+			if (document.activeElement !== descriptionRef.current) {
+				descriptionRef.current.innerHTML = item.description;
+			}
 		}
 	}, [item.description]);
+
+	const debouncedUpdate = useMemo(
+		() =>
+			debounce((newValue: string) => {
+				updateResumeData((draft) => {
+					const project = draft.sections.projects.items.find((p) => p.id === item.id);
+					if (project) project.description = newValue;
+				});
+			}, 100),
+		[updateResumeData, item.id],
+	);
+
+	const handleDescriptionChange = (e: React.FormEvent<HTMLDivElement>) => {
+		const newValue = e.currentTarget.innerHTML || "";
+		if (newValue !== item.description) {
+			debouncedUpdate(newValue);
+		}
+	};
 
 	const handleNameChange = (e: React.FocusEvent<HTMLSpanElement>) => {
 		const newValue = e.currentTarget.textContent || "";
@@ -114,7 +135,15 @@ export function ProjectsItem({ className, ...item }: ProjectsItemProps) {
 			</div>
 
 			{/* Description */}
-			{renderDescription()}
+			<div
+				ref={descriptionRef}
+				contentEditable
+				suppressContentEditableWarning
+				onInput={handleDescriptionChange}
+				className="cursor-text outline-none hover:ring-1 hover:ring-blue-300 focus:ring-2 focus:ring-blue-500"
+			>
+				{renderDescription()}
+			</div>
 
 			{/* Website */}
 			{!item.options?.showLinkInTitle && (
